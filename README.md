@@ -15,7 +15,7 @@ This README covers
 
 ## Installation
 ### Prerequisites
-* Install [Processing](https://processing.org/) version 3.5.4
+* Install [Processing](https://processing.org/) version 3.5.4 or newer.
 * Download the following sample curves and cases folders from our [public repository](http://disco.uv.es/pub/commlab/disco/arritmic3D/simulador/) and unzip both in the `arritmic3D/arritmic3D` directory:
 
     - Restitution curves for cellular models
