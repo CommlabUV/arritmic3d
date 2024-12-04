@@ -1,12 +1,12 @@
 import vtk
 import numpy as np
-import os 
+import os
 from shutil import copy
 from vtk.util.numpy_support import vtk_to_numpy
 
 
 ########   Requerimientos  ########
-### Script preparado para modelos orientados en el eje z (0,0,1) 
+### Script preparado para modelos orientados en el eje z (0,0,1)
 ### Revisar que protocolo de nombres de archivos de segmentación y resonancia definidos en el código sea el correcto:
 #       Carpeta caso p* debe contener:
 #               - Study***.vtk (Archivo de resonancia, debe empezar por Study)
@@ -22,13 +22,13 @@ from vtk.util.numpy_support import vtk_to_numpy
 ############### PARÁMETROS A DEFINIR #################
 ######################################################
 
-# Definir rango de número de pacientes a generar (p*) 
+# Definir rango de número de pacientes a generar (p*)
 # Ej: para generar desde el caso p10 al p12 asignar minRange=10 maxRange=13
 # IMP!! el número de caso definido en maxRange no se generará, se generará hasta el número anterior al mismo
 minRange = 1
-maxRange = 42 
+maxRange = 42
 
-# Path a la carpeta que contiene las subcarpetas con los casos segmentados como p0, p1, p2... 
+# Path a la carpeta que contiene las subcarpetas con los casos segmentados como p0, p1, p2...
 sourceCase = f'VTK_Clara_Footprint_OK'
 
 ############# FIN PARÁMETROS A DEFINIR ###############
@@ -37,12 +37,12 @@ sourceCase = f'VTK_Clara_Footprint_OK'
 
 # Convierte Vector de orientación de fibras, de coordenadas globales a locales
 def global2localCoord (FO, epi_N, endo_N, w, vectorLongAxes, i):
-    
+
     # Normal of the current point -> normal direction of the local coordinates system
     normalDir = np.zeros(3)
     normalDir = w * epi_N - (1-w) * endo_N     #  epiNORMAL  -> OUT (pointing to the pericardium)
     normDir = np.linalg.norm(normalDir)
-    normalDir = normalDir/normDir               #  endoNORMAL -> IN  (pointing to the blood pool) 
+    normalDir = normalDir/normDir               #  endoNORMAL -> IN  (pointing to the blood pool)
     # Tangent direction of the local coordinates system
     tangentDir = np.cross(vectorLongAxes, normalDir)
     tangentNormDir = np.linalg.norm(tangentDir)
@@ -62,7 +62,7 @@ def global2localCoord (FO, epi_N, endo_N, w, vectorLongAxes, i):
 resFail = []
 
 # Definir rango de número de pacientes a generar (p*)
-for case in range(minRange, maxRange): 
+for case in range(minRange, maxRange):
     # Nombre archivos vtk
     source = f'{sourceCase}/p{case}'
     if os.path.isdir(source):
@@ -74,7 +74,7 @@ for case in range(minRange, maxRange):
 
         #### Voxelizamos archivo de resonancia #####
         # Archivo de resonancia
-        # Búscamos nombre de archivo resonancia porque cada caso añade un número aleatorio 
+        # Búscamos nombre de archivo resonancia porque cada caso añade un número aleatorio
         # detrás de Study
         for f_name in os.listdir(source):
             if f_name.startswith('Study'):
@@ -83,7 +83,7 @@ for case in range(minRange, maxRange):
         # Malla ventrículo Izq
         file_nameVent = f'{source}/Left Ventricle.vtk'
         print("  Leídos .........................")
-        # Cargamos los datos de la mesh del ventrículo 
+        # Cargamos los datos de la mesh del ventrículo
         mesh_readerVent = vtk.vtkPolyDataReader()
         mesh_readerVent.SetFileName(file_nameVent)
         mesh_readerVent.Update()
@@ -92,9 +92,9 @@ for case in range(minRange, maxRange):
         # Cargamos los datos de la resonancia.
         reader = vtk.vtkStructuredPointsReader()
         reader.SetFileName(file_nameRes)
-        reader.Update() 
+        reader.Update()
 
-        imageDim = reader.GetOutput().GetDimensions() 
+        imageDim = reader.GetOutput().GetDimensions()
         boundsImage = reader.GetOutput().GetBounds()
         cell = reader.GetOutput().GetCell(1)
         cellSize = cell.GetBounds()
@@ -104,8 +104,8 @@ for case in range(minRange, maxRange):
 
         print("Dim Cell Res: ", cellSize)
         print("Dim Cell Res X Y Z: ", xsizeCell, ysizeCell, zsizeCell)
-        # Comprobamos que la resolución esté dentro de un margen correcto, sino 
-        # añadimos el numero de caso en la lista para imprimirlo al final 
+        # Comprobamos que la resolución esté dentro de un margen correcto, sino
+        # añadimos el numero de caso en la lista para imprimirlo al final
         if xsizeCell > 1.5 or ysizeCell > 1.5 or zsizeCell > 1.5:
             resFail.append(f'p{case}')
             print(f'RESOLUCION NO VÁLIDA EN p{case}')
@@ -146,7 +146,7 @@ for case in range(minRange, maxRange):
 
         # Copiamos datos de valor scalar a puntos
         for i in range(ugrid.GetOutput().GetNumberOfPoints()):
-            scalarsVent.InsertNextValue(ugrid.GetOutput().GetPointData().GetArray('scalars').GetValue(i)) 
+            scalarsVent.InsertNextValue(ugrid.GetOutput().GetPointData().GetArray('scalars').GetValue(i))
 
         ugrid.GetOutput().GetPointData().AddArray(scalarsVent)
         ugrid.Update()
@@ -167,20 +167,20 @@ for case in range(minRange, maxRange):
 
 
 
-        # Cargamos los datos de la mesh del core 
+        # Cargamos los datos de la mesh del core
         mesh_readerCore = vtk.vtkPolyDataReader()
         mesh_readerCore.SetFileName(filenameCore)
         mesh_readerCore.Update()
         mesh_polydataCore = mesh_readerCore.GetOutput()
 
-        # Cargamos los datos de la mesh del Border zone 
+        # Cargamos los datos de la mesh del Border zone
         mesh_readerBZ = vtk.vtkPolyDataReader()
         mesh_readerBZ.SetFileName(filenameBZ)
         mesh_readerBZ.Update()
         mesh_polydataBZ = mesh_readerBZ.GetOutput()
 
-        # Cargamos los datos de la Epi mesh 
-        # y subdividimos para aumentar número de puntos resolución 
+        # Cargamos los datos de la Epi mesh
+        # y subdividimos para aumentar número de puntos resolución
         mesh_readerEpi = vtk.vtkPolyDataReader()
         mesh_readerEpi.SetFileName(filenameEpi)
         mesh_readerEpi.Update()
@@ -195,7 +195,7 @@ for case in range(minRange, maxRange):
         mesh_polydataEpiPost.Update()
         mesh_polydataEpi = mesh_polydataEpiPost.GetOutput()
 
-        # Cargamos los datos de la Endo mesh 
+        # Cargamos los datos de la Endo mesh
         mesh_readerEndo = vtk.vtkPolyDataReader()
         mesh_readerEndo.SetFileName(filenameEndo)
         mesh_readerEndo.Update()
@@ -210,7 +210,7 @@ for case in range(minRange, maxRange):
         mesh_polydataEndoPost.Update()
         mesh_polydataEndo = mesh_polydataEndoPost.GetOutput()
 
-        #Creamos 3 arrays distintos para coord nodos celda x, y, z. 
+        #Creamos 3 arrays distintos para coord nodos celda x, y, z.
         x = np.zeros(dataVent.GetNumberOfPoints())
         y = np.zeros(dataVent.GetNumberOfPoints())
         z = np.zeros(dataVent.GetNumberOfPoints())
@@ -242,15 +242,15 @@ for case in range(minRange, maxRange):
         # Función implícita para evaluar la distancia de cada celda a Endo
         implicitPolyDataDistanceEndo = vtk.vtkImplicitPolyDataDistance()
         implicitPolyDataDistanceEndo.SetInput(mesh_polydataEndo)
-        # Función implícita para localizar el punto mas cercano en Epi y calcular su normal 
+        # Función implícita para localizar el punto mas cercano en Epi y calcular su normal
         implicitPolyDataDistanceEpiNorm = vtk.vtkImplicitPolyDataDistance()
         implicitPolyDataDistanceEpiNorm.SetInput(mesh_polydataEpi)
-        # Función implícita para localizar el punto mas cercano en Endo y calcular su normal 
+        # Función implícita para localizar el punto mas cercano en Endo y calcular su normal
         implicitPolyDataDistanceEndoNorm = vtk.vtkImplicitPolyDataDistance()
         implicitPolyDataDistanceEndoNorm.SetInput(mesh_polydataEndo)
 
-        # Creamos array para guardar la información de las distancias  a Endo y EPi 
-        # para que al calcular las normales lcoalizar si algún punto está fuera del polydata e invertir 
+        # Creamos array para guardar la información de las distancias  a Endo y EPi
+        # para que al calcular las normales lcoalizar si algún punto está fuera del polydata e invertir
         # el cálculo del vector normal para que esté en al dirección correcta
         distancesEndo = vtk.vtkFloatArray()
         distancesEndo.SetNumberOfComponents(1)
@@ -267,12 +267,12 @@ for case in range(minRange, maxRange):
 
         #Creamos un array de los valores de tipo de célula (scar 2, BZ 1, sana 0) en el mismo orden que las coordenadas guardadas
         cellType = np.zeros(dataVent.GetNumberOfPoints())
-        #Creamos un array de los valores de tipo de célula Endo, M, Epi (epi 2, Mid 1, endo 0) 
+        #Creamos un array de los valores de tipo de célula Endo, M, Epi (epi 2, Mid 1, endo 0)
         Endo2Epi = vtk.vtkFloatArray()
         Endo2Epi.SetNumberOfComponents(1)
         Endo2Epi.SetName("EndoToEpi")
 
-        # Creamos array para guardar la información Apex(valor 0) - Base(valor 2) - Resto ventriculo(valor 1) 
+        # Creamos array para guardar la información Apex(valor 0) - Base(valor 2) - Resto ventriculo(valor 1)
         tagApexBase = vtk.vtkFloatArray()
         tagApexBase.SetNumberOfComponents(1)
         tagApexBase.SetName("tagApexBase")
@@ -303,7 +303,7 @@ for case in range(minRange, maxRange):
         vector_LAxis.SetNumberOfComponents(3)
         vector_LAxis.SetName("vector_LAxis")
 
-        # Calculamos centro de masas de Ventriculo voxelizado para obtener Apex como celda de max distancia de centro a Epi 
+        # Calculamos centro de masas de Ventriculo voxelizado para obtener Apex como celda de max distancia de centro a Epi
         centerFilter = vtk.vtkCenterOfMass()
         centerFilter.SetInputData(dataVent)
         centerFilter.SetUseScalarsAsWeights(False)
@@ -325,11 +325,11 @@ for case in range(minRange, maxRange):
         pacing_34.SetNumberOfComponents(1)
         pacing_34.SetName("34_pacing")
 
-        # Creamos array para guardar uno de cada nodo de segmento AHA para obtener los 17 nodos de pacing 
+        # Creamos array para guardar uno de cada nodo de segmento AHA para obtener los 17 nodos de pacing
         pacing_34Nodes = np.ones(34)*(-1)
 
         # Evaluamos el signo de las distancias de cada coordenada de la celda del ventrículo
-        # respecto a la mesh del core y de la BZ (negativo está dentro del core, 
+        # respecto a la mesh del core y de la BZ (negativo está dentro del core,
         # positivo está fuera del core, 0 está en la superficie del core)
         # y guardamos valores en array cellType (scar 2, BZ 1, sana 0)
         # Inicializamos max distancia de celdas a centro
@@ -337,10 +337,10 @@ for case in range(minRange, maxRange):
         for i in range(dataVent.GetNumberOfPoints()):
             p = (x[i],y[i],z[i])
             # Evaluamos signo de la distancia al core(scar)
-            signedDistanceCore = implicitPolyDataDistanceCore.EvaluateFunction(p)  
+            signedDistanceCore = implicitPolyDataDistanceCore.EvaluateFunction(p)
             # Evaluamos signo de la distancia al BZ
-            signedDistanceBZ = implicitPolyDataDistanceBZ.EvaluateFunction(p) 
-            # Evaluamos distancia en valor absoluto de cada coordenda al punto más cercano a Epi 
+            signedDistanceBZ = implicitPolyDataDistanceBZ.EvaluateFunction(p)
+            # Evaluamos distancia en valor absoluto de cada coordenda al punto más cercano a Epi
             distancesEpi1 = implicitPolyDataDistanceEpi.EvaluateFunction(p)
             signedDistanceEpi = abs(distancesEpi1)
             distancesEpi.InsertNextValue(distancesEpi1)
@@ -349,15 +349,15 @@ for case in range(minRange, maxRange):
             signedDistanceEndo = abs(distancesEndo1)
             distancesEndo.InsertNextValue(distancesEndo1)
             # Calculamos la distancia de Endo a Epi de 0 a 1 respectivamente, respecto al grosor del miocardio
-            distanceEndo2Epi = (signedDistanceEndo / (signedDistanceEndo+signedDistanceEpi)) 
+            distanceEndo2Epi = (signedDistanceEndo / (signedDistanceEndo+signedDistanceEpi))
 
             # Calculamos la distancia de Endo a Epi de 1 a 0 respectivamente, respecto al grosor del miocardio
-            #distanceEndo2Epi = (signedDistanceEpi / (signedDistanceEndo+signedDistanceEpi)) 
+            #distanceEndo2Epi = (signedDistanceEpi / (signedDistanceEndo+signedDistanceEpi))
 
             # Guardamos el valor para guardar etiqueta y visualizar en modelo
             distancesEndo2Epi.InsertNextValue(distanceEndo2Epi)
             # Dependiendo de la distancia de Endo2Epi etiquetamos la celda como Endo, Mid, Epi (17%, 41% y 42% del grosor del ventrículo, respectivamente)
-            # Etiquetado: endo 0, Mid 1, epi 2 
+            # Etiquetado: endo 0, Mid 1, epi 2
             # Y guardamos el valor para guardar etiqueta y visualizar en modelo
             # Endo
             if distanceEndo2Epi <= 0.17:
@@ -365,7 +365,7 @@ for case in range(minRange, maxRange):
             # Mid
             elif distanceEndo2Epi <= 0.58:
                 Endo2Epi.InsertNextValue(1)
-            # Epi 
+            # Epi
             else:
                 Endo2Epi.InsertNextValue(2)
             # Si distancia negativa o 0 pertenece al core y la guardamos como scar 2
@@ -376,7 +376,7 @@ for case in range(minRange, maxRange):
             # Si distancia negativa o 0 pertenece al BZ y la guardamos como BZ 1
             elif (signedDistanceBZ <= 0):
                 cellType[i] = 1
-                # Lo guardamos en el modelo vtk para etiquetar el tipo de nodo 
+                # Lo guardamos en el modelo vtk para etiquetar el tipo de nodo
                 type_cell.InsertNextValue(1)
             # Si no, es tejido sano 0
             else:
@@ -398,7 +398,7 @@ for case in range(minRange, maxRange):
         points.InsertNextPoint(coordApex[0], coordApex[1], coordApex[2])
         points.InsertNextPoint(coordApex[0]+0.5,coordApex[1]-0.5,coordApex[2])
         polygon = vtk.vtkPolygon()
-        polygon.GetPointIds().SetNumberOfIds(3) 
+        polygon.GetPointIds().SetNumberOfIds(3)
         polygon.GetPointIds().SetId(0,0)
         polygon.GetPointIds().SetId(1,1)
         polygon.GetPointIds().SetId(2,2)
@@ -406,7 +406,7 @@ for case in range(minRange, maxRange):
         polygons.InsertNextCell(polygon)
         polyApex = vtk.vtkPolyData()
         polyApex.SetPoints(points)
-        polyApex.SetPolys(polygons) 
+        polyApex.SetPolys(polygons)
         ## Base
         featureEdges = vtk.vtkFeatureEdges()
         if vtk.vtkVersion().GetVTKMajorVersion() >5:
@@ -421,7 +421,7 @@ for case in range(minRange, maxRange):
 
         # Localizamos los nodos del ventrículo cercanos a la Base para etiquetarlos
         cell_locator = vtk.vtkCellLocator()
-        cell_locator.SetDataSet(dataVent)  
+        cell_locator.SetDataSet(dataVent)
         cell_locator.BuildLocator()
 
         points = featureEdges.GetOutput().GetPoints()
@@ -433,12 +433,12 @@ for case in range(minRange, maxRange):
             subId = vtk.mutable(0)
             d = vtk.mutable(0.0)
             cell_locator.FindClosestPoint(p, c, cellId, subId, d)
-            
+
             cellPointIds = vtk.vtkIdList()
             dataVent.GetCellPoints(cellId, cellPointIds)
             for l in range (cellPointIds.GetNumberOfIds()):
                 pointId_Base.append(cellPointIds.GetId(l))
-            
+
         # Construímos Polydata de la base para usar en función implícita
         boundaryStrips = vtk.vtkStripper()
         boundaryStrips.SetInputConnection(featureEdges.GetOutputPort())
@@ -492,7 +492,7 @@ for case in range(minRange, maxRange):
         c=c1=c2=c3=c4=c5=c6=c7=c8=c9=c10=c11=c12=c13=c14=c15=c16 = 0
 
         # Etiquetamos el ventrículo indicando la celda Apex con valor 0, las celdas de la Base con valor 2 y el resto 1
-        # Obtenemos la distancia de 0 a 1 de Apex to Base para cada celda 
+        # Obtenemos la distancia de 0 a 1 de Apex to Base para cada celda
         # Obtenemos el vector normal a la superficie Endo y el vector normal a la superficie Epi
         # Calculamos el segmento 17 AHA al que pertenece cada punto
         for i in range(dataVent.GetNumberOfPoints()):
@@ -503,7 +503,7 @@ for case in range(minRange, maxRange):
                 tagApexBase.InsertNextValue(2)
             else:
                 tagApexBase.InsertNextValue(1)
-            
+
             # Calculamos el segmento 17 AHA al que pertenece el punto
             #  Altura Apex
             if z[i] <= hApex:
@@ -524,7 +524,7 @@ for case in range(minRange, maxRange):
                 # Corregimos los ángulos negativos para obtener valores de 0 a 2PI
                 if (angle < 0):
                     angle += np.pi*2
-                # Definimos cada segmento 
+                # Definimos cada segmento
                 if (0 <= angle <= 1.57):
                     seg = 13
                     c13 += 1
@@ -556,7 +556,7 @@ for case in range(minRange, maxRange):
                 # Corregimos los ángulos negativos para obtener valores de 0 a 2PI
                 if (angle < 0):
                     angle += np.pi*2
-                # Definimos cada segmento 
+                # Definimos cada segmento
                 if (0 <= angle <= 1.05):
                     # Altura MidCavity
                     if z[i] <= hMidCavity:
@@ -579,7 +579,7 @@ for case in range(minRange, maxRange):
                         seg = 2
                         c2 += 1
                         c = c2
-                        
+
                 elif (angle <= 3.14):
                     # Altura MidCavity
                     if z[i] <= hMidCavity:
@@ -637,7 +637,7 @@ for case in range(minRange, maxRange):
                 # Etiquetamos el nodo como no pacing
                 pacing_34.InsertNextValue(0)
 
-            # FIN 17 segmentos AHA    
+            # FIN 17 segmentos AHA
             ######################################################
 
 
@@ -645,11 +645,11 @@ for case in range(minRange, maxRange):
             signedDistanceBase = abs(implicitPolyDataDistanceBase.EvaluateFunction(p))
             # Calculamos la distancia de Apex a Base de 0 a 1 respecto al grosor del miocardio
             # (DistApex / (DistApex+DistBase))
-            distanceApex2Base = (signedDistanceApex / (signedDistanceApex+signedDistanceBase)) 
+            distanceApex2Base = (signedDistanceApex / (signedDistanceApex+signedDistanceBase))
 
             # Calculamos la distancia de Apex a Base de 1 a 0 respecto al grosor del miocardio
             # (DistApex / (DistApex+DistBase))
-            #distanceApex2Base = (signedDistanceBase / (signedDistanceApex+signedDistanceBase)) 
+            #distanceApex2Base = (signedDistanceBase / (signedDistanceApex+signedDistanceBase))
 
             # Guardamos el valor para guardar etiqueta y visualizar en modelo
             distancesApex2Base.InsertNextValue(distanceApex2Base)
@@ -676,11 +676,11 @@ for case in range(minRange, maxRange):
         # Calculamos el vector del eje longitudinal del ventriculo de apex a base
         vectorLongAxes = np.subtract(coordApex,centerMassBase)
         #vectorLongAxes = np.subtract(centerMassBase,coordApex)
-        # Normalizamos 
+        # Normalizamos
         #vectorLongAxesNorm = np.linalg.norm(vectorLongAxes)
         #vectorLongAxes = vectorLongAxes/vectorLongAxesNorm
 
-        # Calculamos para cada nodo el vector normal a Endo y a Epi y 
+        # Calculamos para cada nodo el vector normal a Endo y a Epi y
         # vector de orientación de fibras
         for i in range(dataVent.GetNumberOfPoints()):
             # Coordenada de nodo ventrículo
@@ -688,12 +688,12 @@ for case in range(minRange, maxRange):
             # Punto más cercano a Endo
             # Calculamos distancia para saber si está dentro o fuera de polydata para definir la resta al calcular el vector y obtenemos la coord del punto más ceracno
             endo_N_point = np.zeros(3)
-            distanceEndo = implicitPolyDataDistanceEndoNorm.EvaluateFunctionAndGetClosestPoint(p, endo_N_point)  
+            distanceEndo = implicitPolyDataDistanceEndoNorm.EvaluateFunctionAndGetClosestPoint(p, endo_N_point)
 
             # Calculamos el vector del nodo del ventrículo al punto más cercano a Endo
             endo_N = np.zeros(3)
-            # Si nodo en zona epi y la distancia positiva o 0, el punto está fuera de la malla endo por los vóxeles que salen, 
-            # en ese caso calculamos el vector restando al revés para que la dirección sea la correcta hacia endo o epi  
+            # Si nodo en zona epi y la distancia positiva o 0, el punto está fuera de la malla endo por los vóxeles que salen,
+            # en ese caso calculamos el vector restando al revés para que la dirección sea la correcta hacia endo o epi
             if Endo2Epi.GetValue(i) == 0 and distanceEndo >= 0:
                 endo_N = np.subtract(p, endo_N_point)
             else:
@@ -705,17 +705,17 @@ for case in range(minRange, maxRange):
             # Punto más cercano a Epi
             # Calculamos distancia para saber si está dentro o fuera de polydata para definir la resta al calcular el vector y obtenemos la coord del punto más ceracno
             epi_N_point = np.zeros(3)
-            distanceEpi = implicitPolyDataDistanceEpiNorm.EvaluateFunctionAndGetClosestPoint(p, epi_N_point)  
+            distanceEpi = implicitPolyDataDistanceEpiNorm.EvaluateFunctionAndGetClosestPoint(p, epi_N_point)
 
             # Calculamos el vector del nodo del ventrículo al punto más cercano a Epi
             epi_N = np.zeros(3)
-            # Si la distancia positiva o 0, el punto está fuera de la malla endo por los vóxeles que salen, 
-            # en ese caso calculamos el vector restando al revés para que la dirección sea la correcta hacia endo o epi  
+            # Si la distancia positiva o 0, el punto está fuera de la malla endo por los vóxeles que salen,
+            # en ese caso calculamos el vector restando al revés para que la dirección sea la correcta hacia endo o epi
             if Endo2Epi.GetValue(i) == 2 and distanceEpi >= 0:
                 epi_N = np.subtract(p, epi_N_point)
             else:
                 epi_N = np.subtract(epi_N_point, p)
-            
+
             # Normalizamos vector
             epiNorm = np.linalg.norm(epi_N)
             epi_N = epi_N/epiNorm
@@ -724,7 +724,7 @@ for case in range(minRange, maxRange):
             w = distancesEndo2Epi.GetValue(i)
 
             apex2Base = distancesApex2Base.GetValue(i)
-            
+
             phi = abs(np.arccos(apex2Base)) - (np.pi/2)
 
             # Helix angle STREETER
@@ -753,7 +753,7 @@ for case in range(minRange, maxRange):
             fibers_OR.InsertNextTuple3(FO_local[0,0], FO_local[0,1], FO_local[0,2])
             vector_LAxis.InsertNextTuple3(vectorLongAxes[0], vectorLongAxes[1], vectorLongAxes[2])
 
-            
+
         # Añadimos scalar para visualizar datos en modelo
         dataVent.GetPointData().AddArray(distancesEndo2Epi)
         dataVent.GetPointData().AddArray(Endo2Epi)
@@ -837,7 +837,7 @@ for case in range(minRange, maxRange):
                     neigh = cellPointIds.GetId(i)
                     # Evitamos añadir el mismo nodo como vecino
                     if nodoactual != neigh:
-                        # Comprobamos que el nodo vecino no se haya añadido desde otra celda y evitar que se duplique en la lista 
+                        # Comprobamos que el nodo vecino no se haya añadido desde otra celda y evitar que se duplique en la lista
                         if neigh not in nodos[nodoactual]:
                             nodos[nodoactual].append(neigh)
 

@@ -1,10 +1,10 @@
 
-    
+
 class CaseLoader {
-  
+
   String path, m3dPath;
   ArrayList<String> fichs;
-  // Información del caso: Centroide de cada nodo, nivel de gris RMI, lista de vecinos, 
+  // Información del caso: Centroide de cada nodo, nivel de gris RMI, lista de vecinos,
   // curva de restitución APD, curva de restitución CV, orientación de fibras y tipo de célula (sana, BZ, escara)
   FloatList X,Y,Z,P, oX, oY, oZ;
   IntList cellType;
@@ -14,72 +14,72 @@ class CaseLoader {
   int bpl_CasoBloqueY; // Bloques por lado en Y que viene con el caso de bloque vtk para no tener que modificarlo
   int capasZCasoBloque; // Capas en Z de caso bloque VTK
   float cellsize_bloqueVTK; // Tamaño de celda en mm para Bloque VTK
-  ArrayList<IntList> V; 
+  ArrayList<IntList> V;
   int nCeldas;
   Spline spline_Mapd, spline_Mcv, spline_Epiapd, spline_Epicv,spline_Endoapd,spline_Endocv,spline_Mapd_BZ, spline_Mcv_BZ, spline_Epiapd_BZ, spline_Epicv_BZ,spline_Endoapd_BZ,spline_Endocv_BZ;
- 
+
   ArrayList<PVector> M_APD,M_CV, Epi_APD,Epi_CV,Endo_APD,Endo_CV,BZ_M_APD,BZ_M_CV, BZ_Epi_APD,BZ_Epi_CV,BZ_Endo_APD,BZ_Endo_CV;       // APD, CV curves
   CaseLoader(String casePath, String m3DFile) {
-  
+
     this.path = casePath;
     this.m3dPath = m3DFile;
-    
+
     fichs = new ArrayList<String>();
     fichs.add(casePath+"Reader_VTK/centroidCellX.txt"); // fichs 0
     fichs.add(casePath+"Reader_VTK/centroidCellY.txt"); // fichs 1
     fichs.add(casePath+"Reader_VTK/centroidCellZ.txt"); // fichs 2
-    
+
     fichs.add(casePath+"Reader_VTK/scalarValues.txt"); // fichs 3
     fichs.add(casePath+"Reader_VTK/vecinos.txt"); // fichs 4
-    
+
     fichs.add(skecthPath+"restitutionCurves/RestitutionCurve_Sanas_APD_Mid.csv"); // fichs 5  ** M **
     fichs.add(skecthPath+"restitutionCurves/RestitutionCurve_Sanas_CV_Mid.csv"); // fichs 6  ** M **
 
     fichs.add(casePath+"Reader_VTK/fibreOrientationX.txt");  // fichs 7
     fichs.add(casePath+"Reader_VTK/fibreOrientationY.txt"); // fichs 8
     fichs.add(casePath+"Reader_VTK/fibreOrientationZ.txt"); // fichs 9
-    
+
     fichs.add(casePath+"Reader_VTK/scarTissue.txt"); // fichs 10
-    
+
     fichs.add(skecthPath+"restitutionCurves/RestitutionCurve_Sanas_APD_Epi.csv"); // fichs 11
     fichs.add(skecthPath+"restitutionCurves/RestitutionCurve_Sanas_CV_Epi.csv"); // fichs 12
-    
+
     fichs.add(skecthPath+"restitutionCurves/RestitutionCurve_Sanas_APD_Endo.csv"); // fichs 13
     fichs.add(skecthPath+"restitutionCurves/RestitutionCurve_Sanas_CV_Endo.csv"); // fichs 14
-    
+
     fichs.add(casePath+"Reader_VTK/EndoToEpi.txt"); // fichs 15
-    
+
     fichs.add(skecthPath+"restitutionCurves/RestitutionCurve_BZ_APD_Endo.csv"); // fichs 16
     fichs.add(skecthPath+"restitutionCurves/RestitutionCurve_BZ_CV_Endo.csv"); // fichs 17
-    
+
     fichs.add(skecthPath+"restitutionCurves/RestitutionCurve_BZ_APD_Epi.csv"); // fichs 18
     fichs.add(skecthPath+"restitutionCurves/RestitutionCurve_BZ_CV_Epi.csv"); // fichs 19
-    
+
     fichs.add(skecthPath+"restitutionCurves/RestitutionCurve_BZ_APD_Mid.csv"); // fichs 20
     fichs.add(skecthPath+"restitutionCurves/RestitutionCurve_BZ_CV_Mid.csv"); // fichs 21
-    
+
     fichs.add(casePath+"Reader_VTK/centerMass-BPL.txt"); // fichs 22
-    
+
     fichs.add(casePath+"Reader_VTK/pacing_34.txt"); // fichs 23
-  
+
     load_case_data();
   }
-  
-  
-    
+
+
+
   ArrayList<PVector> carga_csv(String fich_csv){
     Table t;
     ArrayList<PVector> l = new ArrayList<PVector>();
       t = loadTable(fich_csv);
       if(t != null){
-        for (TableRow row : t.rows()) 
+        for (TableRow row : t.rows())
         l.add( new PVector(row.getFloat(0), row.getFloat(1)) );
-       
+
         println(t.getRowCount() + " values for "+fich_csv);
       }
       return l;
    }
-   
+
    Spline genera_spline(ArrayList<PVector> data){
       float Xsp[] = new float[data.size()];
       float Ysp[] = new float[data.size()];
@@ -89,13 +89,13 @@ class CaseLoader {
         Ysp[i] = p.y;
         i+=1;
       }
-      
+
       return new Spline(Xsp, Ysp);
-      
+
    }
-   
+
   void load_case_data(){
-    
+
     // Posicion, vecinos, Nivel de gris, orientacion de fibras, tipo de célula (sana, BZ, escara)
     X = new FloatList();
     Y = new FloatList();
@@ -108,9 +108,9 @@ class CaseLoader {
     cellType = new IntList();
     endo2Epi = new IntList();
     centerMass = new PVector();
-    
-   
-      
+
+
+
     // Posicion
     String[] lines = loadStrings(fichs.get(0));
     for (int i = 0 ; i < lines.length; i++)
@@ -118,21 +118,21 @@ class CaseLoader {
     println("Leido: ", fichs.get(0));
     nCeldas = lines.length;
     println("Nceldas: ", nCeldas);
-    
+
     lines = loadStrings(fichs.get(1));
     for (int i = 0 ; i < lines.length; i++)
       Y.append(float(lines[i]));
     println("Leido: ", fichs.get(1));
     nCeldas = lines.length;
     println("Nceldas: ", nCeldas);
-    
+
     lines = loadStrings(fichs.get(2));
     for (int i = 0 ; i < lines.length; i++)
       Z.append(float(lines[i]));
     println("Leido: ", fichs.get(2));
     nCeldas = lines.length;
     println("Nceldas: ", nCeldas);
-    
+
     // Vecinos
     lines = loadStrings(fichs.get(4));
     for (int i = 0 ; i < lines.length; i++){
@@ -146,7 +146,7 @@ class CaseLoader {
     println("Leido: ", fichs.get(4));
     nCeldas = lines.length;
     println("Nceldas: ", nCeldas);
-    
+
     // Grayscale
     lines = loadStrings(fichs.get(3));
     if(lines != null){
@@ -187,7 +187,7 @@ class CaseLoader {
     Endo_CV = carga_csv(fichs.get(14));
     if(Endo_CV.size() != 0)
       spline_Endocv = genera_spline(Endo_CV);
-   
+
     // Curvas de restitucion BZ
     // Endo
     BZ_Endo_APD  = carga_csv(fichs.get(16));
@@ -214,8 +214,8 @@ class CaseLoader {
       spline_Mcv_BZ = genera_spline(BZ_M_CV);
     else
       println("\nError al leer "+fichs.get(21)+"! No se ha podido cargar la curva de CV BZ para M. Al menos esta curva debe estar presente.");
-    
-    
+
+
     // Orientacion de fibras y tipo de célula Sana, BZ, Scar
     lines = loadStrings(fichs.get(7));
     if(lines != null){
@@ -227,7 +227,7 @@ class CaseLoader {
     }else{
       println("File "+ fichs.get(7)+ " could not be read.");
     }
-      
+
     lines = loadStrings(fichs.get(8));
     if(lines != null){
       for (int i = 0 ; i < lines.length; i++)
@@ -238,7 +238,7 @@ class CaseLoader {
     }else{
       println("File "+ fichs.get(8)+ " could not be read.");
     }
-    
+
     lines = loadStrings(fichs.get(9));
     if(lines != null){
       for (int i = 0 ; i < lines.length; i++)
@@ -250,7 +250,7 @@ class CaseLoader {
       println("File "+ fichs.get(9)+ " could not be read.");
     }
 
-    // Tipo de celula, scar 2, BZ 1, sana 0 
+    // Tipo de celula, scar 2, BZ 1, sana 0
     lines = loadStrings(fichs.get(10));
     if(lines != null){
       for (int i = 0 ; i < lines.length; i++)
@@ -261,8 +261,8 @@ class CaseLoader {
     }else{
       println("File "+ fichs.get(10)+ " could not be read.");
     }
-    
-    // Tipo de celula Endo To Epi, epi 2, M 1, endo 0 
+
+    // Tipo de celula Endo To Epi, epi 2, M 1, endo 0
     lines = loadStrings(fichs.get(15));
     if(lines != null){
       for (int i = 0 ; i < lines.length; i++)
@@ -286,8 +286,8 @@ class CaseLoader {
       cellsize_bloqueVTK = float(lines[6]);
     }
     println("Leido: ", fichs.get(22));
-    
-    // Si no se detalla en params los nodos de pacing, se asignan los 34 nodos Endo Epi de los 17 segmentos AHA 
+
+    // Si no se detalla en params los nodos de pacing, se asignan los 34 nodos Endo Epi de los 17 segmentos AHA
     if (Float.isNaN(caseParams.id_extraIMulti.get(0))){
       caseParams.id_extraIMulti.clear();
       lines = loadStrings(fichs.get(23));
@@ -302,5 +302,5 @@ class CaseLoader {
     }
   }
 }
-  
-  
+
+

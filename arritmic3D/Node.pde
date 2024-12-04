@@ -17,9 +17,9 @@ class Node3{
 
   // Vecinos
   ArrayList<Node3>    Lv;  // Vecinos
-  FloatList           Ldv, Lcv;     // Distancia a sus vecinos,  vel de cond. indep. para cada vecino 
-  ArrayList<PVector>  Lprv; // Posición relativa al vecino  
-  
+  FloatList           Ldv, Lcv;     // Distancia a sus vecinos,  vel de cond. indep. para cada vecino
+  ArrayList<PVector>  Lprv; // Posición relativa al vecino
+
   // Fuente de activación
   int                 tipo_propagacion;
   PVector             foco_activador;
@@ -46,10 +46,10 @@ class Node3{
   float               current_act_beat;
   float               factorCorrecCVBZ = 1;
   float               factorCorrecAPD = 1;
-  
-  
+
+
   Node3(int _id, PVector _pos, float _grLevel, int _est, PVector _or, PVector _ind,int _tipo, int _endo2Epi) {
-    
+
     this.id = _id;
     this.pos = _pos;
     this.tipo = _tipo;
@@ -65,25 +65,25 @@ class Node3{
     this.Lprv = new ArrayList<PVector>();
     this.Ldv = new FloatList();
     this.Lcv = new FloatList();
-    
+
     reset();
   }
-  
+
   void reset(){
     t_proxima_activacion = INFINITO;
     desactivar();
 
     this.reductCV = caseParams.reductCVtr; // % de la CV longitudinal a aplicar en transversal
-    this.beat = -1; 
-    
+    this.beat = -1;
+
     this.current_act_beat = -1; // Inicializamos el beat de activación a -1
-    this.cv_real = 0; // Inicializamos a 0 la cv real que se calculará después aplicando la orientación de fibras y la velocidad respecto al frente o al origen 
-  
+    this.cv_real = 0; // Inicializamos a 0 la cv real que se calculará después aplicando la orientación de fibras y la velocidad respecto al frente o al origen
+
 
     this.di = caseParams.di_Sana;
     if(this.tipo == 1)
       this.di = caseParams.di_BZ;
-      
+
     this.tvida = 0; // Tiempo acumulado de vida desde que se activa la célula
     this.end_time = INFINITO; // Tiempo en el cual se desactiva la célula
     this.start_time = INFINITO; // Tiempo en el cual se ha activado la célula
@@ -91,9 +91,9 @@ class Node3{
     this.t_proxima_desactivacion = INFINITO; // Tiempo en el cual se desactivará la célula
     this.t_proximo_evento = INFINITO;
     this.sig_evento = null;
-    
+
     this.estimulo_externo = false;
-    
+
     // Obtenemos APD interpolado de la curva de restitución APD
     // En células sanas
     if (tipo == 0){
@@ -102,10 +102,10 @@ class Node3{
         this.apd = cas.spline_Epiapd.interpolate(di)*factorCorrecAPD;
       // Si M
       else if (endo2Epi == 1 )
-        this.apd = cas.spline_Mapd.interpolate(di)*factorCorrecAPD; 
+        this.apd = cas.spline_Mapd.interpolate(di)*factorCorrecAPD;
       // Si Endo
-      else 
-        this.apd = cas.spline_Endoapd.interpolate(di)*factorCorrecAPD; 
+      else
+        this.apd = cas.spline_Endoapd.interpolate(di)*factorCorrecAPD;
     }
     // Si BZ
     else if (tipo == 1){
@@ -114,12 +114,12 @@ class Node3{
         this.apd = cas.spline_Epiapd_BZ.interpolate(di)*factorCorrecAPD;
       // Si M
       else if (endo2Epi == 1 )
-        this.apd = cas.spline_Mapd_BZ.interpolate(di)*factorCorrecAPD; 
+        this.apd = cas.spline_Mapd_BZ.interpolate(di)*factorCorrecAPD;
       // Si Endo
-      else 
-        this.apd = cas.spline_Endoapd_BZ.interpolate(di)*factorCorrecAPD; 
+      else
+        this.apd = cas.spline_Endoapd_BZ.interpolate(di)*factorCorrecAPD;
     }
-    // Si Core ponemos el valor de apd a 0 para que al generar los archivos case que usan todos los nodos, el Core esté desactivado a 0 y no falle al acceder al valor apd 
+    // Si Core ponemos el valor de apd a 0 para que al generar los archivos case que usan todos los nodos, el Core esté desactivado a 0 y no falle al acceder al valor apd
     else if (tipo == 2)
       this.apd = 0.0;
 
@@ -133,7 +133,7 @@ class Node3{
     this.normal_frente = new PVector();
     this.n_activadores = 0;
     this.min_potencial = caseParams.min_pot_act;
-    
+
     // Calculamos la velocidad de la conducción para células sanas
     if (tipo == 0){
       // Si Epi
@@ -141,32 +141,32 @@ class Node3{
         cv = cas.spline_Epicv.interpolate(di);
       // Si M
       else if (endo2Epi == 1 )
-        cv = cas.spline_Mcv.interpolate(di); 
+        cv = cas.spline_Mcv.interpolate(di);
       // Si Endo
-      else 
-        cv = cas.spline_Endocv.interpolate(di); 
-    }  
-    // Si célula tipo BZ calculamos la velocidad de la conducción 
+      else
+        cv = cas.spline_Endocv.interpolate(di);
+    }
+    // Si célula tipo BZ calculamos la velocidad de la conducción
     else if (tipo == 1) {
       // Si Epi
       if (endo2Epi == 2 )
         cv = (cas.spline_Epicv_BZ.interpolate(di))*factorCorrecCVBZ;
       // Si M
       else if (endo2Epi == 1 )
-        cv = (cas.spline_Mcv_BZ.interpolate(di))*factorCorrecCVBZ; 
+        cv = (cas.spline_Mcv_BZ.interpolate(di))*factorCorrecCVBZ;
       // Si Endo
-      else 
-        cv = (cas.spline_Endocv_BZ.interpolate(di))*factorCorrecCVBZ; 
+      else
+        cv = (cas.spline_Endocv_BZ.interpolate(di))*factorCorrecCVBZ;
     }
     //Peso del apd de los vecinos en el propio apd
-    this.kapd_v = apd_isot_ef; 
+    this.kapd_v = apd_isot_ef;
     this.lpath = 0;
-    
+
     this.esperando = false;
-   
+
   }
 
-  
+
   Evento siguienteEvento(){
     if(sig_evento == null)
       sig_evento = new Evento();
@@ -177,17 +177,17 @@ class Node3{
 
     return sig_evento;
   }
-  
-  
+
+
   float calculaCV(PVector d) {
     // Core no conduce
     if(tipo == 2)
       return 0.0;
-      
+
     // BZ Isotrópico
     if (tipo == 1)
       return cv;
-      
+
     // Sanas anisotrópico
     // cv_t = transversal; cv_l = longitudinal
     float cv_t,cv_l;
@@ -335,13 +335,13 @@ class Node3{
         ev = siguienteEvento();
         // Pasamos el beat de activación del padre inicial a cada nodo que se active, siempre que no sea el padre inicial que genera el beat (init_nodes)
         if (!ac.init_nodes.hasValue(id))
-          current_act_beat = pdr.current_act_beat;  
+          current_act_beat = pdr.current_act_beat;
         updated = true;
-        
+
         if(in_beat < beat  && ac.detecta_reentradas) // Añadir gestión de la reentrada más larga
           println("            REENTRADA?!?!?!  latido(AC) =", ac.num_beat, " in =",in_beat, " cur =",beat);
-        
-        
+
+
       } else {
         // Estamos activos. Hay que comprobar si ya está repolarizado
         // En este caso, no se genera el evento, que se generará al desactivar
@@ -364,10 +364,10 @@ class Node3{
 
     return ev;
   }
-  
-  
+
+
   Evento desactivar(){
-    
+
     Evento ev = null;
       tvida = 0;
       last_start_time = start_time;
@@ -385,7 +385,7 @@ class Node3{
         estado = 0; // Si ya hay tiempo de activación, pasamos a "en espera".
         t_proximo_evento = t_proxima_activacion;
         ev = siguienteEvento();
-      } 
+      }
       else {
         estado = -1;
         t_proxima_desactivacion = INFINITO;
@@ -398,17 +398,17 @@ class Node3{
 
     return ev;
   }
-  
-  
+
+
   void calcularActivacion() {
     // En la primera activación no calculamos el DI, ni APD memory porque no hay datos previos
     // Cuando se lance un estímulo y la célula ya se haya activado una vez, entonces
     // se calcula, usando información de la activación anterior.
-    
+
     // Si segunda o siguientes activaciones ya calculamos media vecinos y memoria APD
     if(end_time != INFINITO){ // Primera activación no entramos
       di = tiempo_transcurrido - end_time;
-      
+
       // Calcular el nuevo apd en funcion del di
       float new_apd = 0;
       // Si células sanas
@@ -418,10 +418,10 @@ class Node3{
           new_apd = cas.spline_Epiapd.interpolate(di)*factorCorrecAPD;
         // Si M
         else if (endo2Epi == 1)
-          new_apd = cas.spline_Mapd.interpolate(di)*factorCorrecAPD; 
+          new_apd = cas.spline_Mapd.interpolate(di)*factorCorrecAPD;
         // Si Endo
         else {
-          new_apd = cas.spline_Endoapd.interpolate(di)*factorCorrecAPD; 
+          new_apd = cas.spline_Endoapd.interpolate(di)*factorCorrecAPD;
         }
       }
       // Si BZ
@@ -431,15 +431,15 @@ class Node3{
           new_apd = cas.spline_Epiapd_BZ.interpolate(di)*factorCorrecAPD;
         // Si M
         else if (endo2Epi == 1)
-          new_apd = cas.spline_Mapd_BZ.interpolate(di)*factorCorrecAPD; 
+          new_apd = cas.spline_Mapd_BZ.interpolate(di)*factorCorrecAPD;
         // Si Endo
-        else 
-          new_apd = cas.spline_Endoapd_BZ.interpolate(di)*factorCorrecAPD; 
+        else
+          new_apd = cas.spline_Endoapd_BZ.interpolate(di)*factorCorrecAPD;
       }
-          
+
       // APD Memory
       new_apd = caseParams.apd_memory*apd + (1-caseParams.apd_memory)*new_apd;
-      
+
       // Efecto electrotónico
       // Ajustar el nuevo apd en funcion del apd_medio de los vecinos
       float apd_medio = 0.0;
@@ -454,13 +454,13 @@ class Node3{
               vecMedia++;
           }
         }
-        
+
         if(vecMedia == 0)
           apd_medio = new_apd;
         else
           apd_medio/=vecMedia;
       }
-      
+
       apd = new_apd*(1-kapd_v) + apd_medio*kapd_v;
       // Guardamos datos para obtener APD Máximo alcanzado en cada beat
       if(apd > apdMAX){
@@ -470,7 +470,7 @@ class Node3{
         tiempo_transcurridoMAX = tiempo_transcurrido;
         idMAX = id;
       }
-      
+
       // Calculamos velocidad de la conducción en sanas y BZ
       float new_cv = 0;
       // Si sanas
@@ -480,10 +480,10 @@ class Node3{
           new_cv = cas.spline_Epicv.interpolate(di);
         // Si M
         else if (endo2Epi == 1 )
-          new_cv = cas.spline_Mcv.interpolate(di); 
+          new_cv = cas.spline_Mcv.interpolate(di);
         // Si Endo
-        else 
-          new_cv = cas.spline_Endocv.interpolate(di); 
+        else
+          new_cv = cas.spline_Endocv.interpolate(di);
       }
       // Si BZ
       else if (tipo == 1){
@@ -492,15 +492,15 @@ class Node3{
           new_cv = (cas.spline_Epicv_BZ.interpolate(di))*factorCorrecCVBZ;
         // Si M
         else if (endo2Epi == 1 )
-          new_cv = (cas.spline_Mcv_BZ.interpolate(di))*factorCorrecCVBZ; 
+          new_cv = (cas.spline_Mcv_BZ.interpolate(di))*factorCorrecCVBZ;
         // Si Endo
-        else 
+        else
           new_cv = (cas.spline_Endocv_BZ.interpolate(di))*factorCorrecCVBZ;
-      }  
+      }
 
       //if (new_cv < caseParams.vel_suelo)//Suelo de vel para no obtener datos irreales
         //new_cv = caseParams.vel_suelo;
-      
+
       // CV memory
       cv = cv_memory*cv + (1-cv_memory)*new_cv;
     }
@@ -514,10 +514,10 @@ class Node3{
           new_apd = cas.spline_Epiapd.interpolate(di)*factorCorrecAPD;
         // Si M
         else if (endo2Epi == 1 )
-          new_apd = cas.spline_Mapd.interpolate(di)*factorCorrecAPD; 
+          new_apd = cas.spline_Mapd.interpolate(di)*factorCorrecAPD;
         // Si Endo
-        else 
-          new_apd = cas.spline_Endoapd.interpolate(di)*factorCorrecAPD; 
+        else
+          new_apd = cas.spline_Endoapd.interpolate(di)*factorCorrecAPD;
       }
       // Si BZ
       else if (tipo == 1){
@@ -526,10 +526,10 @@ class Node3{
           new_apd = cas.spline_Epiapd_BZ.interpolate(di)*factorCorrecAPD;
         // Si M
         else if (endo2Epi == 1 )
-          new_apd = cas.spline_Mapd_BZ.interpolate(di)*factorCorrecAPD; 
+          new_apd = cas.spline_Mapd_BZ.interpolate(di)*factorCorrecAPD;
         // Si Endo
-        else 
-          new_apd = cas.spline_Endoapd_BZ.interpolate(di)*factorCorrecAPD; 
+        else
+          new_apd = cas.spline_Endoapd_BZ.interpolate(di)*factorCorrecAPD;
       }
 
       // Efecto electrotónico
@@ -545,15 +545,15 @@ class Node3{
               vecMedia++;
           }
         }
-        
+
         if(vecMedia == 0)
           apd_medio = new_apd;
         else
           apd_medio/=vecMedia;
       }
-      
+
       apd = new_apd*(1-kapd_v) + apd_medio*kapd_v;
-      
+
       // Calculamos la velocidad de la conducción en sanas y BZ
       if(tipo == 0){
         // Si Epi
@@ -561,10 +561,10 @@ class Node3{
           cv = cas.spline_Epicv.interpolate(di);
         // Si M
         else if (endo2Epi == 1 )
-          cv = cas.spline_Mcv.interpolate(di); 
+          cv = cas.spline_Mcv.interpolate(di);
         // Si Endo
-        else 
-          cv = cas.spline_Endocv.interpolate(di); 
+        else
+          cv = cas.spline_Endocv.interpolate(di);
       }
        // Si célula tipo BZ
       else if(tipo == 1) {
@@ -573,22 +573,22 @@ class Node3{
           cv = cas.spline_Epicv_BZ.interpolate(di);
         // Si M
         else if (endo2Epi == 1 )
-          cv = cas.spline_Mcv_BZ.interpolate(di); 
+          cv = cas.spline_Mcv_BZ.interpolate(di);
         // Si Endo
-        else 
+        else
           cv = cas.spline_Endocv_BZ.interpolate(di);
       }
       //if (cv < caseParams.vel_suelo)//Suelo de vel para no obtener datos irreales
         //cv = caseParams.vel_suelo;
     }
   }
-  
+
   void activar(){
     // Función de activar en el caso iterativo por eventos
-    
+
     start_time = tiempo_transcurrido;
     periodo_activacion = start_time - last_start_time;
-    
+
     calcularActivacion();
 
     estado = 2;
@@ -601,8 +601,8 @@ class Node3{
       ac.first = this;
     }
   }
-  
-  // Función de activar en el caso iterativo por eventos para bloque. Fija APD muy corto fijo y velocidad muy baja a 
+
+  // Función de activar en el caso iterativo por eventos para bloque. Fija APD muy corto fijo y velocidad muy baja a
   // todas las celdas del bloque por igual, aunque estén activadas
   void activar_BLK(EventQueue pq){
     // Desactivamos las celdas activadas antes de activarlas de nuevo para inicializar variables correctamente
@@ -632,18 +632,18 @@ class Node3{
     di = tiempo_transcurrido - end_time;
     apd = 125; // APD Fijo
     potencial += 1.0;
-    
+
     //OPT 1 CV FIJO
     //cv = 0.0012; // CV Fijo???
-    
+
     //OPT 2 CV Sano Endo Curva de Restitución
     cv = cas.spline_Endocv.interpolate(di);
     /*
     //OPT 3 CV con Memory Sano Endo Curva de Restitución
-    float new_cv = cas.spline_Endocv.interpolate(di); 
+    float new_cv = cas.spline_Endocv.interpolate(di);
     cv = cv_memory*cv + (1-cv_memory)*new_cv;
     */
-    
+
     estado = 2;
     t_proxima_activacion = INFINITO;
     t_proxima_desactivacion = tiempo_transcurrido + apd;
@@ -665,13 +665,13 @@ class Node3{
             PVector d = Lprv.get(i);
             float dist = Ldv.get(i);
             Evento ev = vec.propaga_activacion(this,this.lpath+dist,this.beat);
-            
+
             if(ev != null) {
               pq.add(ev); // NEW_PQ: check
               inact.append(i);
             }
           }
-      } 
+      }
       if(inact.size() > 0 ){
         float potnc = 1.0/inact.size();
         for(int i : inact) {
@@ -682,9 +682,9 @@ class Node3{
       pq.add(this.siguienteEvento()); // NEW_PQ: check
   }
 
-  // incluir en activa bloque el recorrer los vecinos y pasarle a la función la lista de prioridad para añadir directamete los eventos 
+  // incluir en activa bloque el recorrer los vecinos y pasarle a la función la lista de prioridad para añadir directamete los eventos
   void dispara_evento(Evento e,EventQueue pq){
-    
+
     if(tiempo_transcurrido == t_proxima_activacion )
     {
       if(estado != 0 || e.st != 0)
@@ -698,30 +698,30 @@ class Node3{
         return;
       }
       // Solo si el nodo a activar pertenece a la lista de init_nodes, inicializamos el valor al tiempo de beat actual, porque no tienen padres de activación
-      // Y comprobamos que no lo está activando una reentrada, en tal caso el valor anterior de current_act_beat sería igual al beat actual LastStimTime (siempre que 
+      // Y comprobamos que no lo está activando una reentrada, en tal caso el valor anterior de current_act_beat sería igual al beat actual LastStimTime (siempre que
       // la reentrada ocurra después del último estímulo), en tal caso no se modifica el current_beat porque debe seguir siendo el último guardado
       if (ac.init_nodes.hasValue(id)){
         //println("ID INIT NODE: ", id);
         if (current_act_beat != ac.LastStimTime)
           current_act_beat = ac.LastStimTime; // Guardamos el tiempo del estímulo actual
-        
-        // Avisamos solo en el primer nodo init que lo detecte para que contador de ciclos de reentrada sea correcto. Para ello descartamos si contador ciclo 
+
+        // Avisamos solo en el primer nodo init que lo detecte para que contador de ciclos de reentrada sea correcto. Para ello descartamos si contador ciclo
         // de reentrada dentro de los siguientes 100 ms, ya que serán los nodos vecinos y pertenecerán al mismo ciclo ya contado
-        // tCountNodesReen se inicializa a infinito y después se actualiza en cada ciclo a tiempo transcurrido 
+        // tCountNodesReen se inicializa a infinito y después se actualiza en cada ciclo a tiempo transcurrido
         else if (tiempo_transcurrido - tCountNodesReen < 0 ||  tiempo_transcurrido - tCountNodesReen > 100){
           println("EN MISMO BEAT SE HAN VUELTO A ACTIVAR NODOS INICIALES SIN ESTÍMULO NUEVO - POSIBLE REENTRADA EN t:", tiempo_transcurrido);
           if (multiSim)
             outputSims.println("\nEN MISMO BEAT SE HAN VUELTO A ACTIVAR NODOS INICIALES SIN ESTÍMULO NUEVO - POSIBLE REENTRADA EN t " + tiempo_transcurrido +" Y Beat " + current_act_beat);
           tCountNodesReen = tiempo_transcurrido;
           countNodesReen++;
-          
+
         }
       }
       activar();
       // Contamos las celdas vecinas inactivas.
       // Vamos a repartir el potencial de acción entre ellas
       IntList inact = new IntList();
-      
+
       for (int i=0;i<Lv.size();i++){
         Node3 vec = Lv.get(i);
         // Excluimos activar celulas vecinas del core para evitar cálculos
@@ -736,21 +736,21 @@ class Node3{
             if(tipo == 1)
               tav = dist / cv;
             //Zona Sana Anisotropico
-            else { 
+            else {
               float vel_calc = calculaCV(d);
               tav = dist / vel_calc; // tiempo de activación del vecino = distancia al vecino / la velocidad de conducción de la propia celda obtenido a partir de su di
               //println("VEL CALC: ", vel_calc);
             }
             */
             Evento ev = vec.propaga_activacion(this,this.lpath+dist,this.beat);
-            
+
             if(ev != null) {
               pq.add(ev);  // NEW_PQ: check
               inact.append(i);
             }
           }
         }
-        
+
         if(inact.size() > 0 ){
           float potnc = 1.0/inact.size() * this.safety_factor;
           for(int i : inact) {
@@ -758,7 +758,7 @@ class Node3{
           }
         }
       estimulo_externo = false;
-      
+
       pq.add(this.siguienteEvento()); // NEW_PQ: check
 
     }
@@ -770,10 +770,10 @@ class Node3{
       if( ev != null )
         pq.add(ev); // NEW_PQ: check
     }
-      
+
   }
 
-  
+
   // Método para crear lista de vecinos de cada nodo
   void add_vecino(Node3 v){
       PVector d = PVector.sub(v.pos, pos);
@@ -781,11 +781,11 @@ class Node3{
       Ldv.append(d.mag());    // dst al vecino
       Lv.add(v);
       Lcv.append(1);
-    
+
   }
-  
+
   // Comprueba que no haya repetidos en l
-  
+
   IntList getPath(){
     Node3 aux = this;
     IntList l = new IntList();
@@ -801,22 +801,22 @@ class Node3{
     }
     return l;
   }
-  
-     
-  
+
+
+
   void chusca_catheter(float radio_catheter, float dist ){
-   
+
     for (int i=0;i<Lv.size();i++){
        Node3 hijo = Lv.get(i);
        if (dist + Ldv.get(i) < radio_catheter && !ac.init_nodes.hasValue(hijo.id)){
            ac.init_nodes.appendUnique(hijo.id);
-           hijo.chusca_catheter(radio_catheter,dist+Ldv.get(i));        
+           hijo.chusca_catheter(radio_catheter,dist+Ldv.get(i));
        }
-     }     
+     }
   }
- 
+
 }
 
 
-    
-  
+
+

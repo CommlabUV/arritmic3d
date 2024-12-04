@@ -8,7 +8,7 @@ class FileParams{
     IntList   ids_extraIMulti = new IntList(); // Lista con id's de nodos iniciales de activación Multi
     FloatList delays_extraIMulti = new FloatList(); // Lista con delays de nodos iniciales de activación Multi
     ArrayList<PVector> dirProp_extraIMulti = new ArrayList(); // Lista con vectores XYZ de dirección de propagación de de nodos iniciales de activación Multi
-    String    fileName_MultiIDs_extraI; 
+    String    fileName_MultiIDs_extraI;
     float     voxel_size;
     float     tam_frente;
     Boolean   grid_enable;
@@ -27,7 +27,7 @@ class FileParams{
     int       rango_min;
     float     radio_cateter; // Radio del cateter de pacing para definir num de nodos iniciales de estímulos
     float     min_pot_act; // Potencial de activación mínimo para que una celda se active
-    
+
     float     di_Sana; // Intervalo diastólico célula sana  DI ->200 (APD - 285 CV - 0.67)
     float     di_BZ ;  // Intervalo diastólico célula BZ. Le reducimos de la sana, ya que el APD es más largo
 
@@ -35,16 +35,16 @@ class FileParams{
     float     stimFrecS2; // Frecuencia de estimulo S2 S3
     int       nStimsS1;
     int       nStimsS2;
-    
+
     float     apd_varBZ; // Aumentamos un 20% el APD de la BZ
     float     vel_suelo; // Velocidad suelo para uqe no baje por debajo de tiempos no correctos
     float     apd_memory; // % Memoria AOD
     float     cv_memory;  // % Memoria CV
     float     reductCVtr; // 0.38% de la CV longitudinal a aplicar en transversal
     float     apd_isot_ef; //Efecto electrotónico. % que afecta
-    
-    PVector   direccion_fibras_bloque; 
-    
+
+    PVector   direccion_fibras_bloque;
+
     // Multi simulación (Listas con los distintos parámetros a simular en una misma ejecución)
     boolean       multiSim;
     FloatList     id_extraIMulti;
@@ -56,13 +56,13 @@ class FileParams{
     FloatList     apd_isot_efMulti;//Efecto electrotónico. % que afecta
 
 
-    
+
     FileParams(String caseFile){
-      
+
        BufferedReader reader = createReader(caseFile+"params.dat");
-       println("Parametros cargados: ");    
+       println("Parametros cargados: ");
         try {
-          
+
           model_file       =  parse_param(reader.readLine());
           hay_mesh         =  boolean(parse_param(reader.readLine()));
           grid_enable      =  boolean(parse_param(reader.readLine()));
@@ -98,7 +98,7 @@ class FileParams{
           reductCVtr       =  float(parse_param(reader.readLine()));
           apd_isot_ef      =  float(parse_param(reader.readLine()));
           direccion_fibras_bloque = parse_PVector(parse_param(reader.readLine()));
-          
+
           //Multi Simulación
           multiSim         =  boolean(parse_param(reader.readLine()));
           id_extraIMulti   =  parse_FloatList(parse_param(reader.readLine()));
@@ -108,7 +108,7 @@ class FileParams{
           nStimsS2Multi    =  parse_FloatList(parse_param(reader.readLine()));
           cv_memoryMulti   =  parse_FloatList(parse_param(reader.readLine()));
           apd_isot_efMulti =  parse_FloatList(parse_param(reader.readLine()));
-          
+
           reader.close();
           println("Leido Fichero de parametros: ", caseFile);
          }
@@ -121,11 +121,11 @@ class FileParams{
          // Si variable a true pero no han escrito el nombre del archivo ponemos la variable a false para que no se ejecute la activación del frente
          else if (active_MultiIDs_extraI)
            active_MultiIDs_extraI = false;
-           
-         
-            
+
+
+
     }
-    
+
     void readInitNodesMulti(String caseFile){
       print("Path: ", caseFile+fileName_MultiIDs_extraI);
       BufferedReader readerInitNodesMulti = createReader(caseFile+fileName_MultiIDs_extraI);
@@ -143,11 +143,11 @@ class FileParams{
           e.printStackTrace();
       }
     }
-    
+
     String parse_param(String line){
-      
+
       println("  |-> "+line);
-      if (line != null){ 
+      if (line != null){
             String[] params = split(line, ':');
             if (params.length == 2)
               return (params[1].trim());
@@ -156,42 +156,42 @@ class FileParams{
       }
       return null;
     }
-    
+
     PVector parse_PVector(String line){
-      
+
       println("  |-> "+line);
-      if (line != null){ 
+      if (line != null){
             String[] params = split(line, ':');
             String svec = params[0];
-            String[] vec = split(svec, ','); 
+            String[] vec = split(svec, ',');
             return new PVector(float(vec[0]), float(vec[1]), float(vec[2]));
       }
       return null;
     }
-    
+
     FloatList parse_FloatList(String line){
-      
+
       println("  |-> "+line);
-      if (line != null){ 
+      if (line != null){
             FloatList values = new FloatList();
             String[] params = split(line, ':');
             String svec = params[0];
-            String[] vec = split(svec, ','); 
+            String[] vec = split(svec, ',');
             for (int i = 0; i < vec.length; i++)
               values.append(float(vec[i]));
             return values;
       }
       return null;
     }
-    
+
     IntList parse_IntList(String line){
-      
+
       println("  |-> "+line);
       if (line != null){
             IntList values = new IntList();
             String[] params = split(line, ':');
             String svec = params[0];
-            String[] vec = split(svec, ','); 
+            String[] vec = split(svec, ',');
             for (int i = 0; i < vec.length; i++)
               values.append(int(vec[i]));
             return values;

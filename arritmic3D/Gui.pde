@@ -1,6 +1,6 @@
 // Añadir el label del caso y el check de multiview
 
-       
+
 import controlP5.*;
 
 ControlP5 gui;
@@ -45,37 +45,37 @@ String  gui_current_state_file = "";
 
 
 
-            
+
 public class InputTest {
   String path;
- 
+
   InputTest() {
     selectInput("Select a file to process:", "fileSelected", dataFile(sketchPath()), this);
   }
- 
+
   void fileSelected(File selection) {
     if (selection == null)
       println("Window was closed or the user hit cancel.");
- 
+
     else if (!selection.isFile())
       println("\"" + selection + "\" is an invalid file.");
- 
+
     else{
         println("Loading state " + (gui_current_state_file = selection.getAbsolutePath()));
-        ac.load_state(new File(gui_current_state_file));  
-    }  
+        ac.load_state(new File(gui_current_state_file));
+    }
 }
 }
 
 class Controles extends PApplet {
-  
+
   RadioButton r1;
   CheckBox chk_blk, chk_cmap,chk_hay_mesh;
   // CheckBox chk_show_path, chk_show_grid;
   PImage imgs;
   color activeC = #1673e5;
-  
- 
+
+
   Controles() {
     super();
     PApplet.runSketch(new String[] {this.getClass().getSimpleName()}, this);
@@ -86,17 +86,17 @@ class Controles extends PApplet {
   }
 
   void setup() {
-   
+
     PFont font = createFont("Ubuntu",13);
     //imgs = loadImage("/tmp/play.png");
     int tam_butt_x = 45;
     int tam_butt_y = 28;
-    
+
     gui = new ControlP5(this);
     gui.setFont(font);
-    
+
     gui_id_start_cell = caseParams.id_extraI;
-    
+
     // Input data
     gui.addTextfield("frec_s1")
      .setPosition(20,25)
@@ -109,7 +109,7 @@ class Controles extends PApplet {
      .setColorLabel(color(0))
      .setAutoClear(false)
      ;
-   
+
     gui.addTextfield("frec_s2")
      .setPosition(20,80)
      .setSize(70,30)
@@ -121,7 +121,7 @@ class Controles extends PApplet {
      .setColorLabel(color(0))
      .setAutoClear(false)
      ;
-    
+
     gui.addTextfield("num_s1")
      .setPosition(120,25)
      .setSize(40,30)
@@ -133,7 +133,7 @@ class Controles extends PApplet {
      .setColorLabel(color(0))
      .setAutoClear(false)
      ;
-   
+
     gui.addTextfield("num_s2")
      .setPosition(120,80)
      .setSize(40,30)
@@ -145,12 +145,12 @@ class Controles extends PApplet {
      .setColorLabel(color(0))
      .setAutoClear(false)
      ;
-    
+
     int altG = 350;
     if (caso == VENT)
       altG = 250;
-      
-    
+
+
     chk_cmap = gui.addCheckBox("color_map")
        .setPosition(20,altG)
        .setSize(15,15)
@@ -165,7 +165,7 @@ class Controles extends PApplet {
        chk_cmap.activate(1);
      else
       chk_cmap.activate(0);
-        
+
     chk_hay_mesh = gui.addCheckBox("show_mesh")
        .setPosition(20,altG+20)
        .setSize(15,15)
@@ -176,12 +176,12 @@ class Controles extends PApplet {
        .setItemsPerRow(1)
        .addItem("Hide mesh",1)
        ;
-       
+
     if (caseParams.hay_mesh)
        chk_hay_mesh.activate(1);
     else
        chk_hay_mesh.activate(0);
-       
+
    float dt_ini = caseParams.dt;
    gui.addSlider("dt")
      .setPosition(270,altG)
@@ -191,13 +191,13 @@ class Controles extends PApplet {
      .setColorValue(color(0))
      .setColorLabel(color(0))
      ;
-  
+
    // reposition the Label for controller 'slider'
    gui.getController("dt").getValueLabel().align(ControlP5.LEFT, ControlP5.BOTTOM_OUTSIDE).setPaddingX(0);
    gui.getController("dt").getCaptionLabel().align(ControlP5.RIGHT, ControlP5.BOTTOM_OUTSIDE).setPaddingX(0);
-  
-    
-         
+
+
+
     /*
     chk_show_path = gui.addCheckBox("show_path")
        .setPosition(20,330)
@@ -208,7 +208,7 @@ class Controles extends PApplet {
        .setItemsPerRow(1)
        .addItem("Show path",1)
        ;
-       
+
     chk_show_grid = gui.addCheckBox("show_grid")
        .setPosition(20,350)
        .setSize(15,15)
@@ -219,9 +219,9 @@ class Controles extends PApplet {
        .addItem("Show grid",1)
        ;
     */
-     
-   if (caso == BLOQUE_VTK){  
-     
+
+   if (caso == BLOQUE_VTK){
+
      gui.addTextfield("h_delay")
        .setPosition(285,55)
        .setSize(tam_butt_x,tam_butt_y)
@@ -232,7 +232,7 @@ class Controles extends PApplet {
        .setColorLabel(color(0))
        .setAutoClear(false)
        ;
-       
+
        gui.addTextfield("frec_horiz")
        .setPosition(385,55)
        .setSize(tam_butt_x,tam_butt_y)
@@ -243,7 +243,7 @@ class Controles extends PApplet {
        .setColorLabel(color(0))
        .setAutoClear(false)
        ;
-       
+
        gui.addTextfield("v_delay")
        .setPosition(285,110)
        .setSize(tam_butt_x,tam_butt_y)
@@ -254,7 +254,7 @@ class Controles extends PApplet {
        .setColorLabel(color(0))
        .setAutoClear(false)
        ;
-       
+
        gui.addTextfield("frec_vert")
        .setPosition(385,110)
        .setSize(tam_butt_x,tam_butt_y)
@@ -265,7 +265,7 @@ class Controles extends PApplet {
        .setColorLabel(color(0))
        .setAutoClear(false)
        ;
-       
+
         gui.addTextfield("id_start_node")
        .setPosition(285,210)
        .setSize(int(tam_butt_x*1.5),tam_butt_y)
@@ -276,7 +276,7 @@ class Controles extends PApplet {
        .setColorLabel(color(0))
        .setAutoClear(false)
        ;
-       
+
        /*
        gui.addTextfield("y")
        .setPosition(385,210)
@@ -289,7 +289,7 @@ class Controles extends PApplet {
        .setAutoClear(false)
        ;
        */
-       
+
         gui.addTextfield("p_delay")
        .setPosition(285,265)
        .setSize(tam_butt_x,tam_butt_y)
@@ -311,7 +311,7 @@ class Controles extends PApplet {
        .setColorLabel(color(0))
        .setAutoClear(false)
        ;
-       
+
         gui.addTextfield("Num_node_X")
        .setPosition(30,265)
        .setSize(tam_butt_x,tam_butt_y)
@@ -322,7 +322,7 @@ class Controles extends PApplet {
        .setColorLabel(color(0))
        .setAutoClear(false)
        ;
-       
+
        gui.addTextfield("Num_node_Y")
        .setPosition(130,265)
        .setSize(tam_butt_x,tam_butt_y)
@@ -333,11 +333,11 @@ class Controles extends PApplet {
        .setColorLabel(color(0))
        .setAutoClear(false)
        ;
-       
-       // RadioButtons : Activación frente vs punto 
-      
-      
-           
+
+       // RadioButtons : Activación frente vs punto
+
+
+
        r1 = gui.addRadioButton("radioButton")
            .setPosition(260,30)
            .setSize(15,15)
@@ -352,7 +352,7 @@ class Controles extends PApplet {
            .addItem("Activar Punto",0)
            .activate(1)
            ;
-           
+
       chk_blk = gui.addCheckBox("checkBox")
            .setPosition(20,185)
            .setSize(15,15)
@@ -363,12 +363,12 @@ class Controles extends PApplet {
            .setItemsPerRow(1)
            .addItem("Activar Bloque",0)
            ;
-    
-           
+
+
    }   //  Fin Ctroles Bloque_vtk
    else
    if (caso == VENT){
-     
+
      r1 = gui.addRadioButton("radioButton")
              .setPosition(260,30)
              .setSize(15,15)
@@ -378,7 +378,7 @@ class Controles extends PApplet {
              .setColorLabel(color(0))
              .addItem("multi_view",1)
              ;
-             
+
       gui.addTextfield("id_start_node")
        .setPosition(260,80)
        .setSize(tam_butt_x*2,tam_butt_y)
@@ -388,9 +388,9 @@ class Controles extends PApplet {
        .setColorActive(color(255))
        .setColorLabel(color(0))
        .setAutoClear(false)
-       ; 
+       ;
   }
-  
+
    PFont fontInst = createFont("Ubuntu",15);
    gui.addTextlabel("Inst1")
       .setText("- Press Enter key after editing values in text fields \n\n- Press Init button to start simulation \n\n- Press Pause / Play buttons to pause and restart simulation \n\n- Edited values only apply if multiSim param to False")
@@ -398,11 +398,11 @@ class Controles extends PApplet {
       .setColorValue(0)
       .setFont(fontInst)
       ;
-   
-   
+
+
    int altura_player = 540;
    int offset_x_player = 110;
-   
+
    gui.addButton("play")
      .setBroadcast(false)
      .setValue(128)
@@ -413,7 +413,7 @@ class Controles extends PApplet {
      .updateSize()
      .setBroadcast(true)
      ;
-   
+
    gui.addButton("pause")
      .setBroadcast(false)
      .setValue(128)
@@ -424,7 +424,7 @@ class Controles extends PApplet {
      .updateSize()
      .setBroadcast(true)
      ;
-  
+
   gui.addButton("init")
      .setBroadcast(false)
      .setValue(128)
@@ -436,7 +436,7 @@ class Controles extends PApplet {
      .updateSize()
      .setBroadcast(true)
      ;
-  /* 
+  /*
   gui.addButton("save")
      .setBroadcast(false)
      .setValue(128)
@@ -447,7 +447,7 @@ class Controles extends PApplet {
      .updateSize()
      .setBroadcast(true)
      ;
-     
+
    gui.addButton("load")
      .setBroadcast(false)
      .setValue(128)
@@ -458,7 +458,7 @@ class Controles extends PApplet {
      .updateSize()
      .setBroadcast(true)
      ;
-     
+
     gui.addTextfield("draw_each_n")
      .setPosition(270,390)
      .setSize(25,30)
@@ -470,7 +470,7 @@ class Controles extends PApplet {
      .setAutoClear(false)
      ;
      */
-    
+
   }
 
   void draw() {
@@ -483,49 +483,49 @@ class Controles extends PApplet {
   void mousePressed() {
    // println("mousePressed in secondary window");
   }
-  
+
   ///////////////////////////////////////////////////////////////////
 
   //   CB
-  
+
   ////////////////////////////////////////////////////////////////////
-  
+
   void controlEvent(ControlEvent theEvent) {
     if(theEvent.isAssignableFrom(Textfield.class)) {
       println("controlEvent: accessing a string from controller '"
               +theEvent.getName()+"': "
               +theEvent.getStringValue()
               );
-              
+
               if (theEvent.getName() == "frec_s1") {
                 stimFrecS1 = float(theEvent.getStringValue());
                 ac.NextStimTime = stimFrecS1;
               }
-              if (theEvent.getName() == "frec_s2") 
+              if (theEvent.getName() == "frec_s2")
                 stimFrecS2 = float(theEvent.getStringValue());
-                
-              if (theEvent.getName() == "num_s1") 
+
+              if (theEvent.getName() == "num_s1")
                 nStimsS1 = int(theEvent.getStringValue());
-                              
-              if (theEvent.getName() == "num_s2") 
+
+              if (theEvent.getName() == "num_s2")
                 nStimsS2 = int(theEvent.getStringValue());
-               
+
               /*
-              if (theEvent.getName() == "draw_each_n") 
+              if (theEvent.getName() == "draw_each_n")
                 caseParams.pinta_cada_n = int(theEvent.getStringValue());
-              */        
-              
+              */
+
               if (theEvent.getName() == "id_start_node" )
                 gui_id_start_cell = int(theEvent.getStringValue());
-              
-              if (caso == BLOQUE_VTK){       
+
+              if (caso == BLOQUE_VTK){
                     if (theEvent.getName() == "frec_horiz" )
                         gui_stimFrec_hz = float(theEvent.getStringValue());
                     if (theEvent.getName() == "frec_vert" )
                         gui_stimFrec_vt = float(theEvent.getStringValue());
                     //if (theEvent.getName() == "y" )
                     //    gui_yfoco = int(theEvent.getStringValue());
-                    
+
                     if (theEvent.getName() == "v_delay" )
                         gui_vdelay = float(theEvent.getStringValue());
                     if (theEvent.getName() == "h_delay" )
@@ -554,83 +554,83 @@ class Controles extends PApplet {
       caseParams.dt = theEvent.getValue();
       ac.frame_time = theEvent.getValue();
     }
-      
+
     if (caso == BLOQUE_VTK){
       // Frente
       if(theEvent.isFrom(r1)) {
-     
+
         //for(int i=0;i<theEvent.getGroup().getArrayValue().length;i++) {
           //gui_activation_mode = int(theEvent.getGroup().getArrayValue()[i]);
           gui_activation_mode = int(r1.getValue());
         //}
-       
+
        println("Activation mode: ", gui_activation_mode);
-       
+
       }
       // Bloque central
       else
       if(theEvent.isFrom(chk_blk)) {
-     
-        for(int i=0;i<theEvent.getGroup().getArrayValue().length;i++) 
-          gui_blk_activated = int(theEvent.getGroup().getArrayValue()[i]); 
-       
+
+        for(int i=0;i<theEvent.getGroup().getArrayValue().length;i++)
+          gui_blk_activated = int(theEvent.getGroup().getArrayValue()[i]);
+
          println("Activated Block: ", gui_blk_activated);
-       
+
       }
-      
+
     }
     else
-    
+
     if (caso == VENT){
       if(theEvent.isFrom(r1)) {
         caseParams.multi_view = !caseParams.multi_view;
         println("gui_multi_view mode: ", caseParams.multi_view);
-       
+
       }
-    
+
     }
-    
-   if(theEvent.isFrom(chk_cmap)) {    
-         caseParams.show_cmap = !caseParams.show_cmap; 
+
+   if(theEvent.isFrom(chk_cmap)) {
+         caseParams.show_cmap = !caseParams.show_cmap;
          println("Show Map: ", caseParams.show_cmap);
       }
-      
-   if(theEvent.isFrom(chk_hay_mesh)) {    
-         caseParams.hay_mesh = !caseParams.hay_mesh; 
+
+   if(theEvent.isFrom(chk_hay_mesh)) {
+         caseParams.hay_mesh = !caseParams.hay_mesh;
          println("Show Mesh: ", caseParams.hay_mesh);
       }
    /*
-   if(theEvent.isFrom(chk_show_path)) {    
-         caseParams.show_path = !caseParams.show_path; 
+   if(theEvent.isFrom(chk_show_path)) {
+         caseParams.show_path = !caseParams.show_path;
          println("Show Path clicked: ", caseParams.show_path);
    }
-      
-   if(theEvent.isFrom(chk_show_grid) && (grid != null)) {   
-         caseParams.grid_enable = !caseParams.grid_enable; 
+
+   if(theEvent.isFrom(chk_show_grid) && (grid != null)) {
+         caseParams.grid_enable = !caseParams.grid_enable;
          println("Show Grid clicked: ", caseParams.grid_enable);
     }
     */
-    
+
   }
-  
+
   public void play(int theValue) {
     gui_play = true;
     gui_pause = false;
   }
-  
+
   public void pause(int theValue) {
     gui_pause = true;
     gui_play = false;
   }
- 
+
   public void init(int theValue) {
     gui_init = true;
   }
-  
+
   public void save(int theValue) {
     gui_save = true;
   }
-  
+
   public void load(int theValue) {
     gui_load = true;
     InputTest it = new InputTest();

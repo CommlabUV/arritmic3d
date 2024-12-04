@@ -18,7 +18,7 @@ class Spline {
             mX = x;
             mY = y;
         }
-       
+
         public float interpolate(float x) {
             final int n = mX.length;
             if (Float.isNaN(x)) {
@@ -30,7 +30,7 @@ class Spline {
             if (x >= mX[n - 1]) {
                 return mY[n - 1];
             }
-            
+
             int i = 0;
             while (x >= mX[i + 1]) {
                 i += 1;
@@ -40,7 +40,7 @@ class Spline {
             }
             return mY[i] + mM[i] * (x - mX[i]);
         }
-      
+
         public String toString() {
             StringBuilder str = new StringBuilder();
             final int n = mX.length;
@@ -60,8 +60,8 @@ class Spline {
             return str.toString();
         }
     }
-    
-    
-    
-    
-     
+
+
+
+
+

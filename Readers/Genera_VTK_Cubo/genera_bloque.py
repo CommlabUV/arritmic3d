@@ -14,23 +14,23 @@ import random
 ##### Requerimiento!!!! Se necesita un archivo params.dat en la raíz de la carpeta del script para que se copie dentro del caso
 
 # Variables para etiquetar zonas Sanas, BZ y Core en número de celdas
-cellsBySideX = 166 # Num celdas en X 
-cellsBySideY = 166 # Num celdas en Y 
+cellsBySideX = 166 # Num celdas en X
+cellsBySideY = 166 # Num celdas en Y
 cellsBySideZ = 1 # Num celdas en Z (Si etiquetado canales, no usar valor 2 porque no generará la capa interior del canal)
 cellSize = 0.3  # El AC funciona en mm
 
-### ETIQUETADO CANALES genera geometría con canal de conducción lenta de BZ rodeado de tejido Core 
-etiquetar_canales = False # Etiquetado para generar geometría con canal de conducción lenta de BZ rodeado de tejido Core 
+### ETIQUETADO CANALES genera geometría con canal de conducción lenta de BZ rodeado de tejido Core
+etiquetar_canales = False # Etiquetado para generar geometría con canal de conducción lenta de BZ rodeado de tejido Core
 ## Variables a definir si etiquetado canales
 altSano = 20    # Num celdas a lo alto de los dos bloques sanos
 altBZ = 25      # Num celdas a lo alto de los dos bloques BZ
-anchoCanal = 3  # Num celdas ancho canal en x. El ancho de canal en z depende del número de capas, 
+anchoCanal = 3  # Num celdas ancho canal en x. El ancho de canal en z depende del número de capas,
                 # siempre deja dos capas exteriores y el resto pertenecn al canal... Ej: capas 5 deja 3 capas de canal, capas 4 deja 2 de canal
 
 
 #### Sino etiquetamos canales, ETIQUETADO HOMOGENEO genera todo el bloque con tejido homogéneo. Mismo tipo de celda y conductividad.
 # Opciones a definir:
-    # endo2epi (tipo de celda) -> endo 0, mid 1, epi 2 
+    # endo2epi (tipo de celda) -> endo 0, mid 1, epi 2
     # tissue (conductividad)  -> sana 0, BZ 1, core 2
 endo2epi = 0
 tissue = 0
@@ -79,9 +79,9 @@ nelements = (max_x-1)*(max_y-1)*(max_z-1)
 data = vtk.vtkUnstructuredGrid()
 data.Allocate(nelements,nelements)
 data.SetPoints(meshPoints)
-for k in range(max_z-1):                   
-    for j in range(max_y-1):              
-        for i in range(max_x-1):          
+for k in range(max_z-1):
+    for j in range(max_y-1):
+        for i in range(max_x-1):
             cell = vtk.vtkHexahedron()
             cell.GetPointIds().SetId(0, (i+1)*(max_y)*(max_z)+j*(max_z)+k)       # upper left front
             cell.GetPointIds().SetId(1, (i+1)*(max_y)*(max_z)+(j+1)*(max_z)+k)   # upper right front
@@ -113,7 +113,7 @@ x = np.zeros(countPuntos)
 y = np.zeros(countPuntos)
 z = np.zeros(countPuntos)
 
-# Copiamos las coordenadas de cada nodo 
+# Copiamos las coordenadas de cada nodo
 for i in range(countPuntos):
         x[i],y[i],z[i] = data.GetPoint(i)
 
@@ -151,9 +151,9 @@ EndoToEpi_cell.SetName("Endo2Epi")
 ############################################################
 
 if etiquetar_canales:
-    ## Esto solo es si tenemos distribución de canales con tejido no homogéneo para generar geometría con canal 
-    ## de conducción lenta de BZ rodeado de tejido Core 
-    # Tipo de celda (EndoToEpi,EndoToEpi_cell): endo 0, mid 1, epi 2 
+    ## Esto solo es si tenemos distribución de canales con tejido no homogéneo para generar geometría con canal
+    ## de conducción lenta de BZ rodeado de tejido Core
+    # Tipo de celda (EndoToEpi,EndoToEpi_cell): endo 0, mid 1, epi 2
     # Conductividad: (scarTissue,type_cell): sana 0, BZ 1, core 2
     for k in range(cellsBySideZ):
         for j in range(cellsBySideY):
@@ -215,7 +215,7 @@ if etiquetar_canales:
                         for l in range (cellPointIds.GetNumberOfIds()):
                             EndoToEpi_cell.InsertValue(cellPointIds.GetId(l),0)
                             scarTissue[cellPointIds.GetId(l)] = 2
-                            EndoToEpi[cellPointIds.GetId(l)] = 0  
+                            EndoToEpi[cellPointIds.GetId(l)] = 0
 
                 # BZ 2
                 elif j <  altSano2:
@@ -296,7 +296,7 @@ for cellId in range(data.GetNumberOfCells()):
             neigh = cellPointIds.GetId(i)
             # Evitamos añadir el mismo nodo como vecino
             if nodoactual != neigh:
-                # Comprobamos que el nodo vecino no se haya añadido desde otra celda y evitar que se duplique en la lista 
+                # Comprobamos que el nodo vecino no se haya añadido desde otra celda y evitar que se duplique en la lista
                 if neigh not in nodos[nodoactual]:
                     nodos[nodoactual].append(neigh)
 

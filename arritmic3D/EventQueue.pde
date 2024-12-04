@@ -5,7 +5,7 @@ class Evento {
   float t;
   int st;
   int pos; // position in the array inside the queue
-  
+
   Evento() {
     id = -1;
     t = 0.0;
@@ -23,17 +23,17 @@ class OrdenaEventos implements Comparator<Evento> {
 }
 
 class EventQueue{
-  
+
   // Attributes
   ArrayList<Evento> tree;
   OrdenaEventos ord;
-  
+
   // public methods
   EventQueue() {
     tree = new ArrayList<Evento>();
     ord = new OrdenaEventos();
   }
-  
+
   void clear() {
     tree.clear();
   }
@@ -45,7 +45,7 @@ class EventQueue{
   int size() {
     return tree.size();
   }
-  
+
   void add(Evento ev) {
     if(ev.pos != -1) {
       if(!update(ev))
@@ -54,7 +54,7 @@ class EventQueue{
     else
       insert(ev);
   }
-    
+
   void insert(Evento ev) {
     tree.add(ev);
     ev.pos = lasti();
@@ -64,13 +64,13 @@ class EventQueue{
   boolean update(Evento ev){
     int i = ev.pos;
     boolean updated = false;
-    
+
     if(ev != tree.get(i)) {
       println(" WARNING-QUEUE: the event has a position, but it is occupied by another event. Inserting it.");
     } else {
       if( i > 0 && lessThan(i, predec(i)) )
         moveUp(i);
-      else if( ( inRange(leftDesc(i)) && lessThan(leftDesc(i),i) ) || 
+      else if( ( inRange(leftDesc(i)) && lessThan(leftDesc(i),i) ) ||
                 ( inRange(rightDesc(i)) && lessThan(rightDesc(i),i) ) )
         moveDown(i);
       updated = true;
@@ -80,7 +80,7 @@ class EventQueue{
 
   Evento updateTime(int pos, float t) {
     Evento ev = null;
-    if( inRange(pos) ) {  
+    if( inRange(pos) ) {
       ev = tree.get(pos);
       float old_t = ev.t;
       if(old_t < t) {
@@ -88,12 +88,12 @@ class EventQueue{
         moveDown(pos);
       } else if(ev.t > t) {
         ev.t = t;
-        moveUp(pos);        
+        moveUp(pos);
       }
     }
     return ev;
   }
-  
+
   Evento poll() {
     Evento first = null;
     if(!isEmpty()) {
@@ -105,7 +105,7 @@ class EventQueue{
     }
     return first;
   }
-  
+
   Evento peek() {
     Evento first = null;
     if(!isEmpty())
@@ -121,45 +121,45 @@ class EventQueue{
   }
 
   // Private methods
-  
+
   private int leftDesc(int i) {
     return i*2 + 1;
   }
-  
+
   private int rightDesc(int i) {
     return i*2 + 2;
   }
-  
+
   private int predec(int i) {
     return (i-1)/2;
   }
-  
+
   private void moveUp(int i) {
     while( i > 0 && lessThan( i, predec(i) ) ) {
       swap(i,predec(i));
       i = predec(i);
     }
   }
-  
+
   private void moveDown(int i) {
     int min = i;
-    
+
     do {
       i = min;
       int ld = leftDesc(i);
       if( inRange(ld) && lessThan(ld,min))
         min = ld;
-        
+
       int rd = rightDesc(i);
       if(inRange(rd) && lessThan(rd,min))
         min = rd;
-        
+
       if( min != i)
         swap(min,i);
-      
-    } while( min != i ); 
+
+    } while( min != i );
   }
-  
+
   private void swap(int i, int j) {
     Evento old_i = tree.get(i);
     tree.set(i,tree.get(j));
@@ -167,7 +167,7 @@ class EventQueue{
 
     tree.set(j,old_i);
     old_i.pos = j;
-    
+
   }
 
   private int lasti() {

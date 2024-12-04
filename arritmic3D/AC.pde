@@ -1,4 +1,4 @@
-import java.util.*;    
+import java.util.*;
 import java.io.File;
 
 
@@ -12,12 +12,12 @@ class Bbox{
 class AC {
 
   ArrayList <Node3> G;
- 
+
   int                 nCeldas;
   IntList             Lab;
   IntList             Lbz;
   EventQueue Labp;
-  
+
   float               max_path, max_st, beat_start_time;
   Node3               first;
   IntList             init_nodes;
@@ -25,28 +25,28 @@ class AC {
   int                 num_beat;
   float               NextStimTime;
   float               LastStimTime;
-  
+
   ArrayList<PVector>  dirs;    // Spatial directions
   IntList             active_dirs;
-  
+
   Node3               map[][][];
   int                 bpl; // bloques por lado
   int                 bplX; // bloques por lado en X
   int                 bplY; // bloques por lado en Y
-  
+
   boolean             detecta_reentradas;
   IntList             re_nodes;
-  
+
   File               current_state_file, current_ev_file;
   String             path, case_path;
   Bbox               bbox;
-  
+
   float             frame_time;
   float             t_next_frame;
   float             t_next_event;
   int               n_cells_updated;
 
-  
+
   // Caso VENT y BLOQUE_VTK
   AC(CaseLoader c){
     if (caso == BLOQUE_VTK){
@@ -65,7 +65,7 @@ class AC {
 
     bbox = new Bbox();
     bbox.center = new PVector();
-    
+
     // Files Path
     path = skecthPath;
     case_path = casePath;
@@ -79,13 +79,13 @@ class AC {
     NextStimTime = stimFrecS1;
     LastStimTime = 0;
     detecta_reentradas = false;
-    
+
     frame_time = caseParams.dt;
     t_next_frame = frame_time;
     n_cells_updated = 0;
 
     println("Construyendo Grafo .... ");
-    
+
     // Se crea el grafo
     for (int id = 0 ; id < nCeldas; id++){
       PVector pos = new PVector(c.X.get(id),c.Y.get(id),c.Z.get(id));
@@ -97,20 +97,20 @@ class AC {
       if (caso == BLOQUE_VTK){
         endo2Epi = c.endo2Epi.get(id);
         //endo2Epi = 0; //// DESCOMENTAR Y DEFINIR SI EL ARCHIVO SCARTISSUE NO ES CORRECTO Y DEFINIMOS TODO EL BLOQUE IGUAL COMO: ENDO 0, MID 1 , EPI 2
-        //tipo = 0; //////// DESCOMENTAR SI DEFINIMOS TODO EL BLOQUE IGUAL COMO: SANA 0, BZ 1 , CORE 2 
+        //tipo = 0; //////// DESCOMENTAR SI DEFINIMOS TODO EL BLOQUE IGUAL COMO: SANA 0, BZ 1 , CORE 2
         tipo = c.cellType.get(id);  //////// COMENTAR SI DEFINIMOS TODO EL BLOQUE IGUAL COMO: SANA 0, BZ 1 , CORE 2
       }
       // Si caso ventrículo leemos el valor etiquetado
       else{
         endo2Epi = c.endo2Epi.get(id);
-        tipo = c.cellType.get(id); 
+        tipo = c.cellType.get(id);
       }
-      
-      // Guardamos lista de BZ para activar ectópicos como estímulos 
+
+      // Guardamos lista de BZ para activar ectópicos como estímulos
       if (tipo == 1)
         Lbz.append(id);
       float P = 0.0;
-      ///// SI BLOQUE_VTK DEFINIMOS ORIENTACIÓN DE FIBRAS 
+      ///// SI BLOQUE_VTK DEFINIMOS ORIENTACIÓN DE FIBRAS
       if (caso == BLOQUE_VTK)
         //or = new PVector(0,1,0);
         or = caseParams.direccion_fibras_bloque;
@@ -119,11 +119,11 @@ class AC {
       // Añadimos la Orient. de Fibras desde los datos leídos txt
       else
         or = new PVector(c.oX.get(id),c.oY.get(id),c.oZ.get(id));
-      
+
       Node3 node = new Node3(id, pos, P, estado, or, or, tipo, endo2Epi);
       G.add(node);
     }
-    
+
     println("Nodos del grafo creados: ",G.size() );
     bbox.center.div(G.size());
     bbox.xmin = c.X.min(); bbox.xmax = c.X.max();
@@ -132,16 +132,16 @@ class AC {
     println("AC-bbox center: ", bbox.center);
     if (caseParams.grid_enable && grid != null)
       grid.setCenter(bbox.center);
-     
+
     // Calculamos safety factor para todas las celdas excepto Core
     calcula_safetyFactor(c);
-    
+
   }
 
   void conecta_vecinos(CaseLoader c){
     float nvec = 0;
- 
-    if (c != null) {  // Caso de fichero  
+
+    if (c != null) {  // Caso de fichero
         for (Node3 N: G){
          for (int id_vec: c.V.get(N.id)){
            Node3 vec = G.get(id_vec);
@@ -154,11 +154,11 @@ class AC {
         nvec=nvec/G.size();
     }
     println("Numero medio de vecinos .... ",nvec);
-     
+
   }
-  
+
   void calcula_safetyFactor(CaseLoader c){
-    if (c != null) {  // Caso de fichero  
+    if (c != null) {  // Caso de fichero
       int cont = 0;
       for (Node3 N: G){
         // Solo lo calculamos si el nodo no es Core
@@ -174,14 +174,14 @@ class AC {
               sum_vec = peso_vecino; // Se cuenta él mismo inicialmente para suma total vecinos
               sanos_vec = peso_vecino;  // Se cuenta él mismo inicialmente para suma células sanas que conducen
               for (int id_vec: c.V.get(N.id)){
-                Node3 vec = G.get(id_vec); 
+                Node3 vec = G.get(id_vec);
                 sum_vec+=peso_vecino; // Sumamos vecino al total
                 if (vec.tipo != 2) //Sumamos al cálculo vecinos sanos y BZ que no sean Core
                   sanos_vec+= peso_vecino;
               }
             }
-            
-            // Opción B: implementación “Skinned” elements (Número de vértices compartidos, él mismo 8 vert, vecino de 4 vert, 
+
+            // Opción B: implementación “Skinned” elements (Número de vértices compartidos, él mismo 8 vert, vecino de 4 vert,
             // vecino de 2 vert y vecino de 1 vert)
             else {
               float peso_vecino_4vert = 4;
@@ -192,16 +192,16 @@ class AC {
               PVector dir_normZ = new PVector(0,0,1); // Vector normal eje Z
               PVector dir_normY = new PVector(0,1,0); // Vector normal eje Y
               PVector dir_normX = new PVector(1,0,0); // Vector normal eje X
-                  
+
               /* Calculamos 3 productos escalares entre vector de celda a vecino y el vector normal a cada eje X, Y, Z,
                  para distinguir vecino que comparten 4 vértices, 2 o 1.
-                 Si en los resultados de los 3 productos escalares obtenemos: 
-                        -> 2 ceros(comparten 4 vértices) 
+                 Si en los resultados de los 3 productos escalares obtenemos:
+                        -> 2 ceros(comparten 4 vértices)
                         -> 1 cero(comparten 2 vértices)
                         -> 0 ceros(comparten 1 vértice)
               */
               for (int id_vec: c.V.get(N.id)){
-                Node3 vec = G.get(id_vec); 
+                Node3 vec = G.get(id_vec);
                 // Calculamos el producto escalar entre vector de celda a vecino y respecto a los tres ejes, X, Y, Z
                 // y acumulamos el número de ceros
                 PVector vec_vecino = PVector.sub(vec.pos, N.pos).normalize();
@@ -215,8 +215,8 @@ class AC {
                 float pos_vecX = abs(dir_normX.dot(vec_vecino));
                 if (pos_vecX == 0)
                   num_zeros++;
-                
-                // Le damos el peso respecto a la posición de cada vecino 
+
+                // Le damos el peso respecto a la posición de cada vecino
                 // Si 0 ceros(comparten 1 vértice)
                 if (num_zeros == 0){
                   sum_vec += peso_vecino_1vert; // Sumamos vecino al total
@@ -239,22 +239,22 @@ class AC {
             }
             N.safety_factor = sanos_vec/sum_vec;
             //N.safety_factor = 1;
-            
-            
+
+
             if (N.safety_factor != 1.0){
               cont++;
               //println("SAFETY", cont,N.id , N.safety_factor);
             }
-           
-            
+
+
           }
         }
       }
       println("SAFETY Num Nodes", cont);
     }
   }
-  
- 
+
+
   void init_beat(float t)
   {
      first = null;
@@ -262,14 +262,14 @@ class AC {
      max_st   = 0;
      beat_start_time = t;
   }
-  
-  
+
+
   void reset(){
-  
+
     Lab.clear();
     Labp.clear();
     init_nodes.clear();
-    
+
     max_path = 0;
     max_st   = 0;
     first = null;
@@ -279,36 +279,36 @@ class AC {
     NextStimTime = stimFrecS1;
     LastStimTime = 0;
     detecta_reentradas = false;
-    
+
     t_next_frame = frame_time;
-    
+
     for (Node3 n: G)
        n.reset();
-  }    
-  
+  }
+
   void draw_path(Node3 Root)
   {
       IntList Lpath = Root.getPath();
-      
+
       for (int n:Lpath){
         stroke(random(0,100));
         Node3 N = G.get(n);
         point(N.pos.x,N.pos.y,N.pos.z);
       }
-  
+
   }
-  
+
   // Muestra el camino mas largo
   void show_lpath()
   {
     strokeWeight(0.35);
 
-    if (first != null) 
+    if (first != null)
       draw_path(ac.first);
 
     strokeWeight(caseParams.voxel_size);
   }
-  
+
   // Activamos parche de bloque por NODOS solo una vez cuando se llama desde main
   float activa_parcheBloqueNodos(boolean event_mode){
     float t = INFINITO;
@@ -325,11 +325,11 @@ class AC {
     for(int i = 0; i < gui_blk_num_xmax_Nodos;i++){
       for(int j = 0; j < gui_blk_num_ymax_Nodos*capasZNodo; j++){
         int id_blk = idY-j;
-        init_nodes.append(id_blk); 
+        init_nodes.append(id_blk);
       }
       idY+=(npl*capasZNodo);
     }
-    
+
     println("PREPARADO PARCHE BLOQUE - Num lista INIT",init_nodes.size());
     int hay_nodos_refractarios = 0;
     int minNodo = init_nodes.min();
@@ -339,7 +339,7 @@ class AC {
       Node3 init_node = G.get(i);
       if ( i == minNodo || i == maxNodo )
         println("ID - COORD NODO: ",i,init_node.pos );
-      
+
       /*
       // OPT 2: Las activamos si están desactivadas o apd 70
       float tvida_70 = 0;
@@ -360,7 +360,7 @@ class AC {
 
     return t;
   }
-  
+
   float activacion(boolean event_mode){
     float t = INFINITO;
     if( num_beat < nStimsS1 + nStimsS2)
@@ -383,26 +383,26 @@ class AC {
           }
           if (hay_nodos_refractarios > 0) {
             println("La activación no se producirá en "+hay_nodos_refractarios+" de "+init_nodes.size() + " nodos porque su estado es 2.");
-            // Si estamos en multiSim y S2 es demasiado temprano y no va a activar nodos, activamos variable de aviso para resetear y pasar a la siguiente simulación con nuevo S2 
+            // Si estamos en multiSim y S2 es demasiado temprano y no va a activar nodos, activamos variable de aviso para resetear y pasar a la siguiente simulación con nuevo S2
             if (multiSim && hay_nodos_refractarios == init_nodes.size()) {
-              failed_S2 = true; 
+              failed_S2 = true;
             }
           }
-          if(num_beat < nStimsS1) // Los dos primeros estímulos a BCL largo 
+          if(num_beat < nStimsS1) // Los dos primeros estímulos a BCL largo
             NextStimTime += stimFrecS1;
-          else 
+          else
             NextStimTime += stimFrecS2;
-         
+
           init_beat(tiempo_transcurrido);
       }
-    
+
     return t;
   }
-  
+
   void update(){
-   
-    t_next_event = INFINITO;    
-    
+
+    t_next_event = INFINITO;
+
       if(!Labp.isEmpty()){
         Evento ev = Labp.poll();  // NEW_PQ: check
         Node3 n = G.get(ev.id);
@@ -415,7 +415,7 @@ class AC {
         n.dispara_evento(ev,Labp);  // NEW_PQ: check
         n_cells_updated++;
       }
-  
+
       if(!Labp.isEmpty()) {
         Evento ev = Labp.peek(); // NEW_PQ: check
         t_next_event = ev.t;
@@ -426,20 +426,20 @@ class AC {
           println("\n\n\n\n\n");
         }
       }
-    
+
     if(Float.isNaN(t_next_event))
       println("  "+t_next_event);
 
  }
- 
 
-    
+
+
  void draw_insert(int mode, Boolean show_graph) {
 
    strokeWeight(caseParams.voxel_size);
    // Primero se pintan las activas, porque cuesta mucho menos.
    // Las inactivas se pintan en un bucle independiente al final de la función,
-   // sólo si está activo su pintado. 
+   // sólo si está activo su pintado.
    if ( Lab.size() !=0 ){
      for (int id_N: Lab) {
        if (random(0.0,1.0) < (1.0/caseParams.pinta_cada_n)) // En promedio, pinta uno de cada n
@@ -450,9 +450,9 @@ class AC {
        }
      }
    } else {
-     
+
      int n = 0;
-     for (Node3 N: G) { 
+     for (Node3 N: G) {
       if ( N.tipo < 2 ) { // Si tipo no es core
         if (n == caseParams.pinta_cada_n){
            if( (caseParams.tmode == 2 ) || ( caseParams.tmode == N.tipo) ){
@@ -463,13 +463,13 @@ class AC {
         }
         n++;
       }
-     }    
+     }
    }
-   
+
    // n_cells_updated nos dice cuántas celdas se han actualizado desde el último pintado.
    //n_cells_updated = 0;
  }
- 
+
 
 void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
     boolean frente_onda = false;
@@ -481,17 +481,17 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
       else
         return;
     } else {
-  
+
       if (mode == 5) {
-        if (N.estado == 2) { 
+        if (N.estado == 2) {
           if (tiempo_transcurrido - N.start_time < caseParams.tam_frente)
             frente_onda = true;
           if (tiempo_transcurrido - N.start_time > N.apd - caseParams.tam_frente )
             frente_onda = true;
         }
       }
-  
-      
+
+
       if (mode == 0){ // Pintamos por estado
         switch(N.estado){
          case 2:     // Si activada y zona BZ --> verde
@@ -506,14 +506,14 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
          case 0:     // Si está esperando acaba de activar --> rojo oscuro
               stroke(180,5,5,255);
               break;
-    
-        }     
-      } else if(N.estado == 0) { 
+
+        }
+      } else if(N.estado == 0) {
         return;
       } else {
         float r, g, b;
         float valor;
-        
+
         if (mode == 1 || mode == 5){  // visualizacion del tiempo de vida
           if (visu == 2){
             if (N.apd == 0.0)
@@ -538,24 +538,24 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
               valor = 0.0;
               invisible = true;
             }
-  
+
           }
-          
+
         } else if (mode == 2 ) { // visualizacion del APD
-          caseParams.rango_visual = 350 ; //290  //310  //315 APD90 
+          caseParams.rango_visual = 350 ; //290  //310  //315 APD90
           caseParams.rango_min = 290;      //190  //220
           valor = map(N.apd,caseParams.rango_min,caseParams.rango_visual,0,caseParams.rango_visual);
-         
+
         } else if (mode == 3 ) { // visualización del DI
           caseParams.rango_visual = 300;
           caseParams.rango_min = 0;
           valor = map(N.di,caseParams.rango_min,caseParams.rango_visual,0,caseParams.rango_visual);
-        
+
         } else if (mode == 6 ) { // visualización del periodo de activacion
           caseParams.rango_visual = 600;
-          caseParams.rango_min = 290; 
+          caseParams.rango_min = 290;
           valor = map(N.periodo_activacion, caseParams.rango_min,caseParams.rango_visual,0,caseParams.rango_visual);
-         
+
         } else  { // mode == 4 -> visualización CV
           caseParams.rango_visual = 100;
           caseParams.rango_min = 0;
@@ -563,9 +563,9 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
             valor = (N.lpath/(N.start_time - LastStimTime))*100; //porque el rango es entero
           else
             valor = 0.0;
-         
-        }  
-        
+
+        }
+
         if(valor > caseParams.rango_visual/2) {
           r = map(valor, caseParams.rango_visual, caseParams.rango_visual/2, 255, 0);
           b = 0;
@@ -575,11 +575,11 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
           b = map(valor, caseParams.rango_visual/2, 0, 0,255);
           g = map(valor, caseParams.rango_visual/2, 0, 255, 0);
         }
-         
+
         stroke(r, g, b);
       }
     }
-   
+
     if(mode != 5 || frente_onda) {
       if (invisible == false){
         // Separamos un poco en el eje Z el dibujado para que se visualice
@@ -588,26 +588,26 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
         else
           point(N.pos.x,N.pos.y,N.pos.z);
       }
-      
+
       if (show_graph)
         for (int i=0;i<N.Lv.size();i++){
-          Node3 vec = N.Lv.get(i);           
+          Node3 vec = N.Lv.get(i);
           line(N.pos.x,N.pos.y,N.pos.z, vec.pos.x,vec.pos.y,vec.pos.z);
         }
     }
-    
-    
-   // Marcamos las re-entradas con flashes a todo color 
+
+
+   // Marcamos las re-entradas con flashes a todo color
    for (int i: re_nodes){
      Node3 Nr = G.get(i);
      strokeWeight(0.8+random(0.5));
      stroke(random(255),random(255),random(255));
      point(Nr.pos.x,Nr.pos.y,Nr.pos.z);
-   
+
    }
    strokeWeight(caseParams.voxel_size);
- 
-  }  
+
+  }
 
 
 
@@ -619,16 +619,16 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
          ed+= n.derror;
          et+= n.terror;
       }
-      return new PVector(ed,et);  
+      return new PVector(ed,et);
     }
-    
+
     void draw_derror(int emode) {
-      
+
       strokeWeight(caseParams.voxel_size);
-  
+
       for (int id_N: Lab) {
           Node3 N = G.get(id_N);
-          
+
           float val;
           if (emode == 0){
             val = map(N.derror, 0, 0.6, 0,255);
@@ -638,14 +638,14 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
             val = map(N.terror, 0, caseParams.dt, 0,255);
             stroke(val);
           }
-               
+
           point(N.pos.x,N.pos.y,N.pos.z);
-          
-    
+
+
       }
-             
+
   }
-  
+
   void activa_frente(int mode){
     // Comprobamos si variable activa frente nodos definidos en txt está a true para ejecutar este tipo de frente
     if (caseParams.active_MultiIDs_extraI){
@@ -674,21 +674,21 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
       if (mode == 0){ // nodo foco
         int id_i;
         id_i = id_extraI;
-        ac.init_nodes.append(id_i); 
+        ac.init_nodes.append(id_i);
         Node3 init_node = ac.G.get(id_i);
         init_node.en_espera(gui_pdelay,0,null, 0,true);
         ac.Labp.add(init_node.siguienteEvento()); // NEW_PQ: check
-         
+
       }
       // Frentes horizontales y verticales
-      else if (mode == 1){ 
+      else if (mode == 1){
          // Los nodos tienen una fila más que los elementos
          int capasZNodo = cas.capasZCasoBloque +1;
          // Nodos por columna
          int nplY = bplY*capasZNodo + capasZNodo;
-         
+
          // Frente Horizontal de izq -> der
-         if (gui_stimFrec_hz > 0){  
+         if (gui_stimFrec_hz > 0){
            int id_i;
              for(int i=0;i<nplY;i++){
                id_i = i;
@@ -703,7 +703,7 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
                }
              }
          }
-         
+
          // Frente Vertical de abajo -> arriba
          if (gui_stimFrec_vt > 0) {
            int id_i;
@@ -714,7 +714,7 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
                if(id_i < ac.G.size()) {
                  Node3 init_node = ac.G.get(id_i);
                  if (init_node.tipo != 2){
-                   ac.init_nodes.append(id_i); 
+                   ac.init_nodes.append(id_i);
                    init_node.en_espera(gui_vdelay,0,null, 0,true);
                    ac.Labp.add(init_node.siguienteEvento()); // NEW_PQ: check
                  }
@@ -723,16 +723,16 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
            }
         }
       }
-    } 
-    
-    
+    }
+
+
     void save_current_state()
     {
       PrintWriter output, output2;
 
       current_state_file = new File(ac.case_path+"estados/ac_state_"+str(tiempo_transcurrido)+".txt");
-     
-      output  = createWriter(current_state_file); 
+
+      output  = createWriter(current_state_file);
 
       // Var globales
       String header = str(tiempo_transcurrido)+'\t'+str(t_next_event)+'\t'+str(t_next_frame)+'\t'+str(n_cells_updated)+'\t'+str(t_fin_ciclo)+'\t';
@@ -740,23 +740,23 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
       output.println(header);
       output.flush(); // Writes the remaining data to the file
 
-      
+
       println(" Vamos a guardar "+G.size()+" nodos.");
       int saved_nodes = 0;
-      
+
       // Var por nodo
       for (Node3 n: G){
-        
+
         int idPadre = -1;
         if (n.padre != null)
-          idPadre = n.padre.id; 
-          
+          idPadre = n.padre.id;
+
         String int_line = str(n.id)+'\t'+str(n.estado)+'\t'+str(n.beat)+'\t'+str(idPadre)+'\t'+str(int(n.estimulo_externo));
         int_line += '\t' + str(n.n_activadores);
 
-        output.println(int_line); 
+        output.println(int_line);
         output.flush(); // Writes the remaining data to the file
-      
+
         String float_line = str(n.cv)+'\t'+str(n.apd)+'\t'+str(n.tvida)+'\t'+str(n.start_time)+'\t'+str(n.end_time)+'\t';
         float_line += str(n.di)+'\t'+str(n.lpath)+'\t'+str(n.t_proxima_activacion)+'\t'+str(n.t_proxima_desactivacion)+'\t'+str(n.t_proximo_evento);
         float_line += '\t' + str(n.suma_tiempos_activadores);
@@ -777,53 +777,53 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
         if( saved_nodes%1000 == 0 )
           print(".");
         saved_nodes++;
-      } 
+      }
 
       output.close(); // Finishes the file
       println(" hecho.");
-      
+
       ////////////////////////////////////////////7
       // Lista de eventos
       current_ev_file = new File(ac.case_path+"estados/ac_ev_"+str(tiempo_transcurrido)+".txt");
-      output2 = createWriter(current_ev_file); 
-     
+      output2 = createWriter(current_ev_file);
+
       println(" Vamos a guardar "+Labp.size()+" estados.");
-      
+
       int saved = 0;
-      for (Evento ev: Labp.tree){ 
+      for (Evento ev: Labp.tree){
          output2.println(str(ev.id)+'\t'+str(ev.t)+'\t'+str(ev.st));
          if( saved%1000 == 0)
            print(".");
          saved++;
       }
       println(" hecho.");
-      
+
       output2.close(); // Finishes the file
-      
+
       println("AC-STATE saved at T = ", str(tiempo_transcurrido));
       println("AC-STATE File: ", current_state_file );
       println("AC-EVENT File: ", current_ev_file );
-      
-      
+
+
     }
-    
-   
+
+
     void load_state(File fname)
     {
-      
+
         // Cargamos de nuevo los parámetros para actuaizar cambios
         caseParams = new FileParams(casePath+"params.dat");
-    
+
         if (fname.length() == 0)
           fname = current_state_file;
-        
-        
+
+
         BufferedReader reader = createReader(fname);
         String line = null;
         try {
           // Lee cabecera
           line = reader.readLine();
-          if (line != null){  
+          if (line != null){
             String[] ac_vars = split(line, TAB);
             tiempo_transcurrido =  float(ac_vars[0]);
             t_next_event        =  float(ac_vars[1]);
@@ -835,12 +835,12 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
             num_beat            =  int(ac_vars[7]);
             LastStimTime        =  float(ac_vars[8]);
             caseParams.min_pot_act = float(ac_vars[9]);
-            if(num_beat < nStimsS1) // Los dos primeros estímulos a BCL largo 
+            if(num_beat < nStimsS1) // Los dos primeros estímulos a BCL largo
               NextStimTime = LastStimTime+stimFrecS1;
-            else 
+            else
               NextStimTime = LastStimTime+stimFrecS2;
           }
-          
+
           int id_nodo = 0;
           while ( id_nodo < G.size() && ((line = reader.readLine()) != null)) {
              String[] int_line = split(line, TAB);
@@ -855,10 +855,10 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
              G.get(id_nodo).estimulo_externo  =  boolean(int_line[4]);
              G.get(id_nodo).n_activadores     =  int(int_line[5]);
 
-            
+
              line = reader.readLine();
              String[] float_line = split(line, TAB);
-        
+
              G.get(id_nodo).cv                =  float(float_line[0]);
              G.get(id_nodo).apd               =  float(float_line[1]);
              G.get(id_nodo).tvida             =  float(float_line[2]);
@@ -877,7 +877,7 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
              G.get(id_nodo).suma_activadores = new PVector();
              G.get(id_nodo).foco_activador = new PVector();
              G.get(id_nodo).normal_frente = new PVector();
-             if(G.get(id_nodo).n_activadores != 0) 
+             if(G.get(id_nodo).n_activadores != 0)
              {
                 G.get(id_nodo).suma_activadores.x       = float(float_line[12]);
                 G.get(id_nodo).suma_activadores.y       = float(float_line[13]);
@@ -889,19 +889,19 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
                 G.get(id_nodo).normal_frente.y          = float(float_line[19]);
                 G.get(id_nodo).normal_frente.z          = float(float_line[20]);
              }
-             
+
              G.get(id_nodo).min_potencial = caseParams.min_pot_act;
-             
+
              id_nodo+=1;
           }
           println("Restaurados "+str(id_nodo)+ " nodos :: estado actual T:"+str(tiempo_transcurrido));
           reader.close();
-        } 
+        }
         catch (IOException e) {
           e.printStackTrace();
         }
-        
-        
+
+
         // Fichero de eventos
         Labp.clear();
         if (fname.length() > 0){
@@ -910,7 +910,7 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
           current_ev_file = new File(path+"/ac_ev_"+name.substring(9));
         }
         BufferedReader reader2 = createReader(current_ev_file);
-        
+
         try {
           while ((line = reader2.readLine()) != null) {
              String[] int_line = split(line, TAB);
@@ -918,7 +918,7 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
              ev.id    =  int(int_line[0]);
              ev.t     =  float(int_line[1]);
              ev.st    =  int(int_line[2]);
-             // NEW_PQ: check. Assign ev to node[i]            
+             // NEW_PQ: check. Assign ev to node[i]
              Labp.add(ev);
           }
           reader2.close();
@@ -926,9 +926,9 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
           e.printStackTrace();
         }
         println("Restaurados "+str(Labp.size())+ " eventos :: estado actual T:"+str(tiempo_transcurrido));
-       
+
     }
-  
-    
+
+
  }
-  
+
