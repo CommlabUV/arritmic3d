@@ -10,6 +10,7 @@ Boolean gui_play               = false;
 Boolean gui_pause              = true;
 Boolean gui_init               = false;
 int     gui_activation_mode    = 0;     // Frente activación -> 1, Punto activación inicial -> 0 (En BLOQUE_VTK coge el id de nodo inicial de archivo params id_extraI)
+                                        // Bloque activacion -> 2 // giada
 
 // Input -> valores
 float   gui_stimFrec_hz        = 0; // Si 1 Frente activación inicial Horiz de Izq a Dcha
@@ -30,10 +31,9 @@ int     gui_blk_ymax           = 250;
 
 // DATOS PARCHE BLOQUE_VTK
 //int     gui_blk_id_minXY       = 81;   // ID de la celda (ELEMENTO) inicial con el mínimo x e y, del bloque de activación
-//int     gui_blk_idNodo_minXY   = 67536; // ID del punto (NODO) inicial con el mínimo x e y, del parche de activación
-int     gui_blk_idNodo_minXY   = 27887; // ID del punto (NODO) inicial con el mínimo x e y, del parche de activación
-int     gui_blk_num_xmax       = 82; // Numero de celdas en x del parche de activación (86)
-int     gui_blk_num_ymax       = 82;   // Numero de celdas en y del parche de activación (76)
+int     gui_blk_idNodo_minXY   = 47075; // ID del punto (NODO) inicial con el mínimo x e y, del parche de activación //DOLORS: 67536 //giada dicembre22: 27562
+int     gui_blk_num_xmax       = 133; // Numero de celdas en x del parche de activación (86)
+int     gui_blk_num_ymax       = 132;   // Numero de celdas en y del parche de activación (76)
 
 float   gui_blk_delay          = 0;
 int     gui_blk_activated      = 0; // Bloque activado -> 1, desactivado -> 0
@@ -70,7 +70,7 @@ public class InputTest {
 class Controles extends PApplet {
 
   RadioButton r1;
-  CheckBox chk_blk, chk_cmap,chk_hay_mesh;
+  CheckBox chk_blk, chk_cmap,chk_hay_mesh, use_restsurf;
   // CheckBox chk_show_path, chk_show_grid;
   PImage imgs;
   color activeC = #1673e5;
@@ -181,6 +181,21 @@ class Controles extends PApplet {
        chk_hay_mesh.activate(1);
     else
        chk_hay_mesh.activate(0);
+
+   use_restsurf = gui.addCheckBox("use_restsurface")
+       .setPosition(20,altG+40)
+       .setSize(15,15)
+       .setColorForeground(activeC)
+       .setColorBackground(color(255))
+       .setColorActive(activeC)
+       .setColorLabel(color(0))
+       .setItemsPerRow(1)
+       .addItem("Use Restitution Surface",1)
+       ;
+    if (caseParams.restsurf)
+       use_restsurf.activate(1);
+    else
+       use_restsurf.activate(0);
 
    float dt_ini = caseParams.dt;
    gui.addSlider("dt")
@@ -335,8 +350,7 @@ class Controles extends PApplet {
        ;
 
        // RadioButtons : Activación frente vs punto
-
-
+       // giada: anyado tambien el bloque
 
        r1 = gui.addRadioButton("radioButton")
            .setPosition(260,30)
@@ -348,8 +362,10 @@ class Controles extends PApplet {
            .setItemsPerRow(1)
            .setSpacingRow(140)
            .setNoneSelectedAllowed(false)
+           //.setNoneSelectedAllowed(true) //GIADA
            .addItem("Activar Frente",1)
            .addItem("Activar Punto",0)
+           //.addItem("Activar Bloque",2) //ADD GIADA 02/12/22
            .activate(1)
            ;
 
@@ -362,6 +378,7 @@ class Controles extends PApplet {
            .setColorLabel(color(0))
            .setItemsPerRow(1)
            .addItem("Activar Bloque",0)
+           //.activate(1) //ADD GIADA
            ;
 
 
@@ -389,6 +406,18 @@ class Controles extends PApplet {
        .setColorLabel(color(0))
        .setAutoClear(false)
        ;
+
+             chk_blk = gui.addCheckBox("checkBox")
+           .setPosition(20,185)
+           .setSize(15,15)
+           .setColorForeground(activeC)
+           .setColorBackground(color(255))
+           .setColorActive(activeC)
+           .setColorLabel(color(0))
+           .setItemsPerRow(1)
+           .addItem("Activar Bloque",0)
+           //.activate(1) //ADD GIADA
+           ;
   }
 
    PFont fontInst = createFont("Ubuntu",15);
@@ -571,11 +600,14 @@ class Controles extends PApplet {
       else
       if(theEvent.isFrom(chk_blk)) {
 
-        for(int i=0;i<theEvent.getGroup().getArrayValue().length;i++)
+      for(int i=0;i<theEvent.getGroup().getArrayValue().length;i++) //commentato da giada il 02/12
           gui_blk_activated = int(theEvent.getGroup().getArrayValue()[i]);
 
-         println("Activated Block: ", gui_blk_activated);
+        //  gui_blk_activated = int(chk_blk.getValue()); //giada 02/12
+         //  gui_blk_activated = 2; //giada 02/12 parte b
 
+         println("Activated Block: ", gui_blk_activated);
+         println("ESTAMOS EN EL CASO DEL BLOQUE"); //when you select the activation for a block, this actually is read
       }
 
     }
@@ -586,6 +618,16 @@ class Controles extends PApplet {
         caseParams.multi_view = !caseParams.multi_view;
         println("gui_multi_view mode: ", caseParams.multi_view);
 
+       }
+      // Bloque central
+      else
+      if(theEvent.isFrom(chk_blk)) {
+
+      for(int i=0;i<theEvent.getGroup().getArrayValue().length;i++)
+          gui_blk_activated = int(theEvent.getGroup().getArrayValue()[i]);
+
+         println("Activated Block: ", gui_blk_activated);
+         println("ESTAMOS EN EL CASO DEL BLOQUE"); //when you select the activation for a block, this actually is read
       }
 
     }
@@ -599,6 +641,12 @@ class Controles extends PApplet {
          caseParams.hay_mesh = !caseParams.hay_mesh;
          println("Show Mesh: ", caseParams.hay_mesh);
       }
+
+   if(theEvent.isFrom(use_restsurf)) {
+         caseParams.restsurf = !caseParams.restsurf;
+         println("Use Restitution Surface: ", caseParams.restsurf);
+      }
+
    /*
    if(theEvent.isFrom(chk_show_path)) {
          caseParams.show_path = !caseParams.show_path;

@@ -17,7 +17,8 @@ import java.net.InetAddress;
 final float INFINITO = 1e10;
 
 /////////////////////////////////////////////
-// Gráficos: camara, malla, etc
+
+// Graphics: camera, mesh, etc.
 Controles WinGui;
 Params    WinParams;
 
@@ -25,25 +26,26 @@ PeasyCam cam;
 ToxiclibsSupport gfx;
 WETriangleMesh mesh1;
 
-// casos
+// Read the different case; 0 -> physiological case; 1 -> Simpler geometry (such as tissue)
 final int VENT      = 0;
 final int BLOQUE_VTK = 1;
-// Caso y Paciente, se definen al cargar el archivo de parámetros de caso inicial en setup()
+
+// Case and Patient, are defined when loading the initial case parameter file in setup().
 int caso;
 String paciente;
 
 
-// Variables opciones implementación safety factor
-boolean safety_factor_active = true;  // Activamos que se implemente el bloqueo por safety factor del paper de Bueno Orovio
-boolean safety_factor_full = false;   // Opción A: implementación Full neighbourhood
-boolean safety_factor_skinned = true; // Opción B: implementación “Skinned” elements (Número de vértices compartidos, él mismo 8 vert, vec 4 vert, vec 2 vert y vec 1 vert)
+// Variables options : implementation safety factor
+boolean safety_factor_active = true;  // We activate the implementation of the safety factor blocking of (Bueno Orovio et al., 2008).
+boolean safety_factor_full = false;   // Option A: Full neighbourhood implementation
+boolean safety_factor_skinned = true; // Option B: implementation ‘Skinned’ elements (Number of shared vertices, itself 8 vert, vec 4 vert, vec 2 vert and vec 1 vert)
 
-// Variables para grabar los archivos .case de animación tiempo de vida
+// Variables for recording the animation .case files lifetime
 boolean rec_case = false;
 int t_case;
 int t_caseIni;
 int count_steps;
-boolean escara_case = false; // Variable para guardar en archivo Ensight de Tiempo de Vida solo los nodos de BZ y Core
+boolean escara_case = false; // Variable to store in Ensight Lifetime file only BZ and Core nodes.
 
 // Variables para grabar los archivos .case de mapas de activación en cada estímulo
 boolean escara_caseA = false; // Variable para guardar en archivo Ensight de Mapas de activación solo los nodos de BZ y Core
@@ -54,33 +56,42 @@ FloatList t_beats = new FloatList(); // Tiempos de activación de cada estímulo
 FloatList a_times1 = new FloatList(); // Lista que guarda a lo largo del primer estímulo, los Tiempos de activación de cada nodo
 FloatList a_times2 = new FloatList(); // Lista que guarda a lo largo del siguiente estímulo, los Tiempos de activación de cada nodo
 FloatList a_times3 = new FloatList(); // Lista que guarda a lo largo del siguiente estímulo, los Tiempos de activación de cada nodo
+FloatList a_times4 = new FloatList(); // Lista que guarda a lo largo del siguiente estímulo, los Tiempos de activación de cada nodo
 FloatList a_times1reen = new FloatList(); // Lista que guarda tiempos y id's de posible reentrada
 FloatList a_times2reen = new FloatList(); // Lista que guarda tiempos y id's de posible reentrada
 FloatList a_times3reen = new FloatList(); // Lista que guarda tiempos y id's de posible reentrada
+FloatList a_times4reen = new FloatList(); // Lista que guarda tiempos y id's de posible reentrada
 FloatList a_vel1 = new FloatList(); // Lista que guarda a lo largo del primer estímulo, las velocidades de cada nodo
 FloatList a_vel2 = new FloatList(); // Lista que guarda a lo largo del siguiente estímulo, las velocidades de cada nodo
 FloatList a_vel3 = new FloatList(); // Lista que guarda a lo largo del siguiente estímulo, las velocidades de cada nodo
+FloatList a_vel4 = new FloatList(); // Lista que guarda a lo largo del siguiente estímulo, las velocidades de cada nodo
 int t_activacion = 800; // Tiempo de espera de guardar tiempos de activación para cada beat y registre todos los nodos aunque se estimule otro beat
 int t_waitReen = 6000; // Tiempo de espera cuando ocurre una reentrada en MultiSim, para finalizar la simulación con reentrada sostenida y pasar a la siguiente simulación
 float t_esperaActivacion = 400; // Tiempo de espera para activar variable de posible reentrada y avisar por terminal de tiempos muy altos desde el último beat si siguen activándose nodos después del t definido
 float count_t_lista1 = 0; // Contador del tiempo de guardado de datos de activación de lalista 1
 float count_t_lista2 = 0; // Contador del tiempo de guardado de datos de activación de lalista 2
 float count_t_lista3 = 0; // Contador del tiempo de guardado de datos de activación de lalista 3
+float count_t_lista4 = 0; // Contador del tiempo de guardado de datos de activación de lalista 3
 float beat_lista1 = -1.0; //Guardamos el beat del estímulo de la lista 1
 float beat_lista2 = -1.0; //Guardamos el beat del estímulo de la lista 2
 float beat_lista3 = -1.0; //Guardamos el beat del estímulo de la lista 3
+float beat_lista4 = -1.0; //Guardamos el beat del estímulo de la lista 3
 Boolean lista1_open = false; // Variable que identifica si primera lista abierta guardando datos de activación
 Boolean lista2_open = false; // Variable que identifica si segunda lista abierta guardando datos de activación
 Boolean lista3_open = false; // Variable que identifica si tercera lista abierta guardando datos de activación
+Boolean lista4_open = false; // Variable que identifica si tercera lista abierta guardando datos de activación
 Boolean posible_reentrada1 = false; // Variable que advierte de comportamientos extraños con activaciones de tiempos muy altos que pueden generar reentrada
 Boolean posible_reentrada2 = false; // Variable que advierte de comportamientos extraños con activaciones de tiempos muy altos que pueden generar reentrada
 Boolean posible_reentrada3 = false; // Variable que advierte de comportamientos extraños con activaciones de tiempos muy altos que pueden generar reentrada
+Boolean posible_reentrada4 = false; // Variable que advierte de comportamientos extraños con activaciones de tiempos muy altos que pueden generar reentrada
 Boolean lista1_reen = false; // Variable que identifica si la posible reentrada está guardada en lista1, para antes de cerrarla obtener datos de mínimos t's de activación y demás
 Boolean lista2_reen = false; // Variable que identifica si la posible reentrada está guardada en lista2, para antes de cerrarla obtener datos de mínimos t's de activación y demás
 Boolean lista3_reen = false; // Variable que identifica si la posible reentrada está guardada en lista3, para antes de cerrarla obtener datos de mínimos t's de activación y demás
+Boolean lista4_reen = false; // Variable que identifica si la posible reentrada está guardada en lista3, para antes de cerrarla obtener datos de mínimos t's de activación y demás
 Boolean count1_reentrada = false; // Variable que identifica reentrada en cada lista por tiempos de activación mayores a 600. Imprimimos solo una vez el aviso
 Boolean count2_reentrada = false; // Variable que identifica reentrada en cada lista por tiempos de activación mayores a 600. Imprimimos solo una vez el aviso
 Boolean count3_reentrada = false; // Variable que identifica reentrada en cada lista por tiempos de activación mayores a 600. Imprimimos solo una vez el aviso
+Boolean count4_reentrada = false; // Variable que identifica reentrada en cada lista por tiempos de activación mayores a 600. Imprimimos solo una vez el aviso
 
 ////////////////////////////////////////////
 // Caso
@@ -110,6 +121,7 @@ int     countNodesReen; // Variable que cuenta los ciclos de reentrada
 float   beatReen1; // Posible beat en el que se genera la reentrada
 float   beatReen2; // Posible beat en el que se genera la reentrada
 float   beatReen3; // Posible beat en el que se genera la reentrada
+float   beatReen4; // Posible beat en el que se genera la reentrada
 PrintWriter outputSims; // Writer donde se guaradn resultados si multiSim
 int     countSimsReen; // Variable que cuenta nº de simulaciones con reentradas en multisim
 // Guardamos tiempo inicial y final para calcular el tiempo de ejecución de todas las simulaciones
@@ -121,6 +133,7 @@ StringList paramsReens; // Lista de parámetros que generan reentradas con núme
 int id1;
 int id2;
 int id3;
+int id4;
 
 
 /////////////////////////////////////////////
@@ -215,28 +228,36 @@ void initAll() {
     posible_reentrada1 = false;
     posible_reentrada2 = false;
     posible_reentrada3 = false;
+    posible_reentrada4 = false;
     count1_reentrada = false;
     count2_reentrada = false;
     count3_reentrada = false;
+    count4_reentrada = false;
     count_t_lista1 = 0;
     count_t_lista2 = 0;
     count_t_lista3 = 0;
+    count_t_lista4 = 0;
     lista1_open = false;
     lista2_open = false;
     lista3_open = false;
+    lista4_open = false;
     lista1_reen = false;
     lista2_reen = false;
     lista3_reen = false;
+    lista4_reen = false;
     beat_lista1 = -1.0;
     beat_lista2 = -1.0;
     beat_lista3 = -1.0;
+    beat_lista4 = -1.0;
     beatReen1    = 0; // Posible beat en el que se genera la reentrada
     beatReen2    = 0; // Posible beat en el que se genera la reentrada
     beatReen3    = 0; // Posible beat en el que se genera la reentrada
+    beatReen4    = 0; // Posible beat en el que se genera la reentrada
     // Inicializamos los id's de nodos de reentrada a -1 para distinguir si id guardado por reentrada o no
     id1 = -1;
     id2 = -1;
     id3 = -1;
+    id4 = -1;
     // Creamos el grafo para el caso y elegimos un nodo de estimulación inicial
     if(caso == BLOQUE_VTK){
       if (ac == null){
@@ -260,7 +281,13 @@ void initAll() {
       else
         ac.reset();
 
-
+    //ADDED BY GIADA ON 18/03/2023
+    //IN THIS WAY YOU CAN ACTIVATE S1 FROM A SET OF NODES IN THE ATRIUM TOO
+    if (caseParams.active_MultiIDs_extraI){ //IF THE VARIABLE active_MultiIDs_extraI IN params.dat IS TRUE, THEN....
+      println("siamo entrati nel caso dell'active_MultiIDs_extraI      ");
+      ac.activa_frente(gui_activation_mode);
+    }
+    else{
       // Añadimos todos los nodos de estimulación inicial
       Node3 cat_ini = ac.G.get(id_extraI);
       ac.init_nodes.appendUnique(cat_ini.id);
@@ -273,16 +300,22 @@ void initAll() {
         Node3 init_node = ac.G.get(id_i);
 
         Evento ev = init_node.en_espera(0.0,0,null,0,true);
-          if(ev != null)
+          if(ev != null){
+            //println("init_node.en_espera non è null");
             ac.Labp.add(ev);
+          }
       }
+    }
+
+
     }
     // Si multiSim no visualizamos nada en ventana para que vaya más deprisa
     if (multiSim){
-      caseParams.show_frente = false;
-      caseParams.hay_mesh = false;
-      caseParams.show_cmap = false;
-      caseParams.show_gui = false;
+      caseParams.show_frente = true;
+      caseParams.hay_mesh = true;
+      caseParams.restsurf = true;
+      caseParams.show_cmap = true;
+      caseParams.show_gui = true;
     }
 
     // Una vez construído el AC, inicializamos las 3 listas de tiempos de activación a -1 (Listas usadas para generar el Ensight de Mapas de activación )
@@ -291,22 +324,28 @@ void initAll() {
     a_times1.clear();
     a_times2.clear();
     a_times3.clear();
+    a_times4.clear();
     a_times1reen.clear();
     a_times2reen.clear();
     a_times3reen.clear();
+    a_times4reen.clear();
     a_vel1.clear();
     a_vel2.clear();
     a_vel3.clear();
+    a_vel4.clear();
     for (int i = 0; i < ac.G.size(); i++){
       a_times1.append(-1);
       a_times2.append(-1);
       a_times3.append(-1);
+      a_times4.append(-1);
       a_times1reen.append(-1);
       a_times2reen.append(-1);
       a_times3reen.append(-1);
+      a_times4reen.append(-1);
       a_vel1.append(0);
       a_vel2.append(0);
       a_vel3.append(0);
+      a_vel4.append(0);
     }
 
     if (multiSim) {
@@ -432,6 +471,7 @@ void setup() {
       parametersMulti.add(caseParams.cv_memoryMulti);  // % Memoria CV
       parametersMulti.add(caseParams.apd_isot_efMulti);//Efecto electrotónico. % que afecta
       parametersMulti.add(caseParams.id_extraIMulti);
+      println("puntoooooooos   " + caseParams.id_extraIMulti);
 
       // Copiamos el array de listas inicial para poder modificarlo pero mantener las listas originales para poder recargar los datos
       // Y contamos el número de simulaciones que se generarán
@@ -575,13 +615,32 @@ void draw() {
   // de activación ya que limpia init_nodes antes de añadir parche
   if (caso == BLOQUE_VTK){
     if (gui_blk_activated == 1){
-      float t_active_blk = 1322; /// tiempo en milisegundos de activación parche bloque   Elvira -> 1320
+      float t_active_blk = 318; /// tiempo en milisegundos de activación parche bloque   Elvira -> 1320
+      //per S1 = 150 -- t actt= 435 fa diffusione normale
+      // per S1 = 150 -- t act = 430 fa un inizio di rotore
+      //ultimo 10/01:  per S1 = 150 da rotore
       if (tiempo_transcurrido >= t_active_blk && blk_NOactivado){
         //float t = ac.activa_parcheBloque(true);
         float t = ac.activa_parcheBloqueNodos(true);
         // Ponemos a false para que el parche solo se active una vez
         blk_NOactivado = false;
-        // Limpiamos la lista de nodos de estímulo iniciales para que no se activen de nuevo ni frente ni bloque
+        ac.init_nodes.clear();
+        if(t < ac.t_next_event)
+          ac.t_next_event = t;
+      }
+    }
+  }
+  //GIADA
+    // SI caso CENT. Si activacion parche a 1 Activamos parche de bloque en un tiempo en ms exacto definido y como últimos nodos
+  // de activación ya que limpia init_nodes antes de añadir parche
+  if (caso == VENT){
+    if (gui_blk_activated == 1){
+      float t_active_blk = 320; /// tiempo en milisegundos de activación parche bloque   Elvira -> 1320
+      if (tiempo_transcurrido >= t_active_blk && blk_NOactivado){
+        //float t = ac.activa_parcheBloque(true);
+        float t = ac.activa_parcheBloqueNodosVent(true);
+        // Ponemos a false para que el parche solo se active una vez
+        blk_NOactivado = false;
         ac.init_nodes.clear();
         if(t < ac.t_next_event)
           ac.t_next_event = t;
@@ -592,11 +651,11 @@ void draw() {
   if( ac.num_beat < nStimsS1 + nStimsS2) {
       // Activamos nuevo estímulo
       if(ac.NextStimTime <= tiempo_transcurrido){
-        float t = ac.activacion(true);
+        float t = ac.activacion(true); //DOLORS
         // Inicializamos en cada estímulo variables de detección de nodos init activados por vecinos y el contador de ciclos de reentrada
         tCountNodesReen = INFINITO;
         countNodesReen = 0;
-        // Si multiSim y S2 no activa vecinos reseteamos y pasamos a siguiente siumulación
+        // Si multiSim y S2 no activa vecinos reseteamos y pasamos a siguiente simulación
         if (multiSim && failed_S2){
           // Incrementamos contador de simulaciones
           countMultiSim++;
@@ -657,6 +716,20 @@ void draw() {
             lista3_open = true; // Ponemos a true la variable que identifica que la lista 3 està guardando datos
             println("LISTA3 ABIERTA - BEAT - count", beat_lista3, count_t_lista3);
           }
+          // Si tercera lista abierta y sigue guardando datos, abrimos la lista4 y empezamos a guardar los datos de activación del actual beat en ella
+          else if (!lista4_open){
+            // Inicializamos la lista3 de tiempos de activación a -1 y velocidad a 0 para que los nodos que no se activen en el actual estímulo se queden con valores por defecto
+            a_times4.clear();
+            a_vel4.clear();
+            for (int i = 0; i < ac.G.size(); i++){
+              a_times4.append(-1);
+              a_vel4.append(0);
+            }
+            count_t_lista4 = int(tiempo_transcurrido - ac.LastStimTime); // Inicilizamos contador de tiempos de guardado de datos de activación actualizandolo dependiendo del tiempo transcurrido desde estímulo actual
+            beat_lista4 = ac.LastStimTime; // Guardamos el beat al que corresponde el guardado de la lista 1
+            lista4_open = true; // Ponemos a true la variable que identifica que la lista 3 està guardando datos
+            println("LISTA3 ABIERTA - BEAT - count", beat_lista4, count_t_lista4);
+          }
           // Si no advertimos que nos hemos quedado sin listas para abrir
           else
             println("NO NOS QUEDAN LISTAS PARA ABRIR!!!!!!!!!!");
@@ -678,6 +751,7 @@ void draw() {
   // Si multiSim y t posterior o igual a último estímulo y ya hemos terminado S1-S2, incrementamos num_beat para que entre aquí en cada draw y esperamos 700ms
   // para revisar si quedan celdas activadas ante reentrada o no. Y reseteamos todo para lanzar la siguiente simulación con nuevos parámetros
   else if (multiSim && tiempo_transcurrido >= t_LastStim ){
+
       ac.num_beat+=1;
       if (tiempo_transcurrido > t_LastStim + 700){
           // Cerramos simulación si ya no hay eventos porque las celdas están todas desactivadas
@@ -778,6 +852,16 @@ void draw() {
      else if (lista3_open)
        count_t_lista3 += caseParams.dt;
 
+     if (lista4_open && count_t_lista4 > t_activacion){
+       println("Cierro lista4 en t: ", tiempo_transcurrido);
+       lista4_open = false;
+
+       if (rec_caseMAP)
+         generaEnsA_Map(a_times4, a_vel4);
+     }
+     else if (lista4_open)
+       count_t_lista4 += caseParams.dt;
+
 
      // Recorremos todos los nodos para guardar tiempos de activación
      for (Node3 n: ac.G){
@@ -868,6 +952,34 @@ void draw() {
            println("POSIBLE REENTRADA!!! LISTA CERRADA DESPUÉS DE 600 ms PERO SIGUEN HABIENDO NODOS ACTIVÁNDOSE EN BEAT: ",beat_lista3);
            count3_reentrada = true;
            }
+
+                    // Si su beat de activación pertenece a la lista 3
+         if (n.current_act_beat == beat_lista4 && lista4_open){
+           // Comprobamos si no se ha guardado beat de reentrada para asegurar que guardamos primera 2ª activación y si ya existía dato de activación
+           // anterior (valor distinto a inicialización -1) y el valor anterior es distinto al que vamos a guardar y por tanto es segunda activación en mismo beat para al final del bucle deducir nodo inicial reentrada
+           /*
+           if (a_times3.get(n.id) != -1  && a_times3.get(n.id) != (n.start_time - beat_lista3) && beatReen3 == 0){
+             lista3_reen = true; // Ponemos a true variable que identifica que esta lista contiene datos de posibles reentrada
+             a_times3reen.set(n.id, n.start_time - beat_lista3);
+           }
+           */
+           //a_times3.set(n.id, n.start_time - beat_lista3);
+           a_times4.set(n.id, n.start_time);
+           //a_vel3.set(n.id, n.cv);
+           //a_vel3.set(n.id, n.cv_real);
+           a_vel4.set(n.id, n.apd);
+           // Si el tiempo de activación mayor a 400 (variable definida al inicio) existe una activación fuera de lo normal y podría generar una reentrada. AVisamos solo una vez
+           if (!posible_reentrada4 && n.start_time - beat_lista4 > t_esperaActivacion){
+             posible_reentrada4 = true;
+             println("TIEMPOS DE ACTIVACIÓN MUY ALTOS  EN LISTA 3. ACTIVACIÓN FUERA DE LOS PARÁMETROS NORMALES !!! EN BEAT:  ", beat_lista3);
+           }
+         }
+         // Si siguen habiendo nodos con el padre de activación del beat lista 3 pero hemos cerrado ya la lista, significa que posiblemente está ocuriendo una reentrada
+         // porque estamos dentro de la activación del beat en tiempos superiores a 600 ms. Advertimos de la situación
+         else if (n.current_act_beat == beat_lista4 && !lista4_open && a_times4.get(n.id) != n.start_time - beat_lista4 && !count4_reentrada){
+           println("POSIBLE REENTRADA!!! LISTA CERRADA DESPUÉS DE 600 ms PERO SIGUEN HABIENDO NODOS ACTIVÁNDOSE EN BEAT: ",beat_lista4);
+           count4_reentrada = true;
+           }
          }
        }
        // Lista reen 1 - Si hemos detectado posible reentrada y guardado tiempos de segundas activaciones buscamos origen reentrada con mínimo tiempo de activación
@@ -936,6 +1048,29 @@ void draw() {
          println("EN MAPA LISTA 3 POSIBLE REENTRADA, MIN. TIEMPO ACTIVACION: ",min_t_reentrada,"EN ID: ", id_min," Y BEAT ", beat_lista3);
          if (multiSim)
            outputSims.println("\nNODO INICIO DE REENTRADA ( POR 2ª ACTIVACIÓN EN MISMO BEAT CON MÍNIMO t ): \tNodo ID "+ id_min+", 2º Tiempo de activación "+min_t_reentrada+", Beat "+ beat_lista3);
+       }
+
+              // Lista reen 3 - Si hemos detectado posible reentrada y guardado tiempos de segundas activaciones buscamos origen reentrada con mínimo tiempo de activación
+       // Guardamos mínimo tiempo y id del nodo
+       if (lista4_reen){
+         float min_t_reentrada = INFINITO;
+         int id_min = -1;
+         for (int i= 0; i < a_times4reen.size(); i++){
+           beatReen4 = beat_lista4; // Beat en el que se genera la reentrada y sirve para que no se vuelvan a guardar siguientes segundas activaciones
+           // Descartamos los tiempos inicializados a -1 de nodos no activados
+           float a_time = a_times4reen.get(i);
+           if (a_time != -1 )
+             println("LISTA INI REEN 4 - Time - ID: ", a_time, i);
+           if(a_time < min_t_reentrada && a_time > -1){
+             min_t_reentrada = a_time;
+             id_min = i;
+           }
+         }
+         lista4_reen = false;
+         id4 = id_min;
+         println("EN MAPA LISTA 4 POSIBLE REENTRADA, MIN. TIEMPO ACTIVACION: ",min_t_reentrada,"EN ID: ", id_min," Y BEAT ", beat_lista4);
+         if (multiSim)
+           outputSims.println("\nNODO INICIO DE REENTRADA ( POR 2ª ACTIVACIÓN EN MISMO BEAT CON MÍNIMO t ): \tNodo ID "+ id_min+", 2º Tiempo de activación "+min_t_reentrada+", Beat "+ beat_lista4);
        }
    }
 
@@ -1019,6 +1154,10 @@ void keyPressed()
         lista3_open = false;
         generaEnsA_Map(a_times3, a_vel3);
       }
+     if (lista4_open){
+        lista4_open = false;
+        generaEnsA_Map(a_times4, a_vel4);
+      }
       // Generamos .case con los datos de los .ens generados
       generaCaseA_Map();
       println(" Finalizada grabación Ensight Mapa de activación");
@@ -1085,6 +1224,9 @@ void keyPressed()
   if (key == 'w')
    caseParams.hay_mesh = !caseParams.hay_mesh;
 
+  if (key == 'r')
+   caseParams.restsurf = !caseParams.restsurf;
+
 
 }
 
@@ -1106,29 +1248,22 @@ void draw_scene(int id_view)
 
       case VENT:
                if(!caseParams.multi_view){
-                 // Berruezo LV y Bivent
-                 ///*
                  strokeWeight(6);
                  escala = 5;
+                 // Berruezo
                  scale(-1,1,1);
-                 rotateX(PI/2);
-                 translate(-cas.centerMass.x,-cas.centerMass.y,-cas.centerMass.z);
-                 // LV Berruezo
-                 cam.setDistance(125);
-                 // Bivent Berruezo
-                 //cam.setDistance(180);
-                 //*/
-
-                  // Alejandro  Bivent
-                  /*
-                  strokeWeight(1);
-                  escala = 5;
+                 //Alejandro
+                  //scale(1,-1,1);
+                  rotateX(PI/2);
                   translate(-cas.centerMass.x,-cas.centerMass.y,-cas.centerMass.z);
-                  scale(-escala,escala,escala);
-                  rotateX(-PI/2);
-                  translate(-65,-65,-250);
-                  cam.setDistance(600);
-                  */
+                  cam.setDistance(125);
+
+                  // Alejandro
+                  //escala = 5;
+                  //scale(-escala,escala,escala);
+                  //rotateX(-PI/2);
+                  //translate(-65,-65,-250);
+                  //cam.setDistance(600);
                }
                else{
                if (id_view == 1){ // vista posterior // der
@@ -1155,9 +1290,9 @@ void draw_scene(int id_view)
         if (cas.cellsize_bloqueVTK < 0.2)
           cam.setDistance(80);
         else if (cas.bpl_CasoBloqueY * cas.cellsize_bloqueVTK < 140)
-          cam.setDistance(100);
+          cam.setDistance(130); //prima100
         else
-          cam.setDistance(140);
+          cam.setDistance(180); //prima140
         break;
     }
 
@@ -1205,7 +1340,7 @@ void draw_cmap(){
 
   if (caso == BLOQUE_VTK){
     strokeWeight(1);
-    translate(680,160,0);
+    translate(800,160,0);
     scale(3,3,3);
   }
   else if (caso == VENT){
@@ -1339,8 +1474,8 @@ void generaGeo(String typeFile){
   outputGeo.flush();
 
   // Tipo de elementos
-  //outputGeo.println("tetra4");
-  outputGeo.println("hexa8");
+  outputGeo.println("tetra4");
+  //outputGeo.println("hexa8");
   // Abrimos archivo txt con id's de nodos conectados a cada celda ne cada línea
   String[] lines = loadStrings(casePath+"Reader_VTK/cell_conex_nodos.txt");
 
@@ -1364,9 +1499,9 @@ void generaGeo(String typeFile){
        // Ventrículo Alejandro
        //hexaline = " "+str(int(tok[0])+1)+" "+str(int(tok[1])+1)+" "+str(int(tok[2])+1)+" "+str(int(tok[3])+1)+" "+str(int(tok[4])+1)+" "+str(int(tok[5])+1)+" "+str(int(tok[6])+1)+" "+str(int(tok[7])+1);
        // Ventrículos Berruezo Voxels
-       hexaline = " "+str(int(tok[0])+1)+" "+str(int(tok[1])+1)+" "+str(int(tok[3])+1)+" "+str(int(tok[2])+1)+" "+str(int(tok[4])+1)+" "+str(int(tok[5])+1)+" "+str(int(tok[7])+1)+" "+str(int(tok[6])+1);
+       //hexaline = " "+str(int(tok[0])+1)+" "+str(int(tok[1])+1)+" "+str(int(tok[3])+1)+" "+str(int(tok[2])+1)+" "+str(int(tok[4])+1)+" "+str(int(tok[5])+1)+" "+str(int(tok[7])+1)+" "+str(int(tok[6])+1);
        // Mesh Tetraedro
-       //hexaline = " "+str(int(tok[0])+1)+" "+str(int(tok[1])+1)+" "+str(int(tok[2])+1)+" "+str(int(tok[3])+1);
+       hexaline = " "+str(int(tok[0])+1)+" "+str(int(tok[1])+1)+" "+str(int(tok[2])+1)+" "+str(int(tok[3])+1);
      // Si Bloque vtk
      else
        hexaline = " "+str(int(tok[0])+1)+" "+str(int(tok[1])+1)+" "+str(int(tok[2])+1)+" "+str(int(tok[3])+1)+" "+str(int(tok[4])+1)+" "+str(int(tok[5])+1)+" "+str(int(tok[6])+1)+" "+str(int(tok[7])+1);
@@ -1443,10 +1578,10 @@ void generaEns(){
   for (Node3 n: ac.G){
     //float valor = 0.0;
     float valor = n.t_proxima_desactivacion - tiempo_transcurrido;
-    // Si el nodo es core tendrá APD 0 y le ponemos valor de tvida a -1. Si queremos no visualizarlos en Paraview con un threshold
+    // Si el nodo es core tendrá APD 0 y le ponemos valor de tvida a 0. Si queremos no visualizarlos en Paraview con un threshold
     // podemos modificar el valor a -1
     if (n.apd == 0.0)
-      valor = -1;
+      valor = 0.0;
     // SI la celda está desactivada t_proxima_desactivacion es infinito por tanto si valores mayor que 1000 ponemos tvida a 0
     else if (valor > 1000)
       valor = 0.0;

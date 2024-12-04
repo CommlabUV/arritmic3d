@@ -16,7 +16,7 @@ class AC {
   int                 nCeldas;
   IntList             Lab;
   IntList             Lbz;
-  EventQueue Labp;
+  PriorityQueue<Evento> Labp;
 
   float               max_path, max_st, beat_start_time;
   Node3               first;
@@ -60,7 +60,7 @@ class AC {
     re_nodes = new IntList();
     init_nodes = new IntList();
     int tamQueue = max(1,int(sqrt(nCeldas)));
-    Labp = new EventQueue();
+    Labp = new PriorityQueue<Evento>(tamQueue,new OrdenaEventos());
     println("Creada lista con prioridad. Capacidad para " + tamQueue + " celdas.");
 
     bbox = new Bbox();
@@ -85,6 +85,7 @@ class AC {
     n_cells_updated = 0;
 
     println("Construyendo Grafo .... ");
+    println("lista INIT " + init_nodes);
 
     // Se crea el grafo
     for (int id = 0 ; id < nCeldas; id++){
@@ -94,16 +95,22 @@ class AC {
       int estado = -1;
       int tipo;
       int endo2Epi;
+      float vertex_ratio;
+      float vertex_reductCV;
       if (caso == BLOQUE_VTK){
         endo2Epi = c.endo2Epi.get(id);
         //endo2Epi = 0; //// DESCOMENTAR Y DEFINIR SI EL ARCHIVO SCARTISSUE NO ES CORRECTO Y DEFINIMOS TODO EL BLOQUE IGUAL COMO: ENDO 0, MID 1 , EPI 2
         //tipo = 0; //////// DESCOMENTAR SI DEFINIMOS TODO EL BLOQUE IGUAL COMO: SANA 0, BZ 1 , CORE 2
         tipo = c.cellType.get(id);  //////// COMENTAR SI DEFINIMOS TODO EL BLOQUE IGUAL COMO: SANA 0, BZ 1 , CORE 2
+        vertex_ratio = 0.77;
+        vertex_reductCV = 1.38;
       }
       // Si caso ventrículo leemos el valor etiquetado
       else{
         endo2Epi = c.endo2Epi.get(id);
         tipo = c.cellType.get(id);
+        vertex_ratio = c.vertex_ratio.get(id);
+        vertex_reductCV = c.vertex_reductCV.get(id);
       }
 
       // Guardamos lista de BZ para activar ectópicos como estímulos
@@ -111,16 +118,17 @@ class AC {
         Lbz.append(id);
       float P = 0.0;
       ///// SI BLOQUE_VTK DEFINIMOS ORIENTACIÓN DE FIBRAS
-      if (caso == BLOQUE_VTK)
+      if (caso == BLOQUE_VTK){
         //or = new PVector(0,1,0);
         or = caseParams.direccion_fibras_bloque;
+      }
       else if( c.oX.size() == 0 ||  c.oX.size() == 0 ||  c.oX.size() == 0 )
         or = new PVector(0,1,0);
       // Añadimos la Orient. de Fibras desde los datos leídos txt
       else
         or = new PVector(c.oX.get(id),c.oY.get(id),c.oZ.get(id));
 
-      Node3 node = new Node3(id, pos, P, estado, or, or, tipo, endo2Epi);
+      Node3 node = new Node3(id, pos, P, estado, or, or, tipo, endo2Epi, vertex_ratio,vertex_reductCV);
       G.add(node);
     }
 
@@ -132,7 +140,6 @@ class AC {
     println("AC-bbox center: ", bbox.center);
     if (caseParams.grid_enable && grid != null)
       grid.setCenter(bbox.center);
-
     // Calculamos safety factor para todas las celdas excepto Core
     calcula_safetyFactor(c);
 
@@ -145,7 +152,7 @@ class AC {
         for (Node3 N: G){
          for (int id_vec: c.V.get(N.id)){
            Node3 vec = G.get(id_vec);
-           // Incluímos vecinos Core también porque si no no se puede calcular el SafetyFactor pq solo tiene en cuenta vecinos Core respecto a Sanos o BZ
+
            //if (vec.tipo != 2) //Añadimos vecinos que no sean Core
              N.add_vecino(vec);
          }
@@ -201,6 +208,7 @@ class AC {
                         -> 0 ceros(comparten 1 vértice)
               */
               for (int id_vec: c.V.get(N.id)){
+                //println("lo intenta 2 " + N.id); //aqui esta el problema 23/03/03
                 Node3 vec = G.get(id_vec);
                 // Calculamos el producto escalar entre vector de celda a vecino y respecto a los tres ejes, X, Y, Z
                 // y acumulamos el número de ceros
@@ -243,14 +251,13 @@ class AC {
 
             if (N.safety_factor != 1.0){
               cont++;
-              //println("SAFETY", cont,N.id , N.safety_factor);
+            //  println("SAFETY", cont,N.id , N.safety_factor);
             }
 
 
           }
         }
       }
-      println("SAFETY Num Nodes", cont);
     }
   }
 
@@ -337,8 +344,10 @@ class AC {
     println("MIN MAX NODO: ", minNodo, maxNodo);
     for(int i : init_nodes) {
       Node3 init_node = G.get(i);
-      if ( i == minNodo || i == maxNodo )
-        println("ID - COORD NODO: ",i,init_node.pos );
+      if ( i == minNodo || i == maxNodo ){
+        //println("ID - COORD NODO: ",i,init_node.pos );
+
+      }
 
       /*
       // OPT 2: Las activamos si están desactivadas o apd 70
@@ -350,19 +359,77 @@ class AC {
       if((init_node.estado != 2 || tvida_70 >= apd70)){
       */
       // OPT 1: Las activamos tanto si están desactivadas o no
-        init_node.activar_BLK(Labp);  // NEW_PQ: check
+        init_node.activar_BLK(Labp);
         t = tiempo_transcurrido;
       //}else
         //hay_nodos_refractarios++;
     }
-    if (hay_nodos_refractarios > 0)
-      println("La activación no se producirá en "+hay_nodos_refractarios+" de "+init_nodes.size() + " nodos porque su estado es 2.");
+    if (hay_nodos_refractarios > 0){
+      //hay_nodos_refractarios = 0;
+    //  println("RIGA 369 La activación no se producirá en "+hay_nodos_refractarios+" de "+init_nodes.size() + " nodos porque su estado es 2.");
+    }
+
+    return t;
+  }
+
+    // Activamos parche de bloque por NODOS solo una vez cuando se llama desde main
+  float activa_parcheBloqueNodosVent(boolean event_mode){
+    float t = INFINITO;
+    println("ACTIVAMOS BLK VENT EN t: ", tiempo_transcurrido);
+    // Limpiamos la lista de nodos de activación ya que solo falta activar el parche
+    println("INIT NODES BEFORE THE CLEAR     " + init_nodes.size());
+    init_nodes.clear();
+    println("INIT NODES AFTER THE CLEAR     " + init_nodes.size());
+    println("ids_bloquevent before     " + caseParams.ids_BloqueVent);
+    init_nodes = caseParams.ids_BloqueVent;
+    //los nodos son los qu cargamos con el fichero nodes_CasoBloqueVent.txt
+    /*
+    for (int i=0;i<caseParams.ids_BloqueVent.size();i++){
+    init_nodes.append(caseParams.ids_BloqueVent[i]);
+    }*/
+
+
+    println("PREPARADO PARCHE BLOQUE  VENT - Num lista INIT",init_nodes.size());
+
+    int hay_nodos_refractarios = 0;
+    int minNodo = init_nodes.min();
+    int maxNodo = init_nodes.max();
+    println("MIN MAX NODO: ", minNodo, maxNodo);
+    for(int i : init_nodes) {
+      Node3 init_node = G.get(i);
+      if ( i == minNodo || i == maxNodo ){
+        //println("ID - COORD NODO: ",i,init_node.pos );
+
+      }
+
+      /*
+      // OPT 2: Las activamos si están desactivadas o apd 70
+      float tvida_70 = 0;
+      float apd70 = init_node.apd * 0.7;
+      // Si activada comprobamos su tvida_70
+      if (init_node.estado == 2)
+        tvida_70 = tiempo_transcurrido - init_node.start_time;
+      if((init_node.estado != 2 || tvida_70 >= apd70)){
+      */
+      // OPT 1: Las activamos tanto si están desactivadas o no
+        init_node.activar_BLK(Labp);
+        t = tiempo_transcurrido;
+      //}else
+        //hay_nodos_refractarios++;
+    }
+    if (hay_nodos_refractarios > 0){
+      //hay_nodos_refractarios = 0;
+    //  println("RIGA 369 La activación no se producirá en "+hay_nodos_refractarios+" de "+init_nodes.size() + " nodos porque su estado es 2.");
+    }
 
     return t;
   }
 
   float activacion(boolean event_mode){
     float t = INFINITO;
+  //  println("halloooooooooooooooooooooooooooooooooooooooooo num_beat  " + num_beat);
+    println("nStimsS1  " + nStimsS1);
+    println("nStimsS2  " + nStimsS2);
     if( num_beat < nStimsS1 + nStimsS2)
       if (tiempo_transcurrido >= NextStimTime ){
           num_beat+=1;
@@ -373,18 +440,25 @@ class AC {
             Node3 init_node = G.get(i);
             if( init_node.estado != 2 )
             {
+             // println("estamos en el NOOO null");
               Evento new_ev = init_node.en_espera(0.0,0,null,num_beat,true);
               if(new_ev != null) {
-                Labp.add(new_ev);  // NEW_PQ: check
+                Labp.add(new_ev);
                 t = tiempo_transcurrido;
+               // println("estamos en el NO null");
               }
-            }else
+            }else{
               hay_nodos_refractarios++;
+              //t = tiempo_transcurrido; //AGGIUNTO 8 NOVEMBRE
+            //  println("estamos en el SI null");
+              //Evento new_ev = init_node.en_espera(0.0,0,null,num_beat,true); //AGGIUNTO 8 NOVEMBRE
+            }
           }
           if (hay_nodos_refractarios > 0) {
-            println("La activación no se producirá en "+hay_nodos_refractarios+" de "+init_nodes.size() + " nodos porque su estado es 2.");
+            println("RIGA 400 La activación no se producirá en "+hay_nodos_refractarios+" de "+init_nodes.size() + " nodos porque su estado es 2.");
             // Si estamos en multiSim y S2 es demasiado temprano y no va a activar nodos, activamos variable de aviso para resetear y pasar a la siguiente simulación con nuevo S2
             if (multiSim && hay_nodos_refractarios == init_nodes.size()) {
+            //  println("dentro all'if di hay_nodos_refractarios");
               failed_S2 = true;
             }
           }
@@ -395,7 +469,7 @@ class AC {
 
           init_beat(tiempo_transcurrido);
       }
-
+  //  println("ciaoooooooooooooooooooooooooooooooooooooooooo Value of t   " + t);
     return t;
   }
 
@@ -404,7 +478,7 @@ class AC {
     t_next_event = INFINITO;
 
       if(!Labp.isEmpty()){
-        Evento ev = Labp.poll();  // NEW_PQ: check
+        Evento ev = Labp.poll();
         Node3 n = G.get(ev.id);
         float new_t = ev.t;
         if(new_t < tiempo_transcurrido){
@@ -412,12 +486,12 @@ class AC {
           println("\n\n\n\n\n");
         }
         tiempo_transcurrido = new_t;
-        n.dispara_evento(ev,Labp);  // NEW_PQ: check
+        n.dispara_evento(ev,Labp);
         n_cells_updated++;
       }
 
       if(!Labp.isEmpty()) {
-        Evento ev = Labp.peek(); // NEW_PQ: check
+        Evento ev = Labp.peek();
         t_next_event = ev.t;
         if(t_next_event < tiempo_transcurrido)
         {
@@ -649,6 +723,7 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
   void activa_frente(int mode){
     // Comprobamos si variable activa frente nodos definidos en txt está a true para ejecutar este tipo de frente
     if (caseParams.active_MultiIDs_extraI){
+      println("entramos en el multidis--------");
        // TODO: Cuando se integre la dirección de la propagación, los valores leídos en el txt están en un ArrayList<PVector> con nombre caseParams.dirProp_extraIMulti
        int id_i;
        for (int i = 0; i < caseParams.ids_extraIMulti.size(); i++){
@@ -660,24 +735,25 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
            if (init_node.tipo != 2){
              ac.init_nodes.append(id_i);
              init_node.en_espera(caseParams.delays_extraIMulti.get(i),0,null, 0,true);
-             ac.Labp.add(init_node.siguienteEvento()); // NEW_PQ: check
+             ac.Labp.add(init_node.siguienteEvento());
+             //println("ID init_nodes total son      "+ init_node.id);
            }
          }
          // Si no avisamos que id no existe en el modelo
          else
            println("ID "+ id_i + " no existe en el modelo");
        }
-       println("Lista Init Nodes ID's: ", ac.init_nodes);
     }
     // Si no ejecutamos nodos de activación inicial dependiendo del mode (nodo único, frente vertical, frente horizontal)
     else {
+      println("noooo entramoa en el multidis--------------");
       if (mode == 0){ // nodo foco
         int id_i;
         id_i = id_extraI;
         ac.init_nodes.append(id_i);
         Node3 init_node = ac.G.get(id_i);
         init_node.en_espera(gui_pdelay,0,null, 0,true);
-        ac.Labp.add(init_node.siguienteEvento()); // NEW_PQ: check
+        ac.Labp.add(init_node.siguienteEvento());
 
       }
       // Frentes horizontales y verticales
@@ -698,7 +774,7 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
                  if (init_node.tipo != 2){
                    ac.init_nodes.append(id_i);
                    init_node.en_espera(gui_hdelay,0,null, 0,true);
-                   ac.Labp.add(init_node.siguienteEvento()); // NEW_PQ: check
+                   ac.Labp.add(init_node.siguienteEvento());
                  }
                }
              }
@@ -716,7 +792,7 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
                  if (init_node.tipo != 2){
                    ac.init_nodes.append(id_i);
                    init_node.en_espera(gui_vdelay,0,null, 0,true);
-                   ac.Labp.add(init_node.siguienteEvento()); // NEW_PQ: check
+                   ac.Labp.add(init_node.siguienteEvento());
                  }
                }
              }
@@ -790,7 +866,7 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
       println(" Vamos a guardar "+Labp.size()+" estados.");
 
       int saved = 0;
-      for (Evento ev: Labp.tree){
+      for (Evento ev: Labp){
          output2.println(str(ev.id)+'\t'+str(ev.t)+'\t'+str(ev.st));
          if( saved%1000 == 0)
            print(".");
@@ -871,6 +947,7 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
              G.get(id_nodo).t_proximo_evento          =  float(float_line[9]);
              G.get(id_nodo).suma_tiempos_activadores  = float(float_line[10]);
              G.get(id_nodo).tiempo_activador          = float(float_line[11]);
+             G.get(id_nodo).apd0                =  float(float_line[12]);
 
              // Este bloque se leerá el último. Si hay que añadir algo, hay
              // que hacerlo antes y cambiar el 10.
@@ -879,15 +956,15 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
              G.get(id_nodo).normal_frente = new PVector();
              if(G.get(id_nodo).n_activadores != 0)
              {
-                G.get(id_nodo).suma_activadores.x       = float(float_line[12]);
-                G.get(id_nodo).suma_activadores.y       = float(float_line[13]);
-                G.get(id_nodo).suma_activadores.z       = float(float_line[14]);
-                G.get(id_nodo).foco_activador.x         = float(float_line[15]);
-                G.get(id_nodo).foco_activador.y         = float(float_line[16]);
-                G.get(id_nodo).foco_activador.z         = float(float_line[17]);
-                G.get(id_nodo).normal_frente.x          = float(float_line[18]);
-                G.get(id_nodo).normal_frente.y          = float(float_line[19]);
-                G.get(id_nodo).normal_frente.z          = float(float_line[20]);
+                G.get(id_nodo).suma_activadores.x       = float(float_line[13]);
+                G.get(id_nodo).suma_activadores.y       = float(float_line[14]);
+                G.get(id_nodo).suma_activadores.z       = float(float_line[15]);
+                G.get(id_nodo).foco_activador.x         = float(float_line[16]);
+                G.get(id_nodo).foco_activador.y         = float(float_line[17]);
+                G.get(id_nodo).foco_activador.z         = float(float_line[18]);
+                G.get(id_nodo).normal_frente.x          = float(float_line[19]);
+                G.get(id_nodo).normal_frente.y          = float(float_line[20]);
+                G.get(id_nodo).normal_frente.z          = float(float_line[21]);
              }
 
              G.get(id_nodo).min_potencial = caseParams.min_pot_act;
@@ -918,7 +995,7 @@ void drawNode(Node3 N,int mode, int visu, Boolean show_graph) {
              ev.id    =  int(int_line[0]);
              ev.t     =  float(int_line[1]);
              ev.st    =  int(int_line[2]);
-             // NEW_PQ: check. Assign ev to node[i]
+
              Labp.add(ev);
           }
           reader2.close();

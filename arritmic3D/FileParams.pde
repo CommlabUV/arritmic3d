@@ -1,6 +1,7 @@
 class FileParams{
     String    model_file;
     Boolean   hay_mesh;
+    Boolean   restsurf;
     int       pinta_cada_n;
     int       id_extraI;
     Boolean   active_MultiIDs_extraI; // Variable para activar opción de activación de nodos definidos en txt
@@ -8,7 +9,9 @@ class FileParams{
     IntList   ids_extraIMulti = new IntList(); // Lista con id's de nodos iniciales de activación Multi
     FloatList delays_extraIMulti = new FloatList(); // Lista con delays de nodos iniciales de activación Multi
     ArrayList<PVector> dirProp_extraIMulti = new ArrayList(); // Lista con vectores XYZ de dirección de propagación de de nodos iniciales de activación Multi
+
     String    fileName_MultiIDs_extraI;
+
     float     voxel_size;
     float     tam_frente;
     Boolean   grid_enable;
@@ -30,6 +33,9 @@ class FileParams{
 
     float     di_Sana; // Intervalo diastólico célula sana  DI ->200 (APD - 285 CV - 0.67)
     float     di_BZ ;  // Intervalo diastólico célula BZ. Le reducimos de la sana, ya que el APD es más largo
+
+    float     apd0_Sana; // Intervalo diastólico célula sana  APD0 -> 294 (APD -  CV - )
+    float     apd0_BZ ;  // Intervalo diastólico célula BZ. Le reducimos de la sana, ya que el APD es más largo
 
     float     stimFrecS1; // Frecuencia de estimulo S1
     float     stimFrecS2; // Frecuencia de estimulo S2 S3
@@ -55,6 +61,10 @@ class FileParams{
     FloatList     cv_memoryMulti;  // % Memoria CV
     FloatList     apd_isot_efMulti;//Efecto electrotónico. % que afecta
 
+    Boolean   active_BloqueVent_extraI; // Variable para activar opción de activación de nodos en bloque definidos en el txt
+    // Nombre de archivo txt para activación de nodos definidos, que contiene en cada línea: id nodo a activar(Todo separado por espacios)
+    IntList   ids_BloqueVent = new IntList(); // Lista con id's del bloque por el ventriculo/auricula
+    String    fileName_BloqueVent_extraI;
 
 
     FileParams(String caseFile){
@@ -65,6 +75,7 @@ class FileParams{
 
           model_file       =  parse_param(reader.readLine());
           hay_mesh         =  boolean(parse_param(reader.readLine()));
+          restsurf         =  boolean(parse_param(reader.readLine()));
           grid_enable      =  boolean(parse_param(reader.readLine()));
           pinta_cada_n     =  int(parse_param(reader.readLine()));
           id_extraI        =  int(parse_param(reader.readLine()));
@@ -89,6 +100,8 @@ class FileParams{
           min_pot_act      = float(parse_param(reader.readLine()));
           di_Sana          =  float(parse_param(reader.readLine()));
           di_BZ            =  float(parse_param(reader.readLine()));
+          apd0_Sana          =  float(parse_param(reader.readLine()));
+          apd0_BZ            =  float(parse_param(reader.readLine()));
           stimFrecS1       =  float(parse_param(reader.readLine()));
           stimFrecS2       =  float(parse_param(reader.readLine()));
           nStimsS1         =  int(parse_param(reader.readLine()));
@@ -109,6 +122,9 @@ class FileParams{
           cv_memoryMulti   =  parse_FloatList(parse_param(reader.readLine()));
           apd_isot_efMulti =  parse_FloatList(parse_param(reader.readLine()));
 
+          active_BloqueVent_extraI =  boolean(parse_param(reader.readLine()));
+          fileName_BloqueVent_extraI = parse_param(reader.readLine());
+
           reader.close();
           println("Leido Fichero de parametros: ", caseFile);
          }
@@ -122,6 +138,9 @@ class FileParams{
          else if (active_MultiIDs_extraI)
            active_MultiIDs_extraI = false;
 
+         if (active_BloqueVent_extraI)
+           readIdBloqueVent(caseFile);
+
 
 
     }
@@ -132,12 +151,29 @@ class FileParams{
       try {
          String line;
          while ((line = readerInitNodesMulti.readLine()) != null) {
-          String[] values = line.split("\\s+");
-          ids_extraIMulti.append(int(values[0]));
-          delays_extraIMulti.append(float(values[1]));
-          dirProp_extraIMulti.add(new PVector(float(values[2]),float(values[3]),float(values[4])));
+          String[] values = line.split("\t");
+          ids_extraIMulti.append(int(values[0])); //dolors
+          delays_extraIMulti.append(float(values[1])); //dolors
+          dirProp_extraIMulti.add(new PVector(float(values[2]),float(values[3]),float(values[4]))); //dolors
          }
          println("Datos fichero txt IdsExtraMulti cargado");
+      }
+      catch (IOException e) {
+          e.printStackTrace();
+      }
+    }
+
+     void readIdBloqueVent(String caseFile){
+      print("Path: ", caseFile+fileName_BloqueVent_extraI);
+      BufferedReader readerIdBloqueVent = createReader(caseFile+fileName_BloqueVent_extraI);
+      try {
+         String line;
+         while ((line = readerIdBloqueVent.readLine()) != null) {
+          String[] values = line.split("\t");
+          ids_BloqueVent.append(int(values[0])-1);
+         }
+         println("Datos fichero txt BloqueVent cargado");
+         println("caioooooooooo " + ids_BloqueVent.size());
       }
       catch (IOException e) {
           e.printStackTrace();
@@ -164,7 +200,7 @@ class FileParams{
             String[] params = split(line, ':');
             String svec = params[0];
             String[] vec = split(svec, ',');
-            return new PVector(float(vec[0]), float(vec[1]), float(vec[2]));
+            return new PVector(float(vec[0]), float(vec[1]));
       }
       return null;
     }

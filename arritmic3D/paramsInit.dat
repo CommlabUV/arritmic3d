@@ -1,4 +1,4 @@
-### Case options: VENTRICLE -> 0 / BLOCK_VTK -> 1
+### Case options: ATRIA -> 0 / BLOCK_VTK -> 1
 ### FolderCase: name of the case folder located in the arrhythmic3D/casos folder
 case           :  0
-folderCase     :  Berruezo_p2
+folderCase     :  Atlas_Krueger2013
