@@ -36,7 +36,7 @@ int     gui_blk_num_xmax       = 133; // Numero de celdas en x del parche de act
 int     gui_blk_num_ymax       = 132;   // Numero de celdas en y del parche de activación (76)
 
 float   gui_blk_delay          = 0;
-int     gui_blk_activated      = 0; // Bloque activado -> 1, desactivado -> 0
+int     gui_blk_activated      = 1; // Bloque activado -> 1, desactivado -> 0
 
 Boolean gui_save               = false;
 Boolean gui_load               = false;
