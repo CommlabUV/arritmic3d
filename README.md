@@ -16,7 +16,7 @@ This README covers
 ## Installation
 ### Prerequisites
 * Install [Processing](https://processing.org/) version 3.5.4 or newer.
-* Download the following sample curves and cases folders from our [public repository](http://disco.uv.es/pub/commlab/disco/arritmic3D/simulador/) and unzip both in the `arritmic3D/arritmic3D` directory:
+* Download the following sample curves and cases folders from Zenodo [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14277910.svg)](https://doi.org/10.5281/zenodo.14277910) and unzip them in the `arritmic3D/arritmic3D` directory:
 
     - Restitution curves for cellular models
     - Simulation cases folder
