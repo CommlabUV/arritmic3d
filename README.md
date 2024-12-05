@@ -27,7 +27,7 @@ To run a case, you will need several subdirectories inside `arritmic3D`.
 * Two directories called `RestitutionCurves` and `RestitutionSurfaces`.
 * A directory called `casos` with a case per subdirectory in it.
 
-You can download sample data from Zenodo [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14277910.svg)](https://doi.org/10.5281/zenodo.14277910).
+You can download sample data from Zenodo [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14277909.svg)](https://doi.org/10.5281/zenodo.14277909).
 Optionally, you can build your own case from a VTK file using the scripts in the `Readers/` directory (no documentation for this yet, sorry...). Block cases (rectangular slabs of tissue) can also be built.
 
 
