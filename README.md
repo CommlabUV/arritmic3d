@@ -13,16 +13,61 @@ This README covers
 </p>
 
 
+
 ## Installation
-### Prerequisites
-* Install [Processing](https://processing.org/) version 3.5.4 or newer.
-* Download the following sample curves and cases folders from Zenodo [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14277909.svg)](https://doi.org/10.5281/zenodo.14277909) and unzip them in the `arritmic3D/arritmic3D` directory:
+* Install Processing (https://processing.org/) (at least, version 3.4)
+* Run processing and install the required libraries. To do so, open the _Tools_ menu, select _Manage tools_ and, there, go to _Libraries_ tab.
+    * Install `PeasyCam` and `ControlP5`.
+    * Instal the `Toxi` library, following these steps:
+        1.	Download `
+    toxiclibs-complete-0021.zip` from: https://github.com/postspectacular/toxiclibs/releases.
+        2.	Open Processing.
+        3.	Go to File->Preferences.
+        4.	Check the value of the field labeled "Sketchbook location:" and open this path in a file browser.
+        6.	Inside that folder you should find another folder called "libraries". Extract the toxiclib library downloaded in STEP 1 and copy it into this location.
+        7.	Restart Processing.
+* Clone or download this repository and open the file `arrithmic3D/arritmic3D.pde` from within Processing. Note that Processing requires the directory and the file have the same name.
 
-    - Restitution curves for cellular models
-    - Simulation cases folder
+
+## Preparing a case
+To run a case, you will need several subdirectories inside `arritmic3D`.
+* Two directories called `RestitutionCurves` and `RestitutionSurfaces`.
+* A directory called `casos` with a case per subdirectory in it.
+
+You can download sample data from Zenodo [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14277909.svg)](https://doi.org/10.5281/zenodo.14277909).
+Optionally, you can build your own case from a VTK file using the scripts in the `Readers/` directory (no documentation for this yet, sorry...). Block cases (rectangular slabs of tissue) can also be built.
 
 
-* Optionally, you can build your own block or left ventricle simulation case. To do this, use the Python scripts contained in the Readers folder and follow the detailed instructions in each one. Then move the generated folder with the new case to the path `arritmic3D/arritmic3D/casos`
+
+### Restitution curves directory
+This directory contains the parameters of the restituion curve activation models.
+* `restitutionCurves` directory. Inside this folder are files in the format `RestitutionCurve_A_B_C.csv` where A={BZ, Sanas} (respectively: Border Zone, Helthy); B={APD, CV} and C={Endo, Epi, Mid}
+
+
+### Cases directory
+A directory called `casos/` is necessary. There, each case will be hosted inside a subdirectory, containing the geometric and biophysical information for the case. You can download the Krueger et al. (2013) simulation case from the URL indicated above.
+Inside each case directory the files required are:
+
+* `Endo.stl`
+* params.dat (The parameters to be entered in this file are described below)
+* A folder `Reader_VTK` that contains:
+    * `cell_conex_nodos.txt` : M x N matrix describing for each of the M elements the N nodes that make it up
+    * `centerMass-BLP.txt` : 3 x 1 vector describing the (x, y, z)’ coordinate of the center of mass of the atria
+    * `centroidCellX.txt` : R x 1 vector describing for each of the R nodes of the geometry its x-coordinate
+    * `centroidCellY.txt` : R x 1 vector describing for each of the R nodes of the geometry its y-coordinate
+    * `centroidCellZ.txt` : R x 1 vector describing for each of the R nodes of the geometry its z-coordinate
+    * `EndoToEpi.txt` : R x 1 vector describing for each of the R nodes the Endo (0) or Epi (1) belonging
+    * `fibreOrientationX.txt` : R x 1 vector describing for each of the R nodes of the geometry its fibre orientation vector x-component
+    * `fibreOrientationY.txt` : R x 1 vector describing for each of the R nodes of the geometry its fibre orientation vector y-component
+    * `fibreOrientationZ.txt` : R x 1 vector describing for each of the R nodes of the geometry its fibre orientation vector z-component
+    * `nodes_CasoBloqueVent.txt` : S x 1 vector containing the nodes IDs activated for the re-entrance case (! nodes counting starts from 0)
+    * `pacing_34.txt` : NOT USED but must be present in the folder (it was prepared for the Ventricle case)
+    * `scalarValues.txt` : NOT USED but must be present in the folder (it was prepared for the Ventricle case)
+    * `scarTissue`.txt` : NOT USED but must be present in the folder (it was prepared for the Ventricle case)
+    * `vecinos.txt` : R x P matrix describing for each of the R nodes of the geometry its P neighbors
+    * `vertex_DlongDtransratio.txt` : R x 1 vector describing for each of the R nodes of the geometry its CV tissue-specific (CVL/CVL,LA)  factor
+    * `vertex_reductCV.txt` : R x 1 vector describing for each of the R nodes of the geometry CV transversal-to-longitudinal (CVL/CVT) factor
+
 ## Usage
 
 ### Defining the simulation parameters
