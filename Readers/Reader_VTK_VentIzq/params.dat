@@ -1,23 +1,23 @@
-model                   :   Endo.stl
+model                   :   Endo.stl  
 hay_mesh                :   true
-grid_enable             :   false
+grid_enable             :   false 
 pinta_cada_n            :   1
-id_extraI               :   0
+id_extraI               :   189166
 active_MultiIDs_extraI  :   false
 fileName_MultiIDs_extraI:   initNodesMulti.txt
 voxel_size              :   5
 tam_frente              :   5.0
 multi_view              :   false
 show_cmap               :   true
-dt                      :   1.0
-vmode                   :   1
-tmode                   :   2
+dt                      :   1.0    
+vmode                   :   1 
+tmode                   :   2     
 fps                     :   1000
 show_path               :   false
 show_frente             :   true
 show_graph              :   false
 rec_frame               :   false
-show_gui                :   true
+show_gui                :   false
 rango_visual            :   250
 rango_min               :   0
 radio_cateter           :   1.0
@@ -27,17 +27,23 @@ di_BZ_Init              :   185
 stimFrecS1              :   600
 stimFrecS2              :   275
 nStimsS1                :   6
-nStimsS2                :   4
+nStimsS2                :   2
 apd_memory              :   0.35
-cv_memory               :   0.05
+cv_memory               :   0.05  
 reductCVtr              :   0.52
-apd_isot_ef             :   0.85
+apd_isot_ef             :   0.8
 dir_fibras              :   0.0,1.0,0.0
-multiSim                :   false
-id_extraIMulti          :
+multiSim                :   true
+id_extraIMulti          :   
 stimFrecS1Multi         :   600
-stimFrecS2Multi         :   270, 275, 280, 285, 290, 295, 300, 305
+stimFrecS2Multi         :   270, 275, 280, 285, 290, 295
 nStimsS1Multi           :   6
-nStimsS2Multi           :   2,3,4
-cv_memoryMulti          :   0.05
-apd_isot_efMulti        :   0.85
+nStimsS2Multi           :   1,2,3
+cv_memoryMulti          :   0.05 
+apd_isot_efMulti        :   0.8
+apd_memoryMulti         :   0.35
+CVR_factorMulti         :   1, 1.25
+APDR_factorMulti        :   0.75,1, 1.25
+multiCaseReen           :   false
+path_multiCaseReen      :   multiSims_Res/PAPER_CasosCompletos/Berruezo_p56_multiSimsRes.txt
+savePre_ECGdata         :   false
