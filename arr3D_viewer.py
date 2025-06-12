@@ -68,7 +68,7 @@ class DiffusionVisualizer:
 
             thresholded = grid.threshold([0, 2], scalars='Cell_type', all_scalars=True)
 
-            
+
             self.mesh_cache[frame_idx] = thresholded
             return thresholded
         return None
@@ -91,7 +91,7 @@ class DiffusionVisualizer:
         for action in self.plotter.main_menu.actions():
             if action.text() == "Editor" or action.text() == "Tools":
                 self.plotter.main_menu.removeAction(action)
-                
+
         self.plotter.set_background('white')
         self.plotter.enable_anti_aliasing()
         self.plotter.app_window.setWindowTitle("Arritmic 3D Viewer - ComMLab@uv.es")
@@ -164,10 +164,10 @@ class DiffusionVisualizer:
             pointa=(0.8, 0.9),
             pointb=(1.0, 0.9)
             )
-        
-        
+
+
     def run_simulation(self):
-        
+
         # Elimina los ficheros actuales del directorio de salida
         print("Eliminando ficheros .vtk del directorio de salida...")
         vtk_files = [f for f in os.listdir(self.path) if f.endswith('.vtk')]
@@ -177,11 +177,11 @@ class DiffusionVisualizer:
             os.remove(file_path)
 
         print("Lanzando simulación...")
-        command = f"python3.11 arritmic3D.py {self.path} "
+        command = f"python3 arritmic3D.py {self.path} "
         print(f"Executing command: {command}")
         # Execute the command to view the pacing site
         os.system(command)
-        
+
         print("Re-loading simulation data.")
         self.plotter.remove_actor(self.mesh_name)
 
@@ -202,7 +202,7 @@ class DiffusionVisualizer:
 
         )
         self.update_mesh(0)
-        
+
         print("Done.")
 
     def update_mesh(self, frame):
@@ -236,31 +236,31 @@ class DiffusionVisualizer:
         #self.slider.index = int(round(value))
         if frame != self.current_frame:
             self.update_mesh(frame)
-    
+
     def opacity_callback(self, value):
         """Callback para el slider"""
         self.opacity = value
         self.update_mesh(self.current_frame)
-    
+
     def animation_callback(self):
         """Callback para la animación"""
         if self.animation_running:
             self.update_mesh(self.current_frame + 1)
             QTimer.singleShot(100, self.animation_callback)
-    
+
     def toggle_animation(self):
         """Inicia/pausa la animación"""
         self.animation_running = not self.animation_running
         if self.animation_running:
             self.animation_callback()
-    
+
     def Right(self):
         """Avanza al siguiente frame"""
         self.update_mesh(self.current_frame + 1)
     def Left(self):
         """Retrocede al frame anterior"""
         self.update_mesh(self.current_frame - 1)
-    def Change_VisMode(self):   
+    def Change_VisMode(self):
         """Cambia al siguiente modo de visualización"""
         self.current_mode = (self.current_mode + 1) % len(self.vis_mode)
         self.plotter.remove_actor('actor_vmode_txt')
@@ -271,12 +271,12 @@ class DiffusionVisualizer:
             name='actor_vmode_txt'
         )
         self.update_mesh(self.current_frame)  # Actualizar el mesh para reflejar el cambio
-        
+
     # Función para mostrar/ocultar el nodo inicial
     """
-    
+
     def inital_node(self):
-        id_initial = self.inital_node_id #self.config['INITIAL_NODE_ID'] 
+        id_initial = self.inital_node_id #self.config['INITIAL_NODE_ID']
         if self.showing_initial_node:
             self.plotter.remove_actor('initial_node')
         else:
@@ -291,15 +291,15 @@ class DiffusionVisualizer:
                 )
         self.showing_initial_node = not self.showing_initial_node
         self.update_mesh(self.current_frame)  # Actualizar el mesh para reflejar el cambio
-    """    
-        
+    """
+
 
 def main(path, config):
     app = QApplication.instance() or QApplication([])
-    
+
     # Cambia esta ruta por tu directorio real
     visualizer = DiffusionVisualizer(path, config)
-    
+
     app.exec_()
 
 
