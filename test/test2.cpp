@@ -10,7 +10,7 @@
 #include "../src/action_potential_rc.h"
 #include "../src/conduction_velocity.h"
 
-const int N_NODES = 50;
+const int N_NODES = 30;
 const int TOTAL_NODES = N_NODES*N_NODES*N_NODES;
 
 /**
@@ -49,28 +49,33 @@ int main(int argc, char **argv)
     CardiacTissue<ActionPotentialRestCurve,ConductionVelocity> tissue(N_NODES, N_NODES, N_NODES, 0.1, 0.1, 0.1);
     std::vector<CellType> v_type(TOTAL_NODES, CellType::HEALTHY);
     //tissue.SetBorder(v_type, CellType::CORE);
-    SetCore(tissue, v_type, N_NODES-10, N_NODES-10, N_NODES-10, CellType::CORE);
+    SetCore(tissue, v_type, N_NODES-8, N_NODES-8, N_NODES-8, CellType::CORE);
 
     vector<NodeParameters> v_np(1);
     Eigen::VectorXf fiber_dir = Eigen::Vector3f(0.7, 0.7, 0.0);
     tissue.Init(v_type, v_np, {fiber_dir});
-    tissue.SetTimer(5);
+
+    tissue.SetTimer(SystemEventType::FILE_WRITE, 10);
 
     size_t initial_node = tissue.GetIndex(2,2,2);   //(1,2,2);
     int s1 = 300;
-    float next_activation_time = 0.0;
+    //tissue.SetTimer(SystemEventType::EXT_ACTIVATION, s1);
+
     int beat = 0;
 
-    tissue.ExternalActivation({initial_node}, next_activation_time, beat);
+    tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, 100);
+    tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, 300);
+    tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, 600);
+    tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, 900);
+
     tissue.SaveVTK("output/testb0.vtk");
     std::cout << 0 << std::endl;
-
 
     float t = tissue.GetTime();
     int i = 0;
     while( t < 1000.0)
     {
-        bool tick = tissue.update();
+        auto tick = tissue.update();
         /*if(tick)
         {
             std::cout << "External activation: " << i << " " << tissue.GetTime() << std::endl;
@@ -78,18 +83,17 @@ int main(int argc, char **argv)
         }*/
         t = tissue.GetTime();
         i++;
-        if(tick)
+        if(tick == SystemEventType::FILE_WRITE)
         {
             std::cout << i << " " << t << std::endl;
             tissue.SaveVTK("output/testb"+ std::to_string(int(t)) +".vtk");
         }
 
-        if (t >= next_activation_time)
+        if(tick == SystemEventType::EXT_ACTIVATION)
         {
             beat++;
-            next_activation_time = next_activation_time + s1;
-            tissue.ExternalActivation({initial_node}, next_activation_time, beat);
-            std::cout << "External activation schedulead for beat " << beat << " at time " << next_activation_time << std::endl;
+            tissue.ExternalActivation({initial_node}, tissue.GetTime(), beat);
+            std::cout << "External activation scheduled for beat " << beat << " at time " << tissue.GetTime() << std::endl;
         }
 
     }

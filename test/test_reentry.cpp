@@ -54,7 +54,9 @@ int main(int argc, char **argv)
     //Eigen::VectorXf fiber_dir = Eigen::Vector3f(0.7, 0.7, 0.0);
     Eigen::VectorXf fiber_dir = Eigen::Vector3f(0, 0, 0.0);
     tissue.Init(v_type, v_np, {fiber_dir});
-    tissue.SetTimer(200);
+
+    tissue.SetTimer(SystemEventType::FILE_WRITE, 800);
+    tissue.SetTimer(SystemEventType::EXT_ACTIVATION, 200);
 
     size_t initial_node = tissue.GetIndex(10,2,1);
     int beat = 0;
@@ -65,8 +67,8 @@ int main(int argc, char **argv)
     int i = 0;
     while (tissue.GetTime() < 500)
     {
-        bool tick = tissue.update(1);
-        if(tick)
+        auto tick = tissue.update(1);
+        if(tick == SystemEventType::EXT_ACTIVATION)
         {
             beat++;
             std::cout << "\nExternal activation: " << beat << " " << tissue.GetTime() << std::endl;
@@ -74,7 +76,7 @@ int main(int argc, char **argv)
         }
 
 
-        if(i % 4 == 0)
+        if(tick == SystemEventType::FILE_WRITE)
         {
             //std::cout << i << " " << tissue.GetTime() << std::endl;
             tissue.SaveVTK("output/testr"+ std::to_string(i) +".vtk");

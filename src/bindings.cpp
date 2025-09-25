@@ -23,6 +23,15 @@ PYBIND11_MODULE(tissue_module, m) {
         .value("EPI", TissueRegion::EPI)
         .export_values();
 
+     // Expose the SystemEventType enum
+     py::enum_<SystemEventType>(m, "SystemEventType")
+          .value("NODE_EVENT", SystemEventType::NODE_EVENT)
+          .value("EXT_ACTIVATION", SystemEventType::EXT_ACTIVATION)
+          .value("FILE_WRITE", SystemEventType::FILE_WRITE)
+          .value("OTHER", SystemEventType::OTHER)
+          .value("NO_EVENT", SystemEventType::NO_EVENT)
+          .export_values();
+
     py::class_<CardiacTissue<ActionPotentialRestCurve, ConductionVelocity>>(m, "CardiacTissue")
         .def(py::init<int, int, int, double, double, double>())
         .def("InitPy", &CardiacTissue<ActionPotentialRestCurve, ConductionVelocity>::InitPy,
@@ -32,14 +41,19 @@ PYBIND11_MODULE(tissue_module, m) {
         .def("GetAPD", &CardiacTissue<ActionPotentialRestCurve, ConductionVelocity>::GetAPD)
         .def("GetCV", &CardiacTissue<ActionPotentialRestCurve, ConductionVelocity>::GetCV)
         .def("GetDI", &CardiacTissue<ActionPotentialRestCurve, ConductionVelocity>::GetDI)
+        .def("GetLastDI", &CardiacTissue<ActionPotentialRestCurve, ConductionVelocity>::GetLastDI)
+        .def("GetLAT", &CardiacTissue<ActionPotentialRestCurve, ConductionVelocity>::GetLAT)
+        .def("GetLT", &CardiacTissue<ActionPotentialRestCurve, ConductionVelocity>::GetLT)
+        .def("GetBeat", &CardiacTissue<ActionPotentialRestCurve, ConductionVelocity>::GetBeat)
         .def("GetIndex", &CardiacTissue<ActionPotentialRestCurve, ConductionVelocity>::GetIndex)
         .def("ExternalActivation", &CardiacTissue<ActionPotentialRestCurve, ConductionVelocity>::ExternalActivation)
         .def("SaveVTK", &CardiacTissue<ActionPotentialRestCurve, ConductionVelocity>::SaveVTK)
         .def("GetTime", &CardiacTissue<ActionPotentialRestCurve, ConductionVelocity>::GetTime)
         .def("update", &CardiacTissue<ActionPotentialRestCurve, ConductionVelocity>::update,
              py::arg("debug") = 0,
-             "Update the tissue state by processing the next event in the queue. Returns true if a system event was processed.")
+             "Update the tissue state by processing the next event in the queue. Returns the type of event that was processed.")
         .def("SetTimer", &CardiacTissue<ActionPotentialRestCurve, ConductionVelocity>::SetTimer)
+        .def("SetSystemEvent", &CardiacTissue<ActionPotentialRestCurve, ConductionVelocity>::SetSystemEvent)
         .def("size", &CardiacTissue<ActionPotentialRestCurve, ConductionVelocity>::size)
         .def("GetSizeX", &CardiacTissue<ActionPotentialRestCurve, ConductionVelocity>::GetSizeX)
         .def("GetSizeY", &CardiacTissue<ActionPotentialRestCurve, ConductionVelocity>::GetSizeY)

@@ -34,8 +34,10 @@ public:
      */
     ActionPotentialRestCurve()
     {
-        this->apd = 300.0;
+        this->last_di = 100.0;
         this->ta = 0.0;
+        this->correction_factor = 1.0;
+        this->apd = 0.0;
     };
 
     /**
@@ -46,10 +48,11 @@ public:
      * @param apd_ Action potential duration.
      * @param t0_ Time of the activation.
      * @param di_ Diastolic interval.
+     * @param corrfc_ Correction factor for restitution curves.
      */
-    ActionPotentialRestCurve(CellType type, TissueRegion region, float apd_, float t0_, float di_ = 0.0)
+    ActionPotentialRestCurve(CellType type, TissueRegion region, float apd_, float t0_, float di_ = 0.0, float corrfc_ = 1.0)
     {
-        Init(type, region, apd_, t0_, di_);
+        Init(type, region, apd_, t0_, di_, corrfc_);
     };
 
     /**
@@ -60,12 +63,23 @@ public:
      * @param apd_ Action potential duration.
      * @param t0_ Time of the activation.
      * @param di_ Diastolic interval.
+     * @param corrfc_ Correction factor for restitution curves.
      */
-    void Init(CellType type, TissueRegion region, float apd_, float t0_, float di_ = 0.0)
+    void Init(CellType type, TissueRegion region, float apd_, float t0_, float di_ = 0.0, float corrfc_ = 1.0)
     {
         SetRestitutionCurve(type, region);
-        this->apd = apd_;
-        this->ta = t0_ - (apd_ + di_);
+        this->correction_factor = corrfc_;
+        if (di_ > 0.0)
+        {
+            this->last_di = di_;
+            this->apd = restitution_curve->getValue(this->last_di)*this->correction_factor;
+        }
+        else
+        {
+            this->last_di = 100.0; /// @todo Should be a reverse mapping from apd_ to di_
+            this->apd = apd_;
+        }
+        this->ta = t0_ - (this->apd + this->last_di);
     };
 
     /**
@@ -90,8 +104,8 @@ public:
         if(di < 0.0)
             return false;
 
-
-        this->apd = restitution_curve->getValue(di);
+        this->last_di = di;
+        this->apd = restitution_curve->getValue(di)*this->correction_factor;
         this->ta = new_ta;
         return true;
     };
@@ -164,11 +178,20 @@ public:
         return t - (this->ta + this->apd);
     };
 
+    /**
+     * @brief Get the diastolic interval of the last activation.
+     *
+     * @return The diastolic interval of the last activation.
+     */
+    float getLastDI() const
+    {
+        return this->last_di;
+    };
 
 private:
     float apd; /**< Action potential duration. */
     float ta; /**< Time of the activation. */
-    float conduction_velocity; /**< Conduction velocity. */
+    float last_di; /**< Last diastolic interval. */
 
     Spline * restitution_curve; /**< APD restitution curve. */
     static SplineContainer splines; /**< Container of APD restitution curves. */
@@ -177,6 +200,7 @@ private:
     static constexpr float resting_potential = -80.0; // 0.0; /**< Resting potential. */
     static constexpr float peak_potential = 40.0; // 1.0;  /**< Peak potential. */
 
+    float correction_factor; /**< Correction factor for restitution curves. */
 
 };
 

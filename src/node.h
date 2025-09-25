@@ -40,29 +40,30 @@ public:
 
     /**
      * State of the cell.
-     * From node.pde: -1, 0, 2
+     *
      */
-    enum class CellActivationState : char { INACTIVE, WAITING_FOR_ACTIVATION, ACTIVE };
+    enum class CellActivationState : char { INACTIVE = 0, WAITING_FOR_ACTIVATION, ACTIVE };
 
     NodeT();
     void Reset(float current_time_);
     float ComputeConductionVelocity(const NodeT::Vector3 &direction_);
-    CellEvent* ActivateAtTime( NodeT *origin_, float activation_time_, float path_length_);
+    CellEvent* ActivateAtTime( NodeT *origin_, float current_time_, float activation_time_);
     CellEvent* ActivateAtTimeExternal(float activation_time_, int beat_n_);
 
     unsigned int GetId() const { return id; }
     CellActivationState GetState(float current_time_) const;
+    int GetBeat() const { return beat; }
 
     // Data extraction ---
-    using NodeData = std::tuple<float, int, int, float, float, float, float, float, float, float>;
+    using NodeData = std::tuple<float, int, int, float, int, float, float, float, float, float, float>;
     NodeData GetData(float current_time_) const
     {
-        return NodeData(current_time_, int(type), beat, start_time, apd_model.getAPD(), apd_model.getDI(current_time_),
+        return NodeData(current_time_, int(type), beat, local_activation_time, apd_model.IsActive(current_time_), apd_model.getAPD(), apd_model.getDI(current_time_),
                         conduction_vel, next_activation_time, next_deactivation_time, received_potential);
     }
     static const vector<std::string> GetDataNames()
     {
-        static const vector<std::string> names = {"Time", "type", "beat", "start_time", "apd", "di", "conduction_velocity",
+        static const vector<std::string> names = {"Time", "type", "beat", "local_activation_time", "activated", "apd", "di", "conduction_velocity",
                                                 "next_activation_time", "next_deactivation_time",
                                                 "received_potential"};
         return names;
@@ -75,7 +76,6 @@ private:
 
     CellType        type = CellType::HEALTHY; ///< @brief Type of the Node
     bool            external_activation;
-    bool            waiting;
     int             beat;               ///< @brief Last beat  of activation
 
     float           conduction_vel;             ///< @brief Conduction velocity in the long. direction
@@ -87,13 +87,9 @@ private:
 
     ConductionVelocityModel   cv_model;
 
-    float           start_time; ///< @brief Start time of the last activation.
+    float           local_activation_time; ///< @brief Time of the last activation. A.k.a. LAT.
 
-    //float           diastolic_interval; ///< @brief Diastolic Interval of the last activation,
-                                        ///< in milliseconds.
     float           kapd_v;
-    float           path_length;         ///< @brief Length of the activation path until Node
-
 
     // Activation
     float               received_potential;
@@ -101,15 +97,14 @@ private:
     float               next_activation_time;  ///< @brief Time of the next activation
     float               next_deactivation_time; ///< @brief Time of the next deactivation
 
-    CellEvent *         next_event;  // Can be substituted by GetEvent(i) !!!
+    CellEvent *         next_activation_event;  ///< @brief Event for the next activation of the node
+    CellEvent *         next_deactivation_event;  ///< @brief Event for the next deactivation of the node
 
     NodeT *              activation_parent; ///< Node that activated this one
-    //float               last_start_time;
-    //float               activation_period;
 
 
     //void Deactivate(float current_time_);
-    void Activate(float current_time_, const Geometry &geometry);
+    bool Activate(float current_time_, const Geometry &geometry);
     void ComputeActivation(float current_time_, const Geometry &geometry);
 
     friend std::ostream & operator<<(std::ostream &os, const NodeT &node)
@@ -118,7 +113,7 @@ private:
         os << " conduction velocity: " << node.conduction_vel;
         os << " APD: " << node.apd_model.getAPD();
         os << " CV: " << node.cv_model.getConductionVelocity();
-        os << " Start time: " << node.start_time;
+        os << " LAT: " << node.local_activation_time;
         os << " Next activation time: " << node.next_activation_time;
         os << " Next deactivation time: " << node.next_deactivation_time;
         os << " Received potential: " << node.received_potential;

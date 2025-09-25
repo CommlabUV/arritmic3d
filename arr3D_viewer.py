@@ -15,145 +15,121 @@ class DiffusionVisualizer:
         try:
             self.pacing_site_id = int(directory.split('_')[-1].split('/')[0])
         except:
-            self.pacing_site_id = ""
+            self.pacing_site_id = ""  # Valor por defecto si no se puede extraer el ID
 
-        # Configuración de cache dinámica
-        self.CACHE_SIZE = 20
-        self.HALF_CACHE = self.CACHE_SIZE // 2
-        self.mesh_cache = {}
-        self.vtk_file_paths = []
-
+        self.thresholded_meshes = []
         self.current_frame = 0
-        self.total_frames = 0
         self.animation_running = False
+        self.animation_speed = 0.1  # segundos entre frames
         self.mesh_name = "diffusion_mesh"
-        self.current_mesh = None
-        self.vis_mode = {0: 'State', 1: 'APD', 2: 'CV'}
-        self.current_mode = 0
-        self.actor_vmode_txt = None
-        self.opacity = 0
-        self.clims = {'State': [0, 2], 'APD': [200, 400], 'CV': [0, 1]}
-        self.showing_initial_node = False
+        self.current_mesh = None  # Para mantener referencia al mesh actual
+        self.vis_mode = {0:'State', 1:'APD',2:'CV'}  # Modo de visualización (0: State, 1: APD, 2: DI,..)
+        self.current_mode = 0  # Modo de visualización actual
+        self.actor_vmode_txt = None  # Texto del modo de visualización
+        self.opacity = 0  # Transparencia inicial
+        self.clims = {'State': [0, 2], 'APD': [100, 400], 'CV': [0, 1]}  # Rango de colores para cada modo
+        self.showing_initial_node = False  # Controla si se muestra el nodo inicial
         self.initial_node_actor = None
-        self.inital_node_id = -1
-
+        self.inital_node_id = -1  # ID del nodo inicial, se puede cambiar según la configuración
         self.setup_data()
         self.setup_ui()
 
     def setup_data(self):
+        """Carga y procesa todos los datos VTK"""
         if not os.path.isdir(self.path):
             raise ValueError(f"El directorio {self.path} no existe")
 
-        vtk_files = natsorted([f for f in os.listdir(self.path) if f.endswith('.vtk')])
-        self.vtk_file_paths = [os.path.join(self.path, f) for f in vtk_files]
-
-        if not self.vtk_file_paths:
+        vtk_files = [f for f in os.listdir(self.path) if f.endswith('.vtk')]
+        if not vtk_files:
             raise ValueError(f"No se encontraron archivos .vtk en {self.path}")
 
-        self.total_frames = len(self.vtk_file_paths)
-        print(f"Detectados {self.total_frames} archivos .vtk.")
+        vtk_files = natsorted(vtk_files)
+        file_paths = [os.path.join(self.path, f) for f in vtk_files]
 
-    def load_frame(self, frame_idx):
-        if frame_idx in self.mesh_cache:
-            return self.mesh_cache[frame_idx]
-
-        if 0 <= frame_idx < self.total_frames:
-            #print(f"Cargando frame {frame_idx}...")
-            file_path = self.vtk_file_paths[frame_idx]
+        print("Cargando y procesando archivos...")
+        for file_path in file_paths:
+            print(f"Cargando {file_path}...")
             grid = pv.read(file_path)
             grid["original_id"] = np.arange(grid.n_points)
-
             if 'State' not in grid.point_data or 'Cell_type' not in grid.point_data:
                 raise ValueError(f"Faltan campos en {file_path}")
 
-            thresholded = grid.threshold([0, 2], scalars='Cell_type', all_scalars=True)
+            thresholded = grid.threshold([0,  2], scalars='Cell_type', all_scalars=True)
+            # Obtener los IDs originales de los puntos seleccionados
+            ids_originales = thresholded["original_id"]
 
+            self.inital_node_id = np.where(ids_originales == self.config['INITIAL_NODE_ID'])[0]
 
-            self.mesh_cache[frame_idx] = thresholded
-            return thresholded
-        return None
+            self.thresholded_meshes.append(thresholded)
 
-    def update_cache(self, current_idx):
-        start = max(0, current_idx - self.HALF_CACHE)
-        end = min(self.total_frames, current_idx + self.HALF_CACHE + 1)
-
-        for i in range(start, end):
-            if i not in self.mesh_cache:
-                self.load_frame(i)
-
-        keys_to_delete = [k for k in self.mesh_cache if k < start or k >= end]
-        for k in keys_to_delete:
-            del self.mesh_cache[k]
+        print(f"{len(self.thresholded_meshes)} archivos cargados correctamente")
 
     def setup_ui(self):
+        """Configura la interfaz gráfica"""
         self.plotter = BackgroundPlotter(window_size=(1200, 900))
-        # Eliminar el menú "Editor"
-        for action in self.plotter.main_menu.actions():
-            if action.text() == "Editor" or action.text() == "Tools":
-                self.plotter.main_menu.removeAction(action)
-
         self.plotter.set_background('white')
         self.plotter.enable_anti_aliasing()
         self.plotter.app_window.setWindowTitle("Arritmic 3D Viewer - ComMLab@uv.es")
 
+        # Obtener la barra de menú
         menu_bar = self.plotter.app_window.menuBar()
+
+        # Crear un nuevo menú "Simulations"
         simulation_menu = menu_bar.addMenu("Arritmic3D")
 
+        # Acción: Lanzar Simulación
         launch_action = QAction("Run Simulation", self.plotter.app_window)
         launch_action.triggered.connect(self.run_simulation)
         simulation_menu.addAction(launch_action)
 
-        self.current_mesh = self.load_frame(0)
-        self.mesh_cache[0] = self.current_mesh
-        #self.inital_node_id = self.config['INITIAL_NODE_ID']
-        #self.showing_initial_node = False
-
-        self.update_cache(0)
-
+        # Añadir el primer mesh
+        self.current_mesh = self.thresholded_meshes[0]
         self.actor = self.plotter.add_mesh(
             self.current_mesh,
             scalars=self.vis_mode[self.current_mode],
             name=self.mesh_name,
             show_scalar_bar=True,
-            scalar_bar_args={'vertical': True},
-            opacity=self.opacity / 100,
+            scalar_bar_args = {'vertical': True},
+            opacity=self.opacity / 100,  # Convertir a rango [0, 1]
             cmap='coolwarm',
-            clim=self.clims[self.vis_mode[self.current_mode]]
+            clim=self.clims[self.vis_mode[self.current_mode]]  # Ajustar el rango de colores
         )
 
         self.plotter.add_text(
-            "'a': Start/Stop Animation  \n"
-            "'m': Change vis-mode  \n"
-            "'i': Remove Frame slider  \n"
-            #"'k': Show initial node  \n"
+            "'a': Start/Stop Animation  \n"\
+            "'m': Change vis-mode  \n"\
+            "'i': Remove Frame slider  \n"\
+            "'k': Show initial node  \n"\
             "'right/left': advance/go back 1 frame ",
+
             position='upper_left',
             font_size=10
         )
-
         self.actor_vmode_txt = self.plotter.add_text(
             f"Mode: {self.vis_mode[self.current_mode]}",
             position='upper_right',
             font_size=12,
             name='actor_vmode_txt'
+
         )
 
+        # Configurar controles
         self.plotter.add_key_event('a', self.toggle_animation)
         self.plotter.add_key_event('q', self.plotter.close)
         self.plotter.add_key_event('Right', self.Right)
         self.plotter.add_key_event('Left', self.Left)
         self.plotter.add_key_event('m', self.Change_VisMode)
-        #self.plotter.add_key_event('k', self.inital_node)
+        self.plotter.add_key_event('k', self.inital_node)
 
+        # Configurar slider con callback mejorado
         self.slider = self.plotter.add_slider_widget(
             self.slider_callback,
-            [0, self.total_frames - 1],
+            [0, len(self.thresholded_meshes)-1],
             value=0,
             title='Frame',
             style='modern',
             pointa=(0.1, 0.1),
-            pointb=(0.9, 0.1)
-        )
+            pointb=(0.9, 0.1))
 
         self.opacity_slider = self.plotter.add_slider_widget(
             self.opacity_callback,
@@ -183,13 +159,12 @@ class DiffusionVisualizer:
         os.system(command)
 
         print("Re-loading simulation data.")
-        self.plotter.remove_actor(self.mesh_name)
-
+        self.thresholded_meshes.clear()
         self.current_frame = 0
-        self.current_mesh = self.load_frame(0)
-        self.mesh_cache[0] = self.current_mesh
-        self.total_frames = len(self.vtk_file_paths)
+
         self.setup_data()
+        self.plotter.remove_actor(self.mesh_name)
+        self.current_mesh = self.thresholded_meshes[0]
         self.actor = self.plotter.add_mesh(
             self.current_mesh,
             scalars=self.vis_mode[self.current_mode],
@@ -205,13 +180,13 @@ class DiffusionVisualizer:
 
         print("Done.")
 
+
     def update_mesh(self, frame):
-        self.current_frame = frame % self.total_frames
-        self.update_cache(self.current_frame)
+        """Actualiza la visualización con el frame especificado"""
+        self.current_frame = frame % len(self.thresholded_meshes)
+        self.current_mesh = self.thresholded_meshes[self.current_frame]
 
-        self.current_mesh = self.mesh_cache[self.current_frame]
-
-        # Eliminar el actor anterior
+        # Actualizar el mesh de manera eficiente
         #self.plotter.remove_actor(self.mesh_name)
 
         self.actor = self.plotter.add_mesh(
@@ -219,10 +194,11 @@ class DiffusionVisualizer:
             scalars=self.vis_mode[self.current_mode],
             name=self.mesh_name,
             show_scalar_bar=True,
-            scalar_bar_args={'vertical': True},
-            opacity=self.opacity / 100,
+            scalar_bar_args = {'vertical': True},
+            opacity=self.opacity / 100,  # Convertir a rango [0, 1]
             cmap='coolwarm',
-            clim=self.clims[self.vis_mode[self.current_mode]]
+            clim=self.clims[self.vis_mode[self.current_mode]]  # Ajustar el rango de colores
+
         )
 
         # Actualizar slider
@@ -270,11 +246,9 @@ class DiffusionVisualizer:
             font_size=12,
             name='actor_vmode_txt'
         )
-        self.update_mesh(self.current_frame)  # Actualizar el mesh para reflejar el cambio
+        self.update_mesh(0)
 
     # Función para mostrar/ocultar el nodo inicial
-    """
-
     def inital_node(self):
         id_initial = self.inital_node_id #self.config['INITIAL_NODE_ID']
         if self.showing_initial_node:
@@ -291,7 +265,7 @@ class DiffusionVisualizer:
                 )
         self.showing_initial_node = not self.showing_initial_node
         self.update_mesh(self.current_frame)  # Actualizar el mesh para reflejar el cambio
-    """
+
 
 
 def main(path, config):

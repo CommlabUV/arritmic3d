@@ -7,7 +7,7 @@ SRC_PY = src/bindings.cpp
 
 # Set the C++ compiler flags
 CXXFLAGS = -O3 -Wall
-CXXFLAGS_PY = -I /usr/include/$(PY) -shared -fPIC $(shell $(PY) -m pybind11 --includes)
+CXXFLAGS_PY = -shared -fPIC $(shell $(PY) -m pybind11 --includes)
 
 DEPEND = src/cell_event_queue.h src/tissue.h src/basic_tissue.h src/action_potential_rc.h src/conduction_velocity.h src/geometry.h src/node.h src/node.cpp src/definitions.h src/spline2D.h src/sensor_dict.h src/node_parameters.h
 

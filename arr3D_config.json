@@ -8,13 +8,15 @@
     "SAFETY_FACTOR": 1.0,
 
     "VTK_OUTPUT_SAVE": true,
-    "VTK_OUTPUT_PERIOD": 20.0,
+    "VTK_OUTPUT_PERIOD": 10.0,
     "SENSORS_OUTPUT_SAVE": true,
     "VTK_INPUT_FILE": "cases/slab.vtk",
 
     "SIMULATION_DURATION": 6000.0,
-    "INITIAL_NODE_ID": 12051,
-    "N_STIMS_PACING": [4,3],
-    "BCL": [800, 500]
+    "PROTOCOL" : {
+        "INITIAL_NODE_ID": [ 42600, 42601 ],
+        "N_STIMS_PACING": [4,3],
+        "BCL": [800, 500]
+    }
 
 }

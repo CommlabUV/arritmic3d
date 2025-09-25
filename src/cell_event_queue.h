@@ -9,6 +9,15 @@
 
 #include <vector>
 #include <iostream>
+#include <queue>
+#include <cassert>
+
+
+enum class CellEventType : unsigned char
+{
+    ACTIVATION = 0,
+    DEACTIVATION
+};
 
 
 /**
@@ -25,7 +34,8 @@ struct Event
     * @param n Node
     * @param t Time for the event
     */
-    Event(Node * n = nullptr) : cell_node(n)
+    Event(CellEventType t, Node * n = nullptr)
+        : cell_node(n), event_type(t)
     {
         this->Reset();
     }
@@ -56,12 +66,39 @@ struct Event
         this->event_time = time_;
     }
 
+    Node * cell_node;                       ///< Pointer to the node to which it affects.
     int position_in_tree;                   ///< Position of the event in the CellEventQueue tree
     float event_time;                       ///< Event time
-    Node * cell_node;                 ///< Pointer to the node to which it affects.
+    CellEventType event_type;               ///< Event type
 
 };
 
+enum class SystemEventType : unsigned char
+{
+    NODE_EVENT = 0,
+    EXT_ACTIVATION,
+    FILE_WRITE,
+    OTHER,
+    NO_EVENT,
+    SIZE
+};
+
+/**
+ * @brief System event structure
+ *
+ * This structure is used to store system events that are not related to a specific node.
+ */
+struct SystemEvent
+{
+    float event_time;               ///< Event time
+    SystemEventType type;
+    unsigned char priority;         ///< Priority of the event (0 - before normal events, 1 - after normal events)
+
+    bool operator<(const SystemEvent & other) const
+    {
+        return this->event_time > other.event_time; // Note: Inverted comparison for priority queue (min-heap)
+    }
+};
 
 /**
  * @brief Priority queue of cell events
@@ -78,22 +115,25 @@ public:
 
     CellEventQueue(std::vector<Node> & tissue_nodes_)
     {
-        tree.reserve(tissue_nodes_.size());
+        tree.reserve(2 * tissue_nodes_.size());
 
-        // Assuming 1 event per node. @to Generalize for more events
-        events.reserve(tissue_nodes_.size());
+        // Assuming 2 events per node. @todo Generalize for more events
+        events.reserve(2 * tissue_nodes_.size());
         for(auto & n : tissue_nodes_)
         {
-            events.push_back(CellEvent(&n) );
+            // Activation nodes are in even positions, deactivation in odd
+            assert(int(CellEventType::ACTIVATION) == 0 && int(CellEventType::DEACTIVATION) == 1);
+            events.push_back(CellEvent(CellEventType::ACTIVATION, &n) );
+            events.push_back(CellEvent(CellEventType::DEACTIVATION, &n) );
         }
     }
 
     /**
      * @brief Get the event of a node using its id
     */
-    CellEvent* GetEvent(int node_id)
+    CellEvent* GetEvent(int node_id, CellEventType type)
     {
-        return &events[node_id];
+        return &events[2*node_id + int(type)];
     }
 
     /**
@@ -120,7 +160,7 @@ public:
         if(pos_in_tree >= this->tree.size() or event != this->tree[pos_in_tree])
         {
             std::cerr << "QUEUE WARNING: the event is not where it was suposed to be. Insert." << std::endl;
-            InsertEvent(event);
+            InsertCellEvent(event);
         }
         else
         {
@@ -137,7 +177,7 @@ public:
      */
     bool IsEmpty() const
     {
-        return tree.empty();
+        return tree.empty() && system_events.empty();
     }
 
 
@@ -146,7 +186,7 @@ public:
      *
      * @param event The event to insert.
      */
-    void InsertEvent(CellEvent * event)
+    void InsertCellEvent(CellEvent * event)
     {
         int pos = event->position_in_tree;
         // If the event is in the queue
@@ -161,43 +201,86 @@ public:
 
     };
 
+    /**
+     * @brief Inserts a system event in the queue
+     *
+     * @param event The system event to insert.
+     */
+    void InsertSystemEvent(float time, SystemEventType type, unsigned char priority = 1)
+    {
+        SystemEvent ev{time, type, priority};
+        system_events.push(ev);
+    }
+
+    /**
+     * @brief Gets information about the next event in the queue.
+     *
+     * @return A tuple containing the event time and type.
+     */
+    std::tuple<float, SystemEventType> GetInfo() const
+    {
+        // If cell events queue is empty, return the first system event
+        if(tree.empty() )
+        {
+            const SystemEvent& ev = system_events.top();
+            return std::make_tuple(ev.event_time, ev.type);
+        }
+
+        // If the system events queue is empty, return the first cell event
+        if(system_events.empty() )
+        {
+            CellEvent ev = *GetFirstCell();
+            return std::make_tuple(ev.event_time, SystemEventType::NODE_EVENT);
+        }
+
+        // Both queues have elements, compare the first element of each queue
+        const SystemEvent& ev1 = system_events.top();
+        CellEvent ev2 = *GetFirstCell();
+        if (ev1.event_time < ev2.event_time || (ev1.event_time == ev2.event_time && ev1.priority == 0))
+            return std::make_tuple(ev1.event_time, ev1.type);
+        else
+            return std::make_tuple(ev2.event_time, SystemEventType::NODE_EVENT);
+    }
 
     /**
      * @brief Returns the first element in the queue.
      *
      * @return CellEvent* Pointer to the CellEvent with least event time in the queue.
      */
-    CellEvent * getFirst() const
+    CellEvent * GetFirstCell() const
     {
-        if( IsEmpty() )
-            return nullptr;
+        assert(!IsEmpty() && "CellEventQueue::ExtractFirstCell: Queue is empty!");
+
         return tree[0];
     }
 
     /**
-     * @brief Returns the first element and removes it from the queue.
+     * @brief Extracts the first element from the cell queue.
      *
-     * @return CellEvent* Pointer to the CellEvent with least event time in the queue.
      */
-    CellEvent * ExtractFirst()
+    void ExtractFirstCell()
     {
-        CellEvent * ev = getFirst();
-        if( ev != nullptr )
-        {
-            tree[0] = tree.back();
-            tree[0]->position_in_tree = 0;
-            tree.pop_back();
-            BubbleDown(0);
+        assert(!IsEmpty() && "CellEventQueue::ExtractFirstCell: Queue is empty!");
 
-            ev->position_in_tree = -1;
-        }
+        // Node event out of the queue
+        tree[0]->position_in_tree = -1;
 
-        return ev;
+        // Remove the first element from the queue
+        tree[0] = tree.back();
+        tree[0]->position_in_tree = 0;
+        tree.pop_back();
+        BubbleDown(0);
+    }
+
+    void ExtractFirstSystem()
+    {
+        // Throws an exception if the queue is empty
+
+        system_events.pop();
     }
 
 
 private:
-
 
     /**
      * @brief Returns the index of the left descendant of the position given as argument.
@@ -205,7 +288,7 @@ private:
      * @param i Position in the tree to which get the left descendant.
      * @return size_t The position of the left descendant.
      */
-    size_t GetLeftDescdentant(size_t i) const
+    size_t GetLeftDescendant(size_t i) const
     {
         return 2*i+1;
     }
@@ -216,7 +299,7 @@ private:
      * @param i Position in the tree to which get the right descendant.
      * @return size_t The position of the right descendant.
      */
-    size_t GetRightDescdentant(size_t i) const
+    size_t GetRightDescendant(size_t i) const
     {
         return 2*i+2;
     }
@@ -264,11 +347,11 @@ private:
      */
     void BubbleDown(size_t index);
 
-    // Data
+    // Data -------------------
     std::vector<CellEvent *> tree; ///< Vector to store the tree for the heap
     std::vector<CellEvent> events; ///< Vector to store the events
 
-
+    std::priority_queue<SystemEvent> system_events; ///< Priority queue for system events
 };
 
 template<typename Node>
@@ -293,12 +376,12 @@ void CellEventQueue<Node>::BubbleDown(size_t index)
     do
     {
         i = min;
-        size_t left_desc = GetLeftDescdentant(i);
+        size_t left_desc = GetLeftDescendant(i);
 
         if ( left_desc < tree.size() and *tree[left_desc] < *tree[min] )
             min = left_desc;
 
-        size_t right_desc = GetRightDescdentant(i);
+        size_t right_desc = GetRightDescendant(i);
 
         if ( right_desc < tree.size() and *tree[right_desc] < *tree[min] )
             min = right_desc;

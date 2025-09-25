@@ -33,6 +33,7 @@ public:
     ConductionVelocity()
     {
         this->cv = INITIAL_CV;
+        this->correction_factor = 1.0;
     };
 
 
@@ -41,8 +42,9 @@ public:
      *
      * @param type Cell type.
      * @param region Tissue region.
+     * @param corrfc_ Correction factor for restitution curves.
      */
-    ConductionVelocity(CellType type, TissueRegion region)
+    ConductionVelocity(CellType type, TissueRegion region, float corrfc_ = 1.0)
     {
         Init(type, region);
     };
@@ -53,10 +55,12 @@ public:
      *
      * @param type Cell type.
      * @param region Tissue region.
+     * @param corrfc_ Correction factor for restitution curves.
      */
-    void Init(CellType type, TissueRegion region)
+    void Init(CellType type, TissueRegion region, float corrfc_ = 1.0)
     {
         SetRestitutionCurve(type, region);
+        this->correction_factor = corrfc_;
         this->cv = INITIAL_CV;
     };
 
@@ -78,7 +82,7 @@ public:
      */
     void Activate(float di)
     {
-        this->cv = this->restitution_curve->getValue(di);
+        this->cv = this->restitution_curve->getValue(di)*this->correction_factor;
     };
 
    /**
@@ -112,6 +116,9 @@ private:
 
     Spline * restitution_curve; ///< APD restitution curve.
     static SplineContainer splines; ///< Container of APD restitution curves.
+
+    float correction_factor; /**< Correction factor for restitution curves. */
+
 };
 
 const std::string path_cv = "restitutionCurves/";

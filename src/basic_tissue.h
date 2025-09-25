@@ -8,6 +8,7 @@
 #define BASIC_TISSUE_H
 
 #include <vector>
+#include <array>
 #include <map>
 #include <iostream>
 #include <fstream>
@@ -46,6 +47,8 @@ public:
         sensor_dict(Node::GetDataNames())
     {
         tissue_time = 0.0;
+        // Initialize the timer for system events
+        timer.fill(0.0f);
     }
 
     void Init(const vector<CellType> & cell_types_, const vector<NodeParameters> & parameters_, const vector<Eigen::Vector3f> & fiber_orientation_ = {Eigen::Vector3f::Zero()});
@@ -55,6 +58,10 @@ public:
     vector<float> GetAPD() const;
     vector<float> GetCV() const;
     vector<float> GetDI() const;
+    vector<float> GetLastDI() const;
+    vector<float> GetLAT() const;
+    vector<float> GetLT() const;
+    vector<int> GetBeat() const;
     void SaveVTK(const std::string & filename) const;
     /** Get the current time of the tissue */
     float GetTime() const { return tissue_time; }
@@ -72,7 +79,9 @@ public:
     /** Set a timer for the simulation
      * @param t Period (time between events) in milliseconds.
     */
-    void SetTimer(float t);
+    void SetTimer(SystemEventType type, float t);
+    void SetSystemEvent(SystemEventType type, float t);
+
     void ShowSensorData() const
     {
         sensor_dict.Show();
@@ -120,7 +129,7 @@ protected:
 
     // Simulation
     float           tissue_time;
-    float           timer;
+    std::array<float, int(SystemEventType::SIZE)> timer; ///< Timer for each of the different system events. 0 unused.
     int             debug_level = 0;
 
     SensorDict<typename Node::NodeData> sensor_dict;  ///< Dictionary to store sensor data
@@ -167,7 +176,8 @@ void BasicTissue<APM,CVM>::Init(const vector<CellType> & cell_types_, const vect
         else
             tissue_nodes[i].parameters = parameters_pool.Find(parameters_[i]);
 
-        tissue_nodes[i].next_event = event_queue.GetEvent(i);
+        tissue_nodes[i].next_activation_event = event_queue.GetEvent(i,CellEventType::ACTIVATION);
+        tissue_nodes[i].next_deactivation_event = event_queue.GetEvent(i,CellEventType::DEACTIVATION);
         tissue_nodes[i].type = cell_types2[i];
         // Set the fiber orientation, default is isotropic
         if(this->tissue_fiber_orientation == FiberOrientation::HOMOGENEOUS)
@@ -204,7 +214,7 @@ void BasicTissue<APM,CVM>::Reset()
     }
 
     // Reset the timer
-    this->timer = 0.0;
+    timer.fill(0.0f);
 }
 
 /**
@@ -311,17 +321,107 @@ vector<float> BasicTissue<APM,CVM>::GetDI() const
 }
 
 /**
+ * Get the last DI (diastolic interval) of the tissue nodes.
+ * @return Vector of last DI of the tissue nodes.
+ */
+template <typename APM,typename CVM>
+vector<float> BasicTissue<APM,CVM>::GetLastDI() const
+{
+    vector<float> last_di(tissue_nodes.size());
+    for(size_t i = 0; i < tissue_nodes.size(); i++)
+        last_di[i] = tissue_nodes[i].apd_model.getLastDI();
+    return last_di;
+}
+
+/**
+ * Get the LAT (local activationtime) of the tissue nodes.
+ * @return Vector of LAT of the tissue nodes.
+ */
+template <typename APM,typename CVM>
+vector<float> BasicTissue<APM,CVM>::GetLAT() const
+{
+    vector<float> lat(tissue_nodes.size());
+    for(size_t i = 0; i < tissue_nodes.size(); i++)
+        lat[i] = tissue_nodes[i].apd_model.getActivationTime();
+    return lat;
+}
+
+/**
+ * Get the LT (life time) of the tissue nodes.
+ * @return Vector of life times of the tissue nodes.
+ */
+template <typename APM,typename CVM>
+vector<float> BasicTissue<APM,CVM>::GetLT() const
+{
+    vector<float> lt(tissue_nodes.size());
+    for(size_t i = 0; i < tissue_nodes.size(); i++)
+        lt[i] = GetTime() - tissue_nodes[i].apd_model.getActivationTime();
+    return lt;
+}
+
+/**
+ * Get the beat number that induced the last activation of the tissue nodes.
+ * @return Vector of beat number of the tissue nodes.
+ */
+template <typename APM,typename CVM>
+vector<int> BasicTissue<APM,CVM>::GetBeat() const
+{
+    vector<int> beat(tissue_nodes.size());
+    for(size_t i = 0; i < tissue_nodes.size(); i++)
+        beat[i] = tissue_nodes[i].GetBeat();
+    return beat;
+}
+
+
+
+/**
  * Set a timer for the simulation.
  * @param t Period (time between events) in milliseconds.
 */
 template <typename APM,typename CVM>
-void BasicTissue<APM,CVM>::SetTimer(float t)
+void BasicTissue<APM,CVM>::SetTimer(SystemEventType type, float t)
 {
-    assert(tissue_nodes.size() > 0 && tissue_nodes[0].next_event != nullptr);
-    this->timer = t;
+    // Setting timer before the simulation starts
+    if(this->tissue_time == 0)
+    {
+        this->timer.at(int(type)) = t;
+        // Insert the first system event
+        event_queue.InsertSystemEvent(t, type);
+        return;
+    }
 
-    tissue_nodes[0].next_event->ChangeEvent(t);
-    event_queue.InsertEvent(tissue_nodes[0].next_event);
+    // Simulation is running.
+    // If the timer is already set, update it
+    if(this->timer.at(int(type)) > 0)
+    {
+        this->timer.at(int(type)) = t;
+    }
+    else
+    {
+        LOG::Error(true, "Timer for type ", (int)type, " does not exist. Use SetTimer before the simulation starts.");
+    }
+
+    return;
+}
+
+/**
+ * Set a system event for the simulation.
+ * @param type Type of the system event.
+ * @param t Time of the system event in milliseconds.
+ */
+template <typename APM,typename CVM>
+void BasicTissue<APM,CVM>::SetSystemEvent(SystemEventType type, float t)
+{
+    if(t < this->tissue_time)
+    {
+        LOG::Error(true, "System event time (", t, ") is before the current tissue time (", this->tissue_time, ").");
+        return;
+    }
+
+    int priority = 1; // Default priority for system events
+    if(type == SystemEventType::EXT_ACTIVATION)
+        priority = 0; // Higher priority for external activations
+    this->event_queue.InsertSystemEvent(t, type, priority);
 }
 
 /**

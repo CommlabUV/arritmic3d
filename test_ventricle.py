@@ -64,33 +64,32 @@ def main():
         if key != 'Cell_type':
             grid.point_data.remove(key)
 
-    # Set the timer for saving the VTK files and succesive activations
-    tissue.SetTimer(20)  # 20 ms
-    n_tick = 0
+    # Set the timer for saving the VTK files
+    tissue.SetTimer(tissue_module.SystemEventType.FILE_WRITE, 20)  # 20 ms
 
     # First activation
     initial_node = 12051 #tissue.GetIndex(2, 2, 1)
     beat = 0
-    tissue.ExternalActivation([initial_node], 0.0, beat)
+    tissue.SetSystemEvent(tissue_module.SystemEventType.EXT_ACTIVATION, 100)  # 100 ms for the first activation
+    tissue.SetSystemEvent(tissue_module.SystemEventType.EXT_ACTIVATION, 800)  # 800 ms for the second activation
     print(0)
 
     i = 1
     while tissue.GetTime() < 1000.0:
         tick = tissue.update(0)
-        if tick:
-            n_tick += 1
-            if n_tick % 40 == 0:
-                beat += 1
-                # Every 800 ms, we activate the tissue again
-                tissue.ExternalActivation([initial_node], tissue.GetTime(), beat)
-                print("Beat at time:", tissue.GetTime())
 
+        if tick == tissue_module.SystemEventType.EXT_ACTIVATION:
+            beat += 1
+            tissue.ExternalActivation([initial_node], tissue.GetTime(), beat)
+            print("Beat at time:", tissue.GetTime())
+
+        elif tick == tissue_module.SystemEventType.FILE_WRITE:
             # Update the cell states
             grid.point_data['State'] = tissue.GetStates()
             grid.point_data['APD'] = tissue.GetAPD()
             grid.point_data['CV'] = tissue.GetCV()
 
-            #grid.save(f"output/vent{int(tissue.GetTime())}.vtk")
+            grid.save(f"output/vent{int(tissue.GetTime())}.vtk")
 
         if i % 1000 == 0:
             print(i, tissue.GetTime())
