@@ -17,9 +17,9 @@ if [ "$VIRTUAL_ENV" != "$HOME/bin/venv/$VENV_NAME" ]; then
     exit 1
 else
     echo "Virtual environment activated successfully."
-    echo "Installing Python dependencies from requirements_3.12.txt..."
+    echo "Installing Python dependencies from requirements.txt..."
     pip install --upgrade pip
-    pip install -r requirements_3.12.txt
+    pip install -r requirements.txt
     echo "Python dependencies installed successfully."
 fi
 
