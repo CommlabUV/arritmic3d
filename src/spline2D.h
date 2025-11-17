@@ -14,6 +14,7 @@
 #include <cassert>
 #include <map>
 #include <cmath>
+#include <filesystem>
 #include <initializer_list>
 #include "../src/rapidcsv.h"
 #include <eigen3/Eigen/Dense>
@@ -21,6 +22,7 @@
 #include "definitions.h"
 
 using std::vector;
+namespace fs = std::filesystem;
 
 /**
  * @brief 2D spline class for 2D interpolation.
@@ -28,9 +30,10 @@ using std::vector;
 class Spline2D
 {
 private:
-    Eigen::ArrayXf x[2];
+    Eigen::ArrayXf x[2];    // 0: rows, 1: columns
     Eigen::ArrayXXf y;
     //Eigen::ArrayXXf m;
+    Eigen::ArrayXi first_novalue_pos[2];
     bool same_interval[2] = {false,false};
     float d[2] = {0.0,0.0};
     bool monotonic = false;
@@ -38,67 +41,91 @@ private:
     const float ALMOST_ZERO = 1e-8;
 
 public:
+    bool is_novalue(float x) const
+    {
+        return x < 0;
+        // return std::isnan(x);
+    }
+
+    int size(int dim) const
+    {
+        assert(dim == 0 || dim == 1);
+        return x[dim].size();
+    }
+
+    /**
+     * @brief Find the index of the given value in the given dimension.
+     * @param dim Dimension (0: rows, 1: columns)
+     * @param value Value to find
+     * @return Index of the value
+     */
+    int FindIndex(int dim, float value) const
+    {
+        assert(dim >= 0 && dim <= 1);
+        unsigned int n = x[dim].size();
+
+        int index = 0;
+        if (value <= x[dim][0] )   // Check if the point is out of the spline
+            index = 0;
+        else if (value >= x[dim][ n - 1 ])
+            index = n - 1;
+        else
+        {
+            if(same_interval[dim])
+                index = (value - x[dim][0]) / d[dim];
+
+            while(value < x[dim][index])
+                index -= 1;
+            while (value > x[dim][index+1])
+                index += 1;
+
+            // Take the nearest point. Can be done with interpolation instead.
+            if(abs(value - x[dim][index]) > abs(value - x[dim][index+1]))
+                index++;
+
+        }
+        return index;
+    }
 
     float getValue(float row, float col) const
     {
-        unsigned int n0 = x[0].size();
-        unsigned int n1 = x[1].size();
-        int x0 = 0;
-        int x1 = 0;
+        // @TODO Erase this assert when checked that nan is impossible
+        assert(! std::isnan(row) && ! std::isnan(col));
 
-        if(std::isnan(row) || std::isnan(col))
-            return NAN;
-
-        // Find row index (x0)
-        if (row <= x[0][0] )   // Check if the point is out of the spline
-            x0 = 0;
-        else if (row >= x[0][n0-1])
-            x0 = n0-1;
-        else
-        {
-            if(same_interval[0])
-                x0 = (row - x[0][0]) / d[0];
-
-            //std::cout << "row: " << x0 << std::endl;
-            while(row < x[0][x0])
-                x0 -= 1;
-            while (row > x[0][x0+1])
-                x0 += 1;
-
-            // Take the nearest point. Can be done with interpolation instead.
-            if(abs(row - x[0][x0]) > abs(row - x[0][x0+1]))
-                x0++;
-
-            //std::cout << "row: " << x0 << " " << d[0] << std::endl;
-
-        }
-
-        // Find column index (x1)
-        if (col <= x[1][0] )   // Check if the point is out of the spline
-            x1 = 0;
-        else if (col >= x[1][n1-1])
-            x1 = n1-1;
-        else
-        {
-            if(same_interval[1])
-                x1 = (col - x[1][0]) / d[1];
-
-            //std::cout << "col: " << x1 << std::endl;
-            while(col < x[1][x1])
-                x1 -= 1;
-            while (col > x[1][x1+1])
-                x1 += 1;
-
-            // Take the nearest point. Can be done with interpolation instead.
-            if(abs(col - x[1][x1]) > abs(col - x[1][x1+1]))
-                x1++;
-
-            //std::cout << "col: " << x1 << std::endl;
-
-        }
+        int x0 = FindIndex(0, row);
+        int x1 = FindIndex(1, col);
 
         return y(x0, x1);
 
+    }
+
+    /**
+     * @brief Get the position of the first no-value in the given row or column beginning from the end.
+     * @param row_or_col 0 for rows, 1 for columns
+     * @param index Index of the row or column
+     * @return Position of the first no-value. -1 if all values are valid.
+     */
+    int GetPosNoValue(int row_or_col, int index) const
+    {
+        assert(row_or_col >= 0 && row_or_col <= 1);
+        return first_novalue_pos[row_or_col][index];
+    }
+
+    float GetLabelNoValue(int row_or_col, float index_label) const
+    {
+        assert(row_or_col >= 0 && row_or_col <= 1);
+        int x_dim = 1 - row_or_col;
+        int index = FindIndex(row_or_col, index_label);
+
+        if(first_novalue_pos[row_or_col][index] >= 0)
+        {
+            return x[x_dim][ first_novalue_pos[row_or_col][index] ];
+        }
+        else
+        {
+            float label = x[x_dim][ 0 ] - d[x_dim];
+            return label;
+        }
     }
 
     bool IsSameInterval(const Eigen::ArrayXf & x)
@@ -126,14 +153,33 @@ public:
         y = y_;
 
         same_interval[0] = IsSameInterval(x[0]);
-        // If same_interval is true, there are at least two points
-        if(same_interval[0])
+        if(x[0].size() > 1)
             d[0] = x[0][1] - x[0][0];
+
         same_interval[1] = IsSameInterval(x[1]);
-        if(same_interval[1])
+        if(x[1].size() > 1)
             d[1] = x[1][1] - x[1][0];
         //monotonic = IsMonotonic(x[0]) && IsMonotonic(x[1]);
         //ComputeSlopes();
+
+        // Find the first non-value position for each dimension
+        first_novalue_pos[1] = Eigen::ArrayXi::Constant(x[1].size(), -1);
+        for (int i = 0; i < x[1].size(); i++)
+        {
+            int pos = 0;
+            while(pos < y.rows() && is_novalue(y(pos,i)) )
+                pos++;
+            first_novalue_pos[1][i] = pos-1;
+        }
+
+        first_novalue_pos[0] = Eigen::ArrayXi::Constant(x[0].size(), -1);
+        for (int i = 0; i < x[0].size(); i++)
+        {
+            int pos = 0;
+            while(pos < y.cols() && is_novalue(y(i,pos)) )
+                pos++;
+            first_novalue_pos[0][i] = pos-1;
+        }
 
         //std::cout << "\nRow info: " << x[0][0] << " - " << x[0][x[0].size() - 1] << " " << d[0] << std::endl;
         //std::cout << "Col info: " << x[1][0] << " - " << x[1][x[1].size() - 1] << " " << d[1] << std::endl;
@@ -144,37 +190,48 @@ public:
         std::cout << "Same interval: " << same_interval[0] << " - " << same_interval[1] << std::endl;
         std::cout << "Rows: " << x[0].transpose() << std::endl;
         std::cout << "Columns: " << x[1].transpose() << std::endl;
-        std::cout << "Values: \n" << y << std::endl;
+        ///< @todo This throws a compilation error.
+        //std::cout << "Values: \n" << y << std::endl;
+        std::cout << "First no-value positions (rows): " << first_novalue_pos[0].transpose() << std::endl;
+        std::cout << "First no-value positions (columns): " << first_novalue_pos[1].transpose() << std::endl;
     }
 
 };
 
 class SplineContainer2D
 {
-    struct par
-    {
-        CellType type;
-        TissueRegion region;
-        bool operator<(const par & other) const
-        {
-            return (type < other.type) || (type == other.type && region < other.region);
-        }
-    };
 
 public:
-    SplineContainer2D(const std::string path = "restitutionSurfaces/")
-    {
+    SplineContainer2D() = default;
 
-        //addSpline(CellType::HEALTHY, TissueRegion::ENDO, {5.0, 700.0}, {133.0, 290.0}); // Endo sano
-        addSpline(CellType::HEALTHY, TissueRegion::ENDO, path + "RestitutionSurface_Sanas_APD_Endo.csv"); // Endo sano
-        addSpline(CellType::BORDER_ZONE , TissueRegion::ENDO, path + "RestitutionSurface_BZ_APD_Endo.csv"); // Endo BZ
-    }
-
-    SplineContainer2D(std::initializer_list<std::tuple<CellType, TissueRegion, std::string>> splines)
+    SplineContainer2D(std::initializer_list<std::tuple<CellType, std::string>> splines)
     {
         for (auto s : splines)
         {
-            addSpline(std::get<0>(s), std::get<1>(s), std::get<2>(s));
+            addSpline(std::get<0>(s), std::get<1>(s));
+        }
+    }
+
+    /**
+     * @brief Initialize the container from a configuration file.
+     * @param filename Name of the configuration file containing the list of restitution models.
+     */
+    void Init(const fs::path &filename)
+    {
+        fs::path models_directory = filename.parent_path();  // directory containing the config file
+        try {
+            rapidcsv::Document doc(filename.string(), rapidcsv::LabelParams(-1,-1) ); // No header
+            vector<int> type = doc.GetColumn<int>(0);
+            vector<std::string> file = doc.GetColumn<std::string>(1);
+            if(type.size() != file.size())
+                throw std::runtime_error("Different number of elements in " + filename.string());
+            for(size_t i = 0; i < type.size(); i++)
+                addSpline(static_cast<CellType>(type[i]), models_directory / file[i]);
+        }
+        catch (std::exception &e)
+        {
+            std::cerr << "Error processing " << filename.string() << std::endl;
+            throw;
         }
     }
 
@@ -183,11 +240,11 @@ public:
      * @param type Cell type
      * @param region Cell region
     */
-    void addSpline(CellType type, TissueRegion region, Eigen::ArrayXf x_row, Eigen::ArrayXf x_column,Eigen::ArrayXXf y_)
+    void addSpline(CellType type, Eigen::ArrayXf x_row, Eigen::ArrayXf x_column,Eigen::ArrayXXf y_)
     {
         Spline2D s;
         s.setPoints(x_row, x_column, y_);
-        splines.insert({{type,region}, s});
+        splines.insert({type, s});
     }
 
     /**
@@ -196,7 +253,7 @@ public:
      * @param region Cell region
      * @param filename Name of the csv file
     */
-    void addSpline(CellType type, TissueRegion region, std::string filename)
+    void addSpline(CellType type, std::string filename)
     {
         try{
             rapidcsv::Document doc(filename, rapidcsv::LabelParams(-1,-1) ); // No header
@@ -226,7 +283,7 @@ public:
                 y.row(i-1) = Eigen::Map<Eigen::ArrayXf>(row.data(), row.size());
             }
 
-            addSpline(type, region, x0, x1, y);
+            addSpline(type, x0, x1, y);
         }
         catch (std::exception &e)
         {
@@ -235,16 +292,16 @@ public:
         }
     }
 
-    Spline2D * getSpline(CellType type, TissueRegion region)
+    Spline2D * getSpline(CellType type)
     {
-        auto it = splines.find({type,region});
+        auto it = splines.find(type);
         if (it == splines.end())
             return nullptr;
         return &it->second;
     }
 
 private:
-    std::map<par,Spline2D> splines;
+    std::map<CellType,Spline2D> splines;
 };
 
 #endif // SPLINE2D_H

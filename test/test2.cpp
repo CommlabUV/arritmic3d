@@ -8,10 +8,13 @@
 #include <string>
 #include "../src/tissue.h"
 #include "../src/action_potential_rc.h"
+#include "../src/action_potential_rs.h"
 #include "../src/conduction_velocity.h"
 
 const int N_NODES = 30;
 const int TOTAL_NODES = N_NODES*N_NODES*N_NODES;
+
+enum CellTypeVentricle { HEALTHY_ENDO = 1, HEALTHY_MID, HEALTHY_EPI, BZ_ENDO, BZ_MID, BZ_EPI };
 
 /**
  * @brief Set the core of the tissue to a given type.
@@ -46,41 +49,38 @@ int main(int argc, char **argv)
 
     // Test of the CardiacTissue class
     // Number of nodes: 98x98x98 - 88x88x88 = 941192 - 681472 = 259720
-    CardiacTissue<ActionPotentialRestCurve,ConductionVelocity> tissue(N_NODES, N_NODES, N_NODES, 0.1, 0.1, 0.1);
-    std::vector<CellType> v_type(TOTAL_NODES, CellType::HEALTHY);
-    //tissue.SetBorder(v_type, CellType::CORE);
-    SetCore(tissue, v_type, N_NODES-8, N_NODES-8, N_NODES-8, CellType::CORE);
+    CardiacTissue<ActionPotentialRestSurface,ConductionVelocity> tissue(N_NODES, N_NODES, N_NODES, 0.1, 0.1, 0.1);
+    std::vector<CellType> v_type(TOTAL_NODES, HEALTHY_ENDO);
+    //tissue.SetBorder(v_type, CELL_TYPE_VOID);
+    SetCore(tissue, v_type, N_NODES-8, N_NODES-8, N_NODES-8, CELL_TYPE_VOID);
 
     vector<NodeParameters> v_np(1);
     Eigen::VectorXf fiber_dir = Eigen::Vector3f(0.7, 0.7, 0.0);
+    tissue.InitModels("restitutionModels/config_TenTuscher_APD.csv","restitutionModels/config_TenTuscher_CV.csv");
     tissue.Init(v_type, v_np, {fiber_dir});
 
-    tissue.SetTimer(SystemEventType::FILE_WRITE, 10);
+    std::cout << "Tissue size: " << tissue.size() << std::endl;
+    std::cout << "Tissue live nodes: " << tissue.GetNumLiveNodes() << std::endl;
+
+    //tissue.SetTimer(SystemEventType::FILE_WRITE, 1);
 
     size_t initial_node = tissue.GetIndex(2,2,2);   //(1,2,2);
+    /*
     int s1 = 300;
-    //tissue.SetTimer(SystemEventType::EXT_ACTIVATION, s1);
-
+    tissue.SetTimer(SystemEventType::EXT_ACTIVATION, s1);
+    */
     int beat = 0;
 
     tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, 100);
-    tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, 300);
-    tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, 600);
-    tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, 900);
 
     tissue.SaveVTK("output/testb0.vtk");
-    std::cout << 0 << std::endl;
+    std::cout << "--- Begin simulation ---" << std::endl;
 
     float t = tissue.GetTime();
     int i = 0;
-    while( t < 1000.0)
+    while( t < 4000.0)
     {
         auto tick = tissue.update();
-        /*if(tick)
-        {
-            std::cout << "External activation: " << i << " " << tissue.GetTime() << std::endl;
-            tissue.ExternalActivation({initial_node}, tissue.GetTime() );
-        }*/
         t = tissue.GetTime();
         i++;
         if(tick == SystemEventType::FILE_WRITE)
@@ -92,8 +92,12 @@ int main(int argc, char **argv)
         if(tick == SystemEventType::EXT_ACTIVATION)
         {
             beat++;
-            tissue.ExternalActivation({initial_node}, tissue.GetTime(), beat);
+            std::cout << "Mean APD variation: " << tissue.GetAPDMeanVariation() << std::endl;
+            tissue.ResetVariations();
+
             std::cout << "External activation scheduled for beat " << beat << " at time " << tissue.GetTime() << std::endl;
+            tissue.ExternalActivation({initial_node}, tissue.GetTime(), beat);
+            tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, tissue.GetTime() + 300);
         }
 
     }

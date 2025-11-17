@@ -55,15 +55,15 @@ public:
     int GetBeat() const { return beat; }
 
     // Data extraction ---
-    using NodeData = std::tuple<float, int, int, float, int, float, float, float, float, float, float>;
-    NodeData GetData(float current_time_) const
+    using NodeData = std::tuple<float, int, int, int, float, int, float, float, float, float, float, float>;
+    NodeData GetData(const CellEvent* ev, float current_time_) const
     {
-        return NodeData(current_time_, int(type), beat, local_activation_time, apd_model.IsActive(current_time_), apd_model.getAPD(), apd_model.getDI(current_time_),
+        return NodeData(current_time_, int(ev->event_type), int(type), beat, local_activation_time, apd_model.IsActive(current_time_), apd_model.getAPD(), apd_model.getLastDI(),
                         conduction_vel, next_activation_time, next_deactivation_time, received_potential);
     }
     static const vector<std::string> GetDataNames()
     {
-        static const vector<std::string> names = {"Time", "type", "beat", "local_activation_time", "activated", "apd", "di", "conduction_velocity",
+        static const vector<std::string> names = {"Time", "event_type", "type", "beat", "local_activation_time", "activated", "APD", "LastDI", "conduction_velocity",
                                                 "next_activation_time", "next_deactivation_time",
                                                 "received_potential"};
         return names;
@@ -74,7 +74,7 @@ private:
     NodeParameters*  parameters;         ///< @brief Parameters of the Node
     unsigned int    id;                 ///< @brief Unique Node id
 
-    CellType        type = CellType::HEALTHY; ///< @brief Type of the Node
+    CellType        type = CELL_TYPE_VOID; ///< @brief Type of the Node
     bool            external_activation;
     int             beat;               ///< @brief Last beat  of activation
 

@@ -58,7 +58,7 @@ class DiffusionVisualizer:
             # Obtener los IDs originales de los puntos seleccionados
             ids_originales = thresholded["original_id"]
 
-            self.inital_node_id = np.where(ids_originales == self.config['INITIAL_NODE_ID'])[0]
+            self.inital_node_id = np.where(ids_originales == self.config['STIMULATION_SITES'])[0]
 
             self.thresholded_meshes.append(thresholded)
 
@@ -153,7 +153,7 @@ class DiffusionVisualizer:
             os.remove(file_path)
 
         print("Lanzando simulación...")
-        command = f"python3 arritmic3D.py {self.path} "
+        command = f"python3.11 arritmic3D.py {self.path} "
         print(f"Executing command: {command}")
         # Execute the command to view the pacing site
         os.system(command)
@@ -250,7 +250,7 @@ class DiffusionVisualizer:
 
     # Función para mostrar/ocultar el nodo inicial
     def inital_node(self):
-        id_initial = self.inital_node_id #self.config['INITIAL_NODE_ID']
+        id_initial = self.inital_node_id #self.config['STIMULATION_SITES']
         if self.showing_initial_node:
             self.plotter.remove_actor('initial_node')
         else:

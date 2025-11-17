@@ -39,11 +39,10 @@ public:
      * @brief Constructor.
      *
      * @param type Cell type.
-     * @param region Tissue region.
      */
-    ConductionVelocitySimple(CellType type, TissueRegion region)
+    ConductionVelocitySimple(CellType type)
     {
-        Init(type, region);
+        Init(type);
     };
 
 
@@ -51,9 +50,8 @@ public:
      * @brief Initialize the conduction velocity.
      *
      * @param type Cell type.
-     * @param region Tissue region.
      */
-    void Init(CellType type, TissueRegion region)
+    void Init(CellType type)
     {
         this->cv = 1.0;
     };

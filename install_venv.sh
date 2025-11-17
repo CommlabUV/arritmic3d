@@ -5,7 +5,6 @@ export PYTHON_BIN=$(which python3 || true)
 set -e
 mkdir -p "$HOME/bin"
 export VENV_NAME="arritmic3D"
-
 "$PYTHON_BIN" -m venv "$HOME/bin/venv/$VENV_NAME"
 echo "Virtual environment created at $HOME/bin/venv/$VENV_NAME"
 

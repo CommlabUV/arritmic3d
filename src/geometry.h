@@ -5,6 +5,11 @@
 #include <array>
 #include <eigen3/Eigen/Dense>
 
+// Define the maximum distance to consider neighbours. Can be set during compilation with -DNEIGHBOURS_DISTANCE=X
+#ifndef NEIGHBOURS_DISTANCE
+#define NEIGHBOURS_DISTANCE 1
+#endif
+
 using Vector3 = Eigen::Vector3f;
 
 /**
@@ -26,7 +31,7 @@ public:
     int size_x, size_y, size_z; // Number of nodes in each direction
     float dx, dy, dz;           // Spacing between nodes
     Vector3 origin;             // Origin of the tissue
-    static constexpr int distance = 1;           // Maximun distance of the neighbours
+    static constexpr int distance = NEIGHBOURS_DISTANCE;           // Maximun distance of the neighbours
     static constexpr size_t num_neighbours = calculate_neighbours(distance);  // Number of neighbours.
     static constexpr size_t num_axis = 6 * distance;  // Number of axis neighbours.
     std::array<int, num_neighbours> displacement = NeighboursDisplace<num_neighbours>(distance);

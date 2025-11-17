@@ -36,9 +36,9 @@ typename NodeT<APD, CVM>::CellActivationState NodeT<APD, CVM>::GetState(float cu
     assert(current_time_ >= local_activation_time || local_activation_time == INFINITY);  // In the current beat
 
     CellActivationState state = CellActivationState::INACTIVE;
-    if(this->type != CellType::CORE and this->apd_model.IsActive(current_time_))
+    if(this->type != CELL_TYPE_VOID and this->apd_model.IsActive(current_time_))
         state = CellActivationState::ACTIVE;
-    else if( this->type != CellType::CORE and
+    else if( this->type != CELL_TYPE_VOID and
             this->next_activation_time > current_time_ and
             this->next_activation_time < INFINITY )
         state = CellActivationState::WAITING_FOR_ACTIVATION;
@@ -58,15 +58,13 @@ void NodeT<APD, CVM>::Reset(float current_time_)
 
     // Activation data
     this->apd_model.Init(type,
-        this->parameters->tissue_region,
         this->parameters->initial_apd,
         current_time_,
         0.0,
         this->parameters->correction_factor_apd
     );
-    this->cv_model.Init(type,
-        this->parameters->tissue_region,
-        this->parameters->correction_factor_cv_border_zone
+    this->cv_model.Init(this->type,
+        this->parameters->correction_factor_cv
     );
     this->local_activation_time = INFINITY;
     this->next_activation_time = INFINITY;
@@ -106,9 +104,10 @@ void NodeT<APD, CVM>::ComputeActivation(float current_time_, const Geometry &geo
 {
     // Conduction velocity. Has to be activated with the previous DI. Otherwise, DI will be 0
     // Thus, we activate before updating the APD.
+    // @todo WARNING! if apd does not activate later, CV will be wrong
     // @todo Do we need electrotonic effect for CV?
     // @todo Do we need CV memory?
-    this->cv_model.Activate(this->apd_model.getDI(current_time_));
+    this->cv_model.Activate(this->apd_model.getDI(current_time_),this->apd_model.getAPD());
     this->conduction_vel = this->cv_model.getConductionVelocity( );
 
     // Electrotonic effect
@@ -185,6 +184,13 @@ typename NodeT<APD, CVM>::CellEvent* NodeT<APD, CVM>::ActivateAtTime(NodeT<APD, 
     if( parent_->parameters->safety_factor < this->parameters->safety_factor)  // @todo Why? Also managed in Tissue
         return ev;
 
+    // If the cell is active, only activation attempts that are
+    // by final 95% of the ERP are considered.
+    // @todo Convert to a parameter
+    if (this->GetState(activation_time_) == CellActivationState::ACTIVE)
+        if (activation_time_ < this->local_activation_time + 0.95 * this->apd_model.getERP())
+            return ev;
+
     // Only if activation is earlier we modify anything
     if (activation_time_ < this->next_activation_time)
     {
@@ -241,15 +247,14 @@ float NodeT<APD, CVM>::ComputeConductionVelocity(const NodeT::Vector3 &direction
 {
     float cond_vel;
 
-    if(this->type == CellType::BORDER_ZONE || this->parameters->isotropic_diffusion ||
-        direction_.norm() < ALMOST_ZERO)
+    if(this->parameters->isotropic_diffusion || direction_.norm() < ALMOST_ZERO)
     {
         // BORDER_ZONE: isotropic conduction
         // The same if direction is not interpretable or
         // there is no fiber orientation
         cond_vel = this->conduction_vel;
     }
-    else if(this->type == CellType::HEALTHY)
+    else if(this->type != CELL_TYPE_VOID)
     {
         // HEALTHY: anisotropic conduction
         float cond_vel_long = abs(this->orientation.dot(direction_))/direction_.norm();

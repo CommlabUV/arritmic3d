@@ -80,6 +80,9 @@ def main():
 
         if tick == tissue_module.SystemEventType.EXT_ACTIVATION:
             beat += 1
+            print("APD error: ", tissue.GetAPDMeanError())
+            tissue.ResetErrors()
+
             tissue.ExternalActivation([initial_node], tissue.GetTime(), beat)
             print("Beat at time:", tissue.GetTime())
 
@@ -89,12 +92,14 @@ def main():
             grid.point_data['APD'] = tissue.GetAPD()
             grid.point_data['CV'] = tissue.GetCV()
 
-            grid.save(f"output/vent{int(tissue.GetTime())}.vtk")
+            #grid.save(f"output/vent{int(tissue.GetTime())}.vtk")
 
         if i % 1000 == 0:
             print(i, tissue.GetTime())
 
         i += 1
+
+    print("APD error: ", tissue.GetAPDMeanError())
 
     sensor_names = tissue.GetSensorDataNames()
     sensor_data = tissue.GetSensorInfo()

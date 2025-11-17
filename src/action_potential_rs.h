@@ -15,25 +15,24 @@
  *
  * */
 
-#ifndef ACTION_POTENTIAL_RC_H
-#define ACTION_POTENTIAL_RC_H
+#ifndef ACTION_POTENTIAL_RS_H
+#define ACTION_POTENTIAL_RS_H
 
 //#include "membrane_potential.h"
-#include "spline.h"
+#include "spline2D.h"
 #include "node.h"
-#include <cmath>
 
 /**
- * @brief Action potential model based on APD restitution curves.
+ * @brief Action potential model based on APD restitution models.
  */
-class ActionPotentialRestCurve
+class ActionPotentialRestSurface
 {
 public:
     /**
      * @brief Default constructor.
      *
      */
-    ActionPotentialRestCurve()
+    ActionPotentialRestSurface()
     {
         this->last_di = 100.0;
         this->ta = 0.0;
@@ -48,9 +47,9 @@ public:
      * @param apd_ Action potential duration.
      * @param t0_ Time of the activation.
      * @param di_ Diastolic interval.
-     * @param corrfc_ Correction factor for restitution curves.
+     * @param corrfc_ Correction factor for restitution models.
      */
-    ActionPotentialRestCurve(CellType type, float apd_, float t0_, float di_ = 0.0, float corrfc_ = 1.0)
+    ActionPotentialRestSurface(CellType type, float apd_, float t0_, float di_ = 0.0, float corrfc_ = 1.0)
     {
         Init(type, apd_, t0_, di_, corrfc_);
     };
@@ -67,55 +66,66 @@ public:
      * @param apd_ Action potential duration.
      * @param t0_ Time of the activation.
      * @param di_ Diastolic interval.
-     * @param corrfc_ Correction factor for restitution curves.
+     * @param corrfc_ Correction factor for restitution models.
      */
     void Init(CellType type, float apd_, float t0_, float di_ = 0.0, float corrfc_ = 1.0)
     {
-        SetRestitutionCurve(type);
+        SetRestitutionModel(type);
         this->correction_factor = corrfc_;
         if (di_ > 0.0)
         {
             this->last_di = di_;
-            this->apd = restitution_curve->getValue(this->last_di)*this->correction_factor;
+            // The next call can return NaN
+            float new_apd = restitution_model->getValue(this->last_di,apd_)*this->correction_factor;
+            // Check invalid value
+            if(! restitution_model->is_novalue(new_apd) )
+                this->apd = new_apd;
+            else
+                this->apd = apd_;
         }
         else
         {
             this->last_di = 100.0; /// @todo Should be a reverse mapping from apd_ to di_
             this->apd = apd_;
         }
-        this->ta = t0_ - (this->apd + this->last_di);
+        this->ta = t0_ - (this->apd + this->last_di); ///< @todo Check if this is correct, this->apd is future
     };
 
     /**
-     * @brief Set the restitution curve.
+     * @brief Set the restitution model.
      *
      * @param type Cell type.
      */
-    void SetRestitutionCurve(CellType type)
+    void SetRestitutionModel(CellType type)
     {
-        this->restitution_curve = splines.getSpline(type);
-        if(this->restitution_curve == nullptr and type != CELL_TYPE_VOID)
-            throw std::runtime_error("action_potential_rc.h: no APD restitution model found for cell type " + std::to_string(static_cast<int>(type)));
+        this->restitution_model = splines.getSpline(type);
+        if(this->restitution_model == nullptr and type != CELL_TYPE_VOID)
+            throw std::runtime_error("action_potential_rc.h: : no APD restitution model found for cell type " + std::to_string(static_cast<int>(type)));
     };
 
     /**
      * @brief Recompute the action potential after an activation.
      *
-     * @todo Consider negative diastolic intervals.
      * @param new_ta New activation time.
      */
     bool Activate(float new_ta)
     {
+        bool activated = false;
         float di = new_ta -(this->ta + this->apd);
         if(di < 0.0)
             return false;
 
-        this->last_di = di;
-        float new_apd = restitution_curve->getValue(di)*this->correction_factor;
-        this->delta_apd = std::fabs(new_apd - this->apd);    // Calculated without electrotonic effect !!
-        this->apd = new_apd;
-        this->ta = new_ta;
-        return true;
+        //float new_apd = restitution_model->getValue(di,this->apd)*this->correction_factor;
+        float new_apd = restitution_model->getValue(this->apd, di)*this->correction_factor;
+        if (! restitution_model->is_novalue(new_apd) )
+        {
+            this->last_di = di;
+            this->delta_apd = fabs(new_apd - this->apd);    // Calculated without electrotonic effect !!
+            this->apd = new_apd;
+            this->ta = new_ta;
+            activated = true;
+        }
+        return activated;
     };
 
     /**
@@ -167,8 +177,8 @@ public:
 
     float getERP() const
     {
-        //return this->apd + restitution_model->GetLabelNoValue(0, this->apd);
-        return this->apd;
+        return this->apd + restitution_model->GetLabelNoValue(0, this->apd);
+        //return this->apd;
     }
 
     /**
@@ -203,7 +213,7 @@ public:
     };
 
     /**
-     * @brief Get the variation in APD due to restitution curves (without electrotonic effect).
+     * @brief Get the variation in APD due to restitution models (without electrotonic effect).
      *
      * @return The variation in APD.
      */
@@ -216,11 +226,11 @@ private:
     float apd; /**< Action potential duration. */
     float ta; /**< Time of the activation. */
     float last_di; /**< Last diastolic interval. */
-    float delta_apd; ///< Change in APD due to restitution curves (without electrotonic effect).
-    float correction_factor; /**< Correction factor for restitution curves. */
+    float delta_apd; ///< Change in APD due to restitution models (without electrotonic effect).
+    float correction_factor; /**< Correction factor for restitution models. */
 
-    Spline * restitution_curve; /**< APD restitution curve. */
-    static SplineContainer splines; /**< Container of APD restitution curves. */
+    Spline2D * restitution_model; /**< APD restitution model. */
+    static SplineContainer2D splines; /**< Container of APD restitution models. */
 
     static constexpr bool normalized_potential = false; /**< Whether the potential is normalized. */
     static constexpr float resting_potential = -80.0; // 0.0; /**< Resting potential. */
@@ -229,8 +239,8 @@ private:
 
 };
 
-std::string ActionPotentialRestCurve::config_file = "";
+std::string ActionPotentialRestSurface::config_file = "";
 
-SplineContainer ActionPotentialRestCurve::splines;
+SplineContainer2D ActionPotentialRestSurface::splines;
 
 #endif

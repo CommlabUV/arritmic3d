@@ -26,17 +26,16 @@ struct NodeParameters
     using Vector2 = Eigen::Vector2f;
 
     bool        isotropic_diffusion = true;       ///< @brief Isotropic diffusion flag.
-    TissueRegion   tissue_region = TissueRegion::ENDO;      ///< @brief endo (0) / mid (1) / epi (2)
     unsigned char  sensor = 0;                ///< @brief Sensor flag. 0: no sensor, 1: sensor
     unsigned char  label1 = 0;                ///< @brief user defined label
-    //unsigned short   padding = 0;            ///< Padding for alignment
+    unsigned char   padding = 0;            ///< Padding for correct alignment. It allows the use of memcmp.
 
     float       initial_apd = 100.0;     ///< Initial APD @todo CAMBIAR!!
 
     //float       gray_level = 1.0;                       ///< @brief Grey level in the CT/MR image.
     float       cond_veloc_transversal_reduction = 0.25;    ///< @brief Amount of CV reduction along transversal direction
     float       safety_factor = 1.0;                    ///< @brief Safety factor of the Node
-    float       correction_factor_cv_border_zone = 1.0; ///< @brief Correction factor to apply to CV in BZ Nodes
+    float       correction_factor_cv = 1.0;             ///< @brief Correction factor to apply to CV in BZ Nodes
     float       correction_factor_apd = 1.0;            ///< @brief Correction factor to apply to APD in BZ Nodes
     float       electrotonic_effect = 0.85;              ///< @brief Electrotonic effect factor.
     float       min_potential = 0.0;                    ///< @brief Used with safety factor.
@@ -55,7 +54,7 @@ struct NodeParameters
             case 0: initial_apd = value; break;
             case 1: cond_veloc_transversal_reduction = value; break;
             case 2: safety_factor = value; break;
-            case 3: correction_factor_cv_border_zone = value; break;
+            case 3: correction_factor_cv = value; break;
             case 4: correction_factor_apd = value; break;
             case 5: electrotonic_effect = value; break;
             case 6: min_potential = value; break;
@@ -93,7 +92,7 @@ struct NodeParameters
         parameters["INITIAL_APD"] = initial_apd;
         parameters["COND_VELOC_TRANSVERSAL_REDUCTION"] = cond_veloc_transversal_reduction;
         parameters["SAFETY_FACTOR"] = safety_factor;
-        parameters["CORRECTION_FACTOR_CV_BORDER_ZONE"] = correction_factor_cv_border_zone;
+        parameters["CORRECTION_FACTOR_CV_BORDER_ZONE"] = correction_factor_cv;
         parameters["CORRECTION_FACTOR_APD"] = correction_factor_apd;
         parameters["ELECTROTONIC_EFFECT"] = electrotonic_effect;
         parameters["MIN_POTENTIAL"] = min_potential;
@@ -176,7 +175,7 @@ public:
         info += "Pool size: " + std::to_string(pool.size()) + " Size of NodeParameters struct: " + std::to_string(sizeof(NodeParameters)) + "\n";
         for(auto & p : pool)
         {
-            info += " Region: " + std::to_string((int)p.tissue_region) + " APD: " + std::to_string(p.initial_apd) + "\n";
+            info += " APD: " + std::to_string(p.initial_apd) + "\n";
         }
         return info;
     }

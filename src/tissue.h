@@ -40,8 +40,13 @@ public:
     SystemEventType update(int debug = 0);
     void ExternalActivation(const vector<size_t> & nodes, float activation_time, int beat_n);
     void TriggerEvent(CellEvent* ev);
+    void ResetVariations() { apd_variation = 0.0; cv_variation = 0.0; }
+    float GetAPDMeanVariation() const { return apd_variation / this->GetNumLiveNodes(); }
+    float GetCVVariation() const { return cv_variation / this->GetNumLiveNodes(); }
 
 private:
+    float apd_variation = 0.0;
+    float cv_variation = 0.0;
 };
 
 /**
@@ -84,7 +89,7 @@ SystemEventType CardiacTissue<APM,CVM>::update(int debug)
         // Node event
         CellEvent * ev = this->event_queue.GetFirstCell();
         this->event_queue.ExtractFirstCell();
-        LOG::Info(debug > 0, "Node Event for node ", ev->cell_node->id);
+        LOG::Info(debug > 0, "Node Event for node ", ev->cell_node->id, " Type: ", int(ev->event_type));
         LOG::Info(debug > 1, "Before processing event. Node value: ", *(ev->cell_node) );
 
         TriggerEvent(ev);
@@ -102,7 +107,7 @@ SystemEventType CardiacTissue<APM,CVM>::update(int debug)
         // Store info in case of sensor node
         if(ev->cell_node->parameters->sensor)
         {
-            this->sensor_dict.AddData(ev->cell_node->id, ev->cell_node->GetData(this->tissue_time));
+            this->sensor_dict.AddData(ev->cell_node->id, ev->cell_node->GetData(ev, this->tissue_time));
         }
 
         return SystemEventType::NODE_EVENT;
@@ -125,7 +130,7 @@ void CardiacTissue<APM,CVM>::ExternalActivation(const vector<size_t> & nodes, fl
 {
     for(size_t i = 0; i < nodes.size(); i++)
     {
-        if(this->tissue_nodes.at(nodes[i]).type == CellType::CORE)
+        if(this->tissue_nodes.at(nodes[i]).type == CELL_TYPE_VOID)
         {
             LOG::Warning(true, "ExternalActivation(): Node ", nodes[i], " is a CORE node. Activation ignored.");
             continue;
@@ -172,6 +177,9 @@ void CardiacTissue<APM,CVM>::TriggerEvent(CellEvent* ev)
                 node_->next_deactivation_event->ChangeEvent(node_->next_deactivation_time);
                 this->event_queue.InsertCellEvent(node_->next_deactivation_event); // @todo Check
 
+                // We accumulate the variations
+                apd_variation += node_->apd_model.getDeltaAPD();
+
                 // The potential is sent to inactive neighbours.
                 vector<Node*> inactive_neighs;
                 for (unsigned int i = 0; i < this->tissue_geometry.num_neighbours; ++i )
@@ -180,7 +188,7 @@ void CardiacTissue<APM,CVM>::TriggerEvent(CellEvent* ev)
                     Node* neigh = node_ + this->tissue_geometry.displacement[i];  // @todo Look for a better way to do this
                     assert(neigh >= this->tissue_nodes.data() && neigh < this->tissue_nodes.data() + this->tissue_nodes.size());
                     // We skip core nodes
-                    if ( neigh->type != CellType::CORE )
+                    if ( neigh->type != CELL_TYPE_VOID )
                     {
                         float distance = this->tissue_geometry.distance_to_neighbour[i];
                         Vector3 activation_dir = - this->tissue_geometry.relative_position[i]; // @todo Maybe we should define the opposite direction in geometry

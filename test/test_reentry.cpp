@@ -12,6 +12,8 @@
 const int N_NODES = 20;
 const int THICKNESS = 4;
 
+enum CellTypeVentricle { HEALTHY_ENDO = 1, HEALTHY_MID, HEALTHY_EPI, BZ_ENDO, BZ_MID, BZ_EPI };
+
 /**
  * @brief Set the core of the tissue to a given type.
  * @param tissue The tissue to modify.
@@ -44,18 +46,19 @@ int main(int argc, char **argv)
 {
     CardiacTissue<ActionPotentialRestCurve,ConductionVelocity> tissue(N_NODES, N_NODES, THICKNESS, 0.1, 0.1, 0.1);
     int total_nodes = tissue.size();
-    std::vector<CellType> v_type(total_nodes, CellType::HEALTHY);
+    std::vector<CellType> v_type(total_nodes, HEALTHY_ENDO);
 
-    SetCore(tissue, v_type, 8, 8, THICKNESS, CellType::BORDER_ZONE);
+    SetCore(tissue, v_type, 8, 8, THICKNESS, BZ_ENDO);
 
     NodeParameters np;
     np.initial_apd = 300.0;
     vector<NodeParameters> v_np = {np};
     //Eigen::VectorXf fiber_dir = Eigen::Vector3f(0.7, 0.7, 0.0);
     Eigen::VectorXf fiber_dir = Eigen::Vector3f(0, 0, 0.0);
+    tissue.InitModels("restitutionModels/config_TenTuscher_APD.csv","restitutionModels/config_TenTuscher_CV.csv");
     tissue.Init(v_type, v_np, {fiber_dir});
 
-    tissue.SetTimer(SystemEventType::FILE_WRITE, 800);
+    tissue.SetTimer(SystemEventType::FILE_WRITE, 1);
     tissue.SetTimer(SystemEventType::EXT_ACTIVATION, 200);
 
     size_t initial_node = tissue.GetIndex(10,2,1);
@@ -65,7 +68,7 @@ int main(int argc, char **argv)
     std::cout << 0 << std::endl;
 
     int i = 0;
-    while (tissue.GetTime() < 500)
+    while (tissue.GetTime() < 700)
     {
         auto tick = tissue.update(1);
         if(tick == SystemEventType::EXT_ACTIVATION)

@@ -2,7 +2,7 @@ import os
 import numpy as np
 import pyvista as pv
 import tissue_module
-from arr3D_config import check_directory, get_parameters, load_config_file, convert_to_cell_type, convert_to_tissue_region
+from arr3D_config import check_directory, get_parameters, load_config_file
 import sys
 
 
@@ -15,7 +15,7 @@ def load_grid(vtk_file):
 
     # Remove innecessary data
     for key in grid.point_data.keys():
-        if key not in ['Cell_type', 'EndoToEpi', 'fibers_OR']:
+        if key not in ['restitution_model', 'fibers_orientation', 'stimulation_sites']:
             grid.point_data.remove(key)
 
     return grid
@@ -23,20 +23,14 @@ def load_grid(vtk_file):
 def create_tissue(grid):
     """ Create a tissue object from the grid.
     The grid is expected to have the following point data:
-    - Cell_type: the type of each cell (e.g., 'Endocardium', 'Epicardium', 'Myocardium')
-    - EndoToEpi: a flag indicating whether the cell is endocardial or epicardial
-    - fibers_OR: the orientation of the fibers in the cell
+    - restitution_model: the type of each cell (e.g., 'Endocardium', 'Epicardium', 'Myocardium')
+    - fibers_orientation: the orientation of the fibers in the cell. Optional. If not present, isotropic conduction is assumed.
     """
 
     print("Creating tissue from grid", flush=True)
-    """
-    if 'Cell_type' not in grid.point_data:
-        raise ValueError("The grid does not contain 'Cell_type' in point data. Please check the VTK file.")
-    if 'EndoToEpi' not in grid.point_data:
-        raise ValueError("The grid does not contain 'EndoToEpi' in point data. Please check the VTK file.")
-    if 'fibers_OR' not in grid.point_data:
-        raise ValueError("The grid does not contain 'fibers_OR' in point data. Please check the VTK file.")
-    """
+    if 'restitution_model' not in grid.point_data:
+        raise ValueError("The grid does not contain 'restitution_model' in point data. Please check the VTK file.")
+
     dims = grid.dimensions
     x_coords = np.unique(grid.points[:, 0])
     y_coords = np.unique(grid.points[:, 1])
@@ -50,8 +44,7 @@ def create_tissue(grid):
     print("CA-Spacing:", x_spacing, y_spacing, z_spacing)
     print("VTK-Scalars:", grid.point_data.keys())
 
-    v_type = list(map(convert_to_cell_type, np.array(grid.point_data['Cell_type'])))
-    v_region = list(map(convert_to_tissue_region, np.array(grid.point_data['EndoToEpi'])))
+    v_type = list(np.array(grid.point_data['restitution_model']))
 
     # Number of cells in each dimension
     ncells_x = dims[0]
@@ -61,22 +54,24 @@ def create_tissue(grid):
     tissue = tissue_module.CardiacTissue(ncells_x, ncells_y, ncells_z, x_spacing, y_spacing, z_spacing)
 
     vparams, params = get_parameters(tissue, dims, config_file)
-    #print("Parameters:", params, flush=True)
-    fiber_or = np.array(grid.point_data['fibers_OR'])
-    tissue.InitPy(v_type, v_region, vparams, fiber_or)
+    print("Parameters:", params, flush=True)
+    fiber_or = list(map(list,grid.point_data['fibers_orientation']))
+    tissue.InitModels("restitutionModels/config_TenTuscher_APD.csv","restitutionModels/config_TenTuscher_CV.csv")
+    print("Types of arguments passed to InitPy():", type(v_type), type(vparams), type(fiber_or), flush=True)
+    tissue.InitPy(v_type, vparams, fiber_or)
     print("tissue initialized", flush=True)
 
     return tissue
 
-def schedule_activation(cfg,tissue):
+def schedule_activation(cfg,grid,tissue):
 
     activations = {}
 
-    # Pacing protocol (S1,S2,...,SN) with (BCL1, BCL2, ..., BCLN)
+    # Pacing protocols (S1,S2,...,SN) with (BCL1, BCL2, ..., BCLN)
     # Activation by pacing protocol
     """
-    "PROTOCOL" : {
-        "INITIAL_NODE_ID": [
+    "PROTOCOL" : [ {
+        "STIMULATION_SITES": [
             10713,
             10714,
             10715,
@@ -86,87 +81,97 @@ def schedule_activation(cfg,tissue):
         "FIRST_ACTIVATION_TIME" : 400,
         "N_STIMS_PACING": [6,3],
         "BCL": [600,400,300,200]
-    },
+    } ],
 
     """
     if "PROTOCOL" in cfg:
-        protocol = cfg['PROTOCOL']
-
-        # Activation. The initial node can be an index (int) or a list of indexes.
-        # If it is a list, we assume it is already in the correct format
-        if isinstance(protocol['INITIAL_NODE_ID'], list):
-            initial_nodes = protocol['INITIAL_NODE_ID']
-        else:
-            # If it is an int, we convert it to a list with one element.
-            initial_nodes = [protocol['INITIAL_NODE_ID']]
-
+        protocols = cfg['PROTOCOL']
         beat = 0
-        activation_time = 0.0
+        for protocol in protocols:
 
-        if 'N_STIMS_PACING' in protocol and 'BCL' in protocol:
-            # Again, can be a list or a single value
-            if isinstance(protocol['N_STIMS_PACING'], list):
-                n_stims_sn = protocol['N_STIMS_PACING']
+            # Activation. The initial node can be an index (int) or a list of indexes.
+            # If it is a list, we assume it is already in the correct format
+            if isinstance(protocol['STIMULATION_SITES'], list):
+                initial_nodes = protocol['STIMULATION_SITES']
+            elif isinstance(protocol['STIMULATION_SITES'], int):
+                # We seek for nodes with 'stimulation_sites' field equal to that value
+                stim_field = np.array(grid.point_data['stimulation_sites'])
+                initial_nodes = np.where(stim_field == protocol['STIMULATION_SITES'])[0].tolist()
             else:
-                n_stims_sn = [protocol['N_STIMS_PACING']]
+                raise ValueError("STIMULATION_SITES must be an int or a list of ints.")
 
-            if isinstance(protocol['BCL'], list):
-                bcl_sn = protocol['BCL']
-            else:
-                bcl_sn = [protocol['BCL']]
+            activation_time = 0.0
 
-            # If the number of stimuli and BCLs are not the same, we complete the shorter one with the last value
-            if len(n_stims_sn) < len(bcl_sn):
-                n_stims_sn += [n_stims_sn[-1]] * (len(bcl_sn) - len(n_stims_sn))
-            elif len(bcl_sn) < len(n_stims_sn):
-                bcl_sn += [bcl_sn[-1]] * (len(n_stims_sn) - len(bcl_sn))
-            # Print pacing protocol in several lines for S1, S2, etc
-            print("Pacing protocol:", flush=True)
-            for i, (n_stim, bcl) in enumerate(zip(n_stims_sn, bcl_sn), 1):
-                print(f"S{i}: N_STIMS={n_stim}, BCL={bcl}", flush=True)
+            if 'N_STIMS_PACING' in protocol and 'BCL' in protocol:
+                # Again, can be a list or a single value
+                if isinstance(protocol['N_STIMS_PACING'], list):
+                    n_stims_sn = protocol['N_STIMS_PACING']
+                else:
+                    n_stims_sn = [protocol['N_STIMS_PACING']]
 
-            # We create a dict where the key is the stimulus time and the value is
-            # the list of nodes to activate at that time
-            if 'FIRST_ACTIVATION_TIME' in protocol:
-                activation_time = protocol['FIRST_ACTIVATION_TIME']
-            else:
-                # If not specified, we start at time 0
-                activation_time = bcl_sn[0]  # Start with the first BCL
+                if isinstance(protocol['BCL'], list):
+                    bcl_sn = protocol['BCL']
+                else:
+                    bcl_sn = [protocol['BCL']]
 
-            for bcl, n_stim in zip(bcl_sn, n_stims_sn):
-                for _ in range(n_stim):
-                    # Schedule the activation at the current activation time
-                    tissue.SetSystemEvent(tissue_module.SystemEventType.EXT_ACTIVATION, activation_time)
-                    if activation_time not in activations:
-                        activations[activation_time] = [initial_nodes, beat]
-                    else:
-                        activations[activation_time][0].extend(initial_nodes)
-                        activations[activation_time][1] = beat # Overwrite the beat number
-                    activation_time += bcl
-                    beat += 1
+                # If the number of stimuli and BCLs are not the same, we complete the shorter one with the last value
+                if len(n_stims_sn) < len(bcl_sn):
+                    n_stims_sn += [n_stims_sn[-1]] * (len(bcl_sn) - len(n_stims_sn))
+                elif len(bcl_sn) < len(n_stims_sn):
+                    bcl_sn += [bcl_sn[-1]] * (len(n_stims_sn) - len(bcl_sn))
+                # Print pacing protocol in several lines for S1, S2, etc
+                print("Pacing protocol:", flush=True)
+                for i, (n_stim, bcl) in enumerate(zip(n_stims_sn, bcl_sn), 1):
+                    print(f"S{i}: N_STIMS={n_stim}, BCL={bcl}", flush=True)
+
+                # We create a dict where the key is the stimulus time and the value is
+                # the list of nodes to activate at that time
+                if 'FIRST_ACTIVATION_TIME' in protocol:
+                    activation_time = protocol['FIRST_ACTIVATION_TIME']
+                else:
+                    # If not specified, we start at time 0
+                    activation_time = bcl_sn[0]  # Start with the first BCL
+
+                for bcl, n_stim in zip(bcl_sn, n_stims_sn):
+                    for _ in range(n_stim):
+                        # Schedule the activation at the current activation time
+                        tissue.SetSystemEvent(tissue_module.SystemEventType.EXT_ACTIVATION, activation_time)
+                        if activation_time not in activations:
+                            activations[activation_time] = [initial_nodes, beat]
+                        else:
+                            activations[activation_time][0].extend(initial_nodes)
+                            activations[activation_time][1] = beat # Overwrite the beat number
+                        activation_time += bcl
+                        beat += 1
 
     """ Activate by node id + time
             "ACTIVATE_NODES" : [
                 {
-                    "INITIAL_NODE_ID" : [1,2,3],
+                    "STIMULATION_SITES" : [1,2,3],
                     "ACTIVATION_TIMES" : [[500,1],[550,2]]
                 },
                 {
-                    "INITIAL_NODE_ID" : [100],
+                    "STIMULATION_SITES" : [100],
                     "ACTIVATION_TIMES" : [[1500,4],[1550,5]]
                 }
             ]
     """
     if "ACTIVATE_NODES" in cfg:
         for activation in cfg['ACTIVATE_NODES']:
-            initial_nodes = activation['INITIAL_NODE_ID']
+            if isinstance(activation['STIMULATION_SITES'], list):
+                initial_nodes = activation['STIMULATION_SITES']
+            elif isinstance(activation['STIMULATION_SITES'], int):
+                initial_nodes = np.where(stim_field == protocol['STIMULATION_SITES'])[0].tolist()
+            else:
+                raise ValueError("STIMULATION_SITES must be an int or a list of ints.")
+
             for time, beat in activation['ACTIVATION_TIMES']:
                 tissue.SetSystemEvent(tissue_module.SystemEventType.EXT_ACTIVATION, time)
                 if time not in activations:
                     activations[time] = [initial_nodes, beat]
                 else:
                     activations[time][0].extend(initial_nodes)
-                    activations[time][1] = beat
+                    activations[time][1] = beat # Overwrite the beat number
 
     return activations
 
@@ -187,7 +192,7 @@ def run_simulation(output_dir, cfg):
     tissue.SetTimer(tissue_module.SystemEventType.FILE_WRITE, cfg['VTK_OUTPUT_PERIOD'])  # time in ms
 
     # Schedule the activation protocol
-    activations = schedule_activation(cfg, tissue)
+    activations = schedule_activation(cfg, grid, tissue)
 
     time = tissue.GetTime()
 

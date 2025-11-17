@@ -14,12 +14,14 @@
 #include <cassert>
 #include <map>
 #include <cmath>
+#include <filesystem>
 #include <initializer_list>
 #include "../src/rapidcsv.h"
 
 #include "definitions.h"
 
 using std::vector;
+namespace fs = std::filesystem;
 
 
 class Spline
@@ -87,32 +89,38 @@ public:
 
 class SplineContainer
 {
-    struct par
-    {
-        CellType type;
-        TissueRegion region;
-        bool operator<(const par & other) const
-        {
-            return (type < other.type) || (type == other.type && region < other.region);
-        }
-    };
 
 public:
-    SplineContainer()
-    {
-        // @TODO More general way to load the splines
-        std::string path = "restitutionCurves/";
+    SplineContainer() = default;
 
-        //addSpline(CellType::HEALTHY, 0, {5.0, 700.0}, {133.0, 290.0}); // Endo sano
-        addSpline(CellType::HEALTHY, TissueRegion::ENDO, path + "RestitutionCurve_Sanas_APD_Endo.csv"); // Endo sano
-        addSpline(CellType::BORDER_ZONE , TissueRegion::ENDO, path + "RestitutionCurve_BZ_APD_Endo.csv"); // Endo BZ
-    }
-
-    SplineContainer(std::initializer_list<std::tuple<CellType, TissueRegion, std::string>> splines)
+    SplineContainer(std::initializer_list<std::tuple<CellType, std::string>> splines)
     {
         for (auto s : splines)
         {
-            addSpline(std::get<0>(s), std::get<1>(s), std::get<2>(s));
+            addSpline(std::get<0>(s), std::get<1>(s));
+        }
+    }
+
+    /**
+     * @brief Initialize the container from a configuration file.
+     * @param filename Name of the configuration file containing the list of restitution models.
+     */
+    void Init(const fs::path &filename)
+    {
+        fs::path models_directory = filename.parent_path();  // directory containing the config file
+        try {
+            rapidcsv::Document doc(filename, rapidcsv::LabelParams(-1,-1) ); // No header
+            vector<int> type = doc.GetColumn<int>(0);
+            vector<std::string> file = doc.GetColumn<std::string>(1);
+            if(type.size() != file.size())
+                throw std::runtime_error("Different number of elements in " + filename.string());
+            for(size_t i = 0; i < type.size(); i++)
+                addSpline(static_cast<CellType>(type[i]), models_directory / file[i]);
+        }
+        catch (std::exception &e)
+        {
+            std::cerr << "Error processing " << filename.string() << std::endl;
+            throw;
         }
     }
 
@@ -121,11 +129,11 @@ public:
      * @param type Cell type
      * @param region Cell region
     */
-    void addSpline(CellType type, TissueRegion region, vector<float> x, vector<float> y)
+    void addSpline(CellType type, vector<float> x, vector<float> y)
     {
         Spline s;
         s.setPoints(x,y);
-        splines.insert({{type,region}, s});
+        splines.insert({type, s});
     }
 
     /**
@@ -134,7 +142,7 @@ public:
      * @param region Cell region
      * @param filename Name of the csv file
     */
-    void addSpline(CellType type, TissueRegion region, std::string filename)
+    void addSpline(CellType type, std::string filename)
     {
         try{
             rapidcsv::Document doc(filename, rapidcsv::LabelParams(-1,-1) ); // No header
@@ -142,7 +150,7 @@ public:
             vector<float> y = doc.GetColumn<float>(1);
             if(x.size() != y.size())
                 throw std::runtime_error("Different number of points in " + filename);
-            addSpline(type, region, x, y);
+            addSpline(type, x, y);
         }
         catch (std::exception &e)
         {
@@ -151,16 +159,16 @@ public:
         }
     }
 
-    Spline * getSpline(CellType type, TissueRegion region)
+    Spline * getSpline(CellType type)
     {
-        auto it = splines.find({type,region});
+        auto it = splines.find(type);
         if (it == splines.end())
             return nullptr;
         return &it->second;
     }
 
 private:
-    std::map<par,Spline> splines;
+    std::map<CellType, Spline> splines;
 };
 
 #endif // SPLINE_H

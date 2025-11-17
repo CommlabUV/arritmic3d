@@ -51,8 +51,14 @@ public:
         timer.fill(0.0f);
     }
 
+    void InitModels(const std::string &fileAP, const std::string &fileCV)
+    {
+        APM::InitModel(fileAP);
+        CVM::InitModel(fileCV);
+    }
+
     void Init(const vector<CellType> & cell_types_, const vector<NodeParameters> & parameters_, const vector<Eigen::Vector3f> & fiber_orientation_ = {Eigen::Vector3f::Zero()});
-    void InitPy(const vector<CellType> & cell_types_, const vector<TissueRegion> & tissue_region_ , std::map<std::string, std::vector<float> > & parameters_, const std::vector<vector<float>> & fiber_orientation_);
+    void InitPy(const vector<CellType> & cell_types_ , std::map<std::string, std::vector<float> > & parameters_, const std::vector<vector<float>> & fiber_orientation_);
     void Reset();
     vector<int> GetStates() const;
     vector<float> GetAPD() const;
@@ -62,6 +68,7 @@ public:
     vector<float> GetLAT() const;
     vector<float> GetLT() const;
     vector<int> GetBeat() const;
+    vector<float> GetAPDVariation() const;
     void SaveVTK(const std::string & filename) const;
     /** Get the current time of the tissue */
     float GetTime() const { return tissue_time; }
@@ -70,6 +77,9 @@ public:
     size_t GetIndex(int x, int y, int z) const  { return tissue_geometry.GetIndex(x, y, z);}
     /** Get the number of nodes in the tissue */
     size_t size() const { return tissue_nodes.size(); }
+    /** Get the number of live nodes (not CORE) in the tissue */
+    int GetNumLiveNodes() const { return n_live_nodes; }
+
     /** Get the number of nodes in the X direction */
     size_t GetSizeX() const { return tissue_geometry.size_x; }
     /** Get the number of nodes in the Y direction */
@@ -123,6 +133,7 @@ protected:
     Geometry      tissue_geometry;
     vector<Node>        tissue_nodes;
     CellEventQueue<Node>  event_queue;
+    int           n_live_nodes = 0;   ///< Number of nodes that are not CORE
 
     // Parameters
     ParametersPool      parameters_pool;
@@ -148,7 +159,7 @@ void BasicTissue<APM,CVM>::Init(const vector<CellType> & cell_types_, const vect
 
     // Set borders to CORE type
     auto cell_types2 = cell_types_;
-    SetBorder(cell_types2, CellType::CORE);
+    SetBorder(cell_types2, CELL_TYPE_VOID);
 
     // Fiber orientation
     if( fiber_orientation_.size() == n_nodes )
@@ -193,6 +204,9 @@ void BasicTissue<APM,CVM>::Init(const vector<CellType> & cell_types_, const vect
 
         // Reset should only be called after the Node parameters are set.
         tissue_nodes[i].Reset(tissue_time);
+
+        if(tissue_nodes[i].type != CELL_TYPE_VOID)
+            n_live_nodes++;
     }
 }
 
@@ -220,19 +234,15 @@ void BasicTissue<APM,CVM>::Reset()
 /**
  * Initialize the tissue from Python. Calls Init with a vector of parameters.
  * @param cell_types_ Vector of cell types.
- * @param tissue_region_ Vector of tissue regions.
  * @param parameters_ Dictionary with the parameters.
  * @param fiber_orientation_ Vector of fiber orientations.
  *
  * @todo Why parameters_ can't be const?
  */
 template <typename APM,typename CVM>
-void BasicTissue<APM,CVM>::InitPy(const vector<CellType> & cell_types_, const vector<TissueRegion> & tissue_region_ , std::map<std::string, std::vector<float> > & parameters_, const std::vector<vector<float> > & fiber_orientation_)
+void BasicTissue<APM,CVM>::InitPy(const vector<CellType> & cell_types_, std::map<std::string, std::vector<float> > & parameters_, const std::vector<vector<float> > & fiber_orientation_)
 {
     vector<NodeParameters> parameters(tissue_nodes.size() );
-
-    for(size_t i = 0; i < parameters.size(); i++)
-        parameters[i].tissue_region = tissue_region_[i];
 
     for(size_t param = 0; param < NodeParameters::names.size(); param++)
     {
@@ -372,7 +382,18 @@ vector<int> BasicTissue<APM,CVM>::GetBeat() const
     return beat;
 }
 
-
+/**
+ * Get the variation in APD of the tissue nodes.
+ * @return Vector of variation of APD of the tissue nodes.
+ */
+template <typename APM,typename CVM>
+vector<float> BasicTissue<APM,CVM>::GetAPDVariation() const
+{
+    vector<float> delta_apd(tissue_nodes.size());
+    for(size_t i = 0; i < tissue_nodes.size(); i++)
+        delta_apd[i] = tissue_nodes[i].apd_model.getDeltaAPD();
+    return delta_apd;
+}
 
 /**
  * Set a timer for the simulation.

@@ -15,7 +15,7 @@
 #ifndef CONDUCTION_VELOCITY_H
 #define CONDUCTION_VELOCITY_H
 
-#include "spline.h"
+#include "spline2D.h"
 #include "node.h"
 
 /**
@@ -41,38 +41,42 @@ public:
      * @brief Constructor.
      *
      * @param type Cell type.
-     * @param region Tissue region.
-     * @param corrfc_ Correction factor for restitution curves.
+     * @param corrfc_ Correction factor for restitution models.
      */
-    ConductionVelocity(CellType type, TissueRegion region, float corrfc_ = 1.0)
+    ConductionVelocity(CellType type, float corrfc_ = 1.0)
     {
-        Init(type, region);
+        Init(type, corrfc_);
     };
 
+
+    static void InitModel(const std::string &path)
+    {
+        splines.Init(path);
+    }
 
     /**
      * @brief Initialize the conduction velocity.
      *
      * @param type Cell type.
-     * @param region Tissue region.
-     * @param corrfc_ Correction factor for restitution curves.
+     * @param corrfc_ Correction factor for restitution models.
      */
-    void Init(CellType type, TissueRegion region, float corrfc_ = 1.0)
+    void Init(CellType type, float corrfc_ = 1.0)
     {
-        SetRestitutionCurve(type, region);
+        SetRestitutionModel(type);
         this->correction_factor = corrfc_;
         this->cv = INITIAL_CV;
     };
 
     /**
-     * @brief Set the restitution curve.
+     * @brief Set the restitution model.
      *
      * @param type Cell type.
-     * @param region Tissue region.
      */
-    void SetRestitutionCurve(CellType type, TissueRegion region)
+    void SetRestitutionModel(CellType type)
     {
-        this->restitution_curve = splines.getSpline(type, region);
+        this->restitution_model = splines.getSpline(type);
+        if(this->restitution_model == nullptr and type != CELL_TYPE_VOID)
+            throw std::runtime_error("conduction_velocity.h: no CV restitution model found for cell type " + std::to_string(static_cast<int>(type)));
     };
 
     /**
@@ -80,9 +84,9 @@ public:
      *
      * @param di Diastolic interval.
      */
-    void Activate(float di)
+    void Activate(float di,float apd)
     {
-        this->cv = this->restitution_curve->getValue(di)*this->correction_factor;
+        this->cv = this->restitution_model->getValue(di,apd)*this->correction_factor;
     };
 
    /**
@@ -93,9 +97,9 @@ public:
      * @param avg_cv Average conduction velocity.
      * @param e_eff Electrotonic effect.
      */
-    void Activate(float di, float avg_cv, float e_eff = 0.0)
+    void Activate(float di, float apd, float avg_cv, float e_eff = 0.0)
     {
-        Activate(di);
+        Activate(di, apd);
         this->cv = this->cv*(1.0 - e_eff) + avg_cv*e_eff;
     };
 
@@ -113,22 +117,17 @@ private:
 
     float cv; ///< Conduction velocity.
     static constexpr float INITIAL_CV = 1.0; ///< Initial conduction velocity.
+    float correction_factor; /**< Correction factor for restitution model. */
 
-    Spline * restitution_curve; ///< APD restitution curve.
-    static SplineContainer splines; ///< Container of APD restitution curves.
+    Spline2D * restitution_model; ///< APD restitution model.
+    static SplineContainer2D splines; ///< Container of APD restitution models.
 
-    float correction_factor; /**< Correction factor for restitution curves. */
+    static std::string config_file; /**< Configuration file for the model. */
 
 };
 
-const std::string path_cv = "restitutionCurves/";
+std::string ConductionVelocity::config_file = "";
 
-SplineContainer ConductionVelocity::splines({{CellType::HEALTHY, TissueRegion::ENDO, path_cv + "RestitutionCurve_Sanas_CV_Endo.csv"},
-                                                    {CellType::HEALTHY, TissueRegion::MID, path_cv + "RestitutionCurve_Sanas_CV_Mid.csv"},
-                                                   {CellType::HEALTHY, TissueRegion::EPI, path_cv + "RestitutionCurve_Sanas_CV_Epi.csv"},
-                                                   {CellType::BORDER_ZONE, TissueRegion::ENDO, path_cv + "RestitutionCurve_BZ_CV_Endo.csv"},
-                                                   {CellType::BORDER_ZONE, TissueRegion::MID, path_cv + "RestitutionCurve_BZ_CV_Mid.csv"},
-                                                   {CellType::BORDER_ZONE, TissueRegion::EPI, path_cv + "RestitutionCurve_BZ_CV_Epi.csv"}
-                                                   });
+SplineContainer2D ConductionVelocity::splines;
 
 #endif // CONDUCTION_VELOCITY_H

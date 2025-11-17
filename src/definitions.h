@@ -12,8 +12,7 @@
 
 const float ALMOST_ZERO = 1e-8;
 
-enum class CellType : char { HEALTHY, BORDER_ZONE, CORE}; ///< @brief Cell type
-
-enum class TissueRegion : char { ENDO, MID, EPI}; ///< @brief endo (0) / mid (1) / epi (2)
+typedef unsigned short CellType; ///< @brief Cell type
+const CellType CELL_TYPE_VOID = 0;
 
 #endif // DEF_H
