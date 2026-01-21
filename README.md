@@ -1,5 +1,5 @@
 # Arritmic3D
-A fast Eikonal computational model for electrophysiology simulation (Ventricle version).
+A fast Eikonal computational model for electrophysiology simulation.
 
 The simulator has three versions in separate branches: branch `main` (this branch), with a development version, branch `ventricle`, with the ventricle version, and branch `atria`, with the atria version. Checkout the desired branch before proceeding.
 
