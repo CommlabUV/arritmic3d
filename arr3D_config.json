@@ -1,4 +1,6 @@
 {
+    "CV_MODEL_CONFIG_PATH": "restitutionModels/config_TorOrd_CV.csv",
+    "APD_MODEL_CONFIG_PATH": "restitutionModels/config_TorOrd_APD.csv",
     "COND_VELOC_TRANSVERSAL_REDUCTION": 0.25,
     "CORRECTION_FACTOR_APD": 1.0,
     "CORRECTION_FACTOR_CV": 1.0,
@@ -16,13 +18,13 @@
 
     "PROTOCOL" : [
         {
-            "STIMULATION_SITES": [ 10, 20, 30 ],
+            "ACTIVATION_REGION": 1,
             "FIRST_ACTIVATION_TIME" : 400,
             "N_STIMS_PACING": [6,3],
             "BCL": [600,300,200]
         },
         {
-            "STIMULATION_SITES": [ 15, 25, 35 ],
+            "ACTIVATION_REGION": [ 15, 25, 35 ],
             "FIRST_ACTIVATION_TIME" : 500,
             "N_STIMS_PACING": [4,3],
             "BCL": [400,300]
@@ -30,11 +32,11 @@
     ],
     "ACTIVATE_NODES" : [
         {
-            "STIMULATION_SITES" : [1,2,3],
+            "ACTIVATION_REGION" : [1,2,3],
             "ACTIVATION_TIMES" : [[500,1],[550,2]]
         },
         {
-            "STIMULATION_SITES" : 1,
+            "ACTIVATION_REGION" : 1,
             "ACTIVATION_TIMES" : [[1500,4],[1550,5]]
         }
     ]

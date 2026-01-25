@@ -17,12 +17,13 @@
 #include <filesystem>
 #include <initializer_list>
 #include "../src/rapidcsv.h"
-#include <eigen3/Eigen/Dense>
-
+#include <Eigen/Dense>
 #include "definitions.h"
 
 using std::vector;
+
 namespace fs = std::filesystem;
+
 
 /**
  * @brief 2D spline class for 2D interpolation.
@@ -44,7 +45,6 @@ public:
     bool is_novalue(float x) const
     {
         return x < 0;
-        // return std::isnan(x);
     }
 
     int size(int dim) const

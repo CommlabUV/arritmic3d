@@ -106,12 +106,13 @@ public:
      */
     bool Activate(float new_ta)
     {
-        float di = new_ta -(this->ta + this->apd);
-        if(di < 0.0)
+        float di = new_ta - (this->ta + this->apd);
+
+        float new_apd = restitution_curve->getValue(di)*this->correction_factor;
+        if(new_apd <= 0.0)
             return false;
 
         this->last_di = di;
-        float new_apd = restitution_curve->getValue(di)*this->correction_factor;
         this->delta_apd = std::fabs(new_apd - this->apd);    // Calculated without electrotonic effect !!
         this->apd = new_apd;
         this->ta = new_ta;
@@ -128,9 +129,10 @@ public:
      */
     bool Activate(float new_ta, float avg_apd, float e_eff = 0.0)
     {
-        bool res = Activate(new_ta);
+        if( not Activate(new_ta) )
+            return false;
         this->apd = this->apd*(1.0 - e_eff) + avg_apd*e_eff;
-        return res;
+        return true;
     };
 
     /**

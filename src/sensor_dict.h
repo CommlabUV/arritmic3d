@@ -23,6 +23,14 @@ public:
     SensorDict(std::vector<std::string> names) : data_names(names)
     {}
 
+    /**
+     * @brief Initialize the sensor dictionary.
+     */
+    void Init()
+    {
+        sensor_info.clear();
+    }
+
     void AddData(int node_id, const T & data)
     {
         sensor_info[node_id].push_back(data);
@@ -48,15 +56,21 @@ public:
 
     void Show() const
     {
-        std::cout << "Sensor contents:";
-        for (const auto &name : data_names)
+        std::cout << "Sensor contents:\n (";
+        for (unsigned i = 0; i < data_names.size(); ++i)
         {
-            std::cout << " " << name;
+            std::cout << data_names[i];
+            if (i < data_names.size() - 1)
+                std::cout << ", ";
         }
-        std::cout << "\n";
+        std::cout << ")\n";
         for (const auto &pair : sensor_info)
         {
-            std::cout << "Node ID: " << pair.first << "\n" << pair.second << "\n";
+            std::cout << "Node ID: " << pair.first << "\n";
+            for (auto const &data : pair.second)
+            {
+                std::cout << " " << data << "\n";
+            }
         }
     }
 };

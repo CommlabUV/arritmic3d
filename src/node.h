@@ -8,7 +8,10 @@
 #define NODE_H
 
 #include <vector>
-#include <eigen3/Eigen/Dense>
+#include <limits>
+#include <fstream>
+#include <iostream>
+#include <Eigen/Dense>
 
 #include "definitions.h"
 #include "node_parameters.h"
@@ -38,21 +41,20 @@ public:
     friend class CardiacTissue<ActionPotentialModel,ConductionVelocityModel>;
     friend class BasicTissue<ActionPotentialModel,ConductionVelocityModel>;
 
-    /**
-     * State of the cell.
-     *
-     */
+    /// State of the cell.
     enum class CellActivationState : char { INACTIVE = 0, WAITING_FOR_ACTIVATION, ACTIVE };
 
     NodeT();
     void Reset(float current_time_);
-    float ComputeConductionVelocity(const NodeT::Vector3 &direction_);
+    void ReApplyParam(float current_time_);
+    float ComputeDirectionalConductionVelocity(const NodeT::Vector3 &direction_);
     CellEvent* ActivateAtTime( NodeT *origin_, float current_time_, float activation_time_);
     CellEvent* ActivateAtTimeExternal(float activation_time_, int beat_n_);
 
     unsigned int GetId() const { return id; }
     CellActivationState GetState(float current_time_) const;
     int GetBeat() const { return beat; }
+    void SaveState(std::ofstream & f, const class ParametersPool & parameters_pool, const CellEventQueue<NodeT> & event_queue) const;
 
     // Data extraction ---
     using NodeData = std::tuple<float, int, int, int, float, int, float, float, float, float, float, float>;
@@ -69,13 +71,29 @@ public:
         return names;
     }
     //----------
+    friend std::ostream & operator<<(std::ostream &os, const NodeT &node)
+    {
+        os << "Node id: " << node.id << " Type: " << (int)node.type << " Beat: " << node.beat;
+        os << " conduction velocity: " << node.conduction_vel;
+        os << " APD: " << node.apd_model.getAPD();
+        os << " CV: " << node.cv_model.getConductionVelocity();
+        os << " LAT: " << node.local_activation_time;
+        os << " Next activation time: " << node.next_activation_time;
+        os << " Next deactivation time: " << node.next_deactivation_time;
+        os << " Received potential: " << node.received_potential;
+        if(node.activation_parent != nullptr)
+            os << " Activation parent: " << node.activation_parent->id;
+        return os;
+    }
 
 private:
+    constexpr static int SAVE_VERSION = 1;  ///< Version of the NodeT class for state saving/loading.
     NodeParameters*  parameters;         ///< @brief Parameters of the Node
     unsigned int    id;                 ///< @brief Unique Node id
 
     CellType        type = CELL_TYPE_VOID; ///< @brief Type of the Node
     bool            external_activation;
+    bool            blocked;            ///< Node activation has been blocked
     int             beat;               ///< @brief Last beat  of activation
 
     float           conduction_vel;             ///< @brief Conduction velocity in the long. direction
@@ -105,22 +123,8 @@ private:
 
     //void Deactivate(float current_time_);
     bool Activate(float current_time_, const Geometry &geometry);
-    void ComputeActivation(float current_time_, const Geometry &geometry);
+    bool ComputeActivation(float current_time_, const Geometry &geometry);
 
-    friend std::ostream & operator<<(std::ostream &os, const NodeT &node)
-    {
-        os << "Node id: " << node.id << " Type: " << (int)node.type << " Beat: " << node.beat;
-        os << " conduction velocity: " << node.conduction_vel;
-        os << " APD: " << node.apd_model.getAPD();
-        os << " CV: " << node.cv_model.getConductionVelocity();
-        os << " LAT: " << node.local_activation_time;
-        os << " Next activation time: " << node.next_activation_time;
-        os << " Next deactivation time: " << node.next_deactivation_time;
-        os << " Received potential: " << node.received_potential;
-        if(node.activation_parent != nullptr)
-            os << " Activation parent: " << node.activation_parent->id;
-        return os;
-    }
 };
 
 #include "node.cpp"

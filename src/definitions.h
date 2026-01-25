@@ -8,11 +8,13 @@
 #define DEF_H
 
 #include <vector>
+#include <limits>
 #include <eigen3/Eigen/Dense>
 
-const float ALMOST_ZERO = 1e-8;
+constexpr float ALMOST_ZERO = 1e-8;
+constexpr float MAX_TIME = std::numeric_limits<float>::max();
 
 typedef unsigned short CellType; ///< @brief Cell type
-const CellType CELL_TYPE_VOID = 0;
+constexpr CellType CELL_TYPE_VOID = 0;
 
 #endif // DEF_H

@@ -17,12 +17,11 @@
 #include <filesystem>
 #include <initializer_list>
 #include "../src/rapidcsv.h"
-
 #include "definitions.h"
 
 using std::vector;
-namespace fs = std::filesystem;
 
+namespace fs = std::filesystem;
 
 class Spline
 {

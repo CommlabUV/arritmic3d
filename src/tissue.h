@@ -11,7 +11,7 @@
 #include <iostream>
 #include <fstream>
 #include <cassert>
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 #include "geometry.h"
 #include "node.h"
@@ -43,8 +43,11 @@ public:
     void ResetVariations() { apd_variation = 0.0; cv_variation = 0.0; }
     float GetAPDMeanVariation() const { return apd_variation / this->GetNumLiveNodes(); }
     float GetCVVariation() const { return cv_variation / this->GetNumLiveNodes(); }
+    void SetLongAPDReactivation(bool val) { long_apd_reactivation = val; }
 
 private:
+    bool long_apd_reactivation = true;
+    float apd_plateau_duration = 0.8; // Percentage of APD considered as plateau for reactivation
     float apd_variation = 0.0;
     float cv_variation = 0.0;
 };
@@ -166,7 +169,7 @@ void CardiacTissue<APM,CVM>::TriggerEvent(CellEvent* ev)
 
             // Deactivate the node. There are situations where this is not correct as more potentials sent to the node may activate it, but this is the behaviour of pde version.
             node_->received_potential = 0.0;    // @todo Check
-            node_->next_activation_time = INFINITY;
+            node_->next_activation_time = MAX_TIME;
         }
         else
         {
@@ -194,7 +197,7 @@ void CardiacTissue<APM,CVM>::TriggerEvent(CellEvent* ev)
                         Vector3 activation_dir = - this->tissue_geometry.relative_position[i]; // @todo Maybe we should define the opposite direction in geometry
 
                         // We compute the direct diffusion, through the graph.
-                        float direct_vel = node_->ComputeConductionVelocity(activation_dir);
+                        float direct_vel = node_->ComputeDirectionalConductionVelocity(activation_dir);
                         float direct_activation_time = node_->local_activation_time + distance/direct_vel;
                         CellEvent * ev_neigh = neigh->ActivateAtTime(node_, this->tissue_time, direct_activation_time);
 
@@ -215,7 +218,7 @@ void CardiacTissue<APM,CVM>::TriggerEvent(CellEvent* ev)
                 }
 
             }
-            node_->next_activation_time = INFINITY;
+            node_->next_activation_time = MAX_TIME;
         }
     }
 
@@ -224,11 +227,58 @@ void CardiacTissue<APM,CVM>::TriggerEvent(CellEvent* ev)
         // Deactivate node
         node_->received_potential = 0.0;
         node_->external_activation = false;
+        node_->next_deactivation_time = MAX_TIME;
 
-        if (node_->next_activation_time < INFINITY)
+        if (node_->next_activation_time < MAX_TIME)
         {
             node_->next_activation_event->ChangeEvent(node_->next_activation_time);
             this->event_queue.InsertCellEvent(node_->next_activation_event);
+        }
+
+        // After deactivation, we check for possible reactivation from neighbours.
+        if(this->long_apd_reactivation)
+        {
+            float node_excitable_at_time = node_->local_activation_time + 1.05*node_->apd_model.getERP(); // @todo Convert to parameter
+            Node* parent_node_ = nullptr;
+            for (unsigned int i = 0; i < this->tissue_geometry.num_neighbours; ++i )
+            {
+                // Danger! May go out of the array of Node
+                Node* neigh = node_ + this->tissue_geometry.displacement[i];  // @todo Look for a better way to do this
+                assert(neigh >= this->tissue_nodes.data() && neigh < this->tissue_nodes.data() + this->tissue_nodes.size());
+                // We skip core nodes
+                if ( neigh->type != CELL_TYPE_VOID )
+                {
+                    // If neighbour is active
+                    if (neigh->GetState(node_excitable_at_time) == Node::CellActivationState::ACTIVE)
+                    {
+                        // If we are before a percentage of the action potential duration, we get potential
+                        // If neighbour still has high potential, we might reactivate the node
+                        float neigh_plateau_duration = neigh->local_activation_time + this->apd_plateau_duration*neigh->apd_model.getAPD(); // @todo Convert to parameter
+                        if (node_excitable_at_time <= neigh_plateau_duration)
+                        {
+                            node_->received_potential += 1.0; // @todo Check potential value
+                            // We set the parent node as the latest activated node
+                            if (parent_node_ == nullptr)
+                                parent_node_ = neigh;
+                            else if (parent_node_->local_activation_time < neigh->local_activation_time)
+                                parent_node_ = neigh;
+                        }
+                    }
+                }
+            }
+
+            if(node_->received_potential >= 3) // @todo Convert to parameter
+            {
+                // Reactivation
+                CellEvent * ev_react = node_->ActivateAtTime(parent_node_, this->tissue_time, node_excitable_at_time);
+                if(ev_react != nullptr)
+                    this->event_queue.InsertCellEvent(ev_react);
+                else // We reset potential
+                    node_->received_potential = 0.0;
+
+            }
+            else // We reset potential
+                node_->received_potential = 0.0;
         }
 
     }

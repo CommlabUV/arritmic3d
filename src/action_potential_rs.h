@@ -18,9 +18,9 @@
 #ifndef ACTION_POTENTIAL_RS_H
 #define ACTION_POTENTIAL_RS_H
 
-//#include "membrane_potential.h"
 #include "spline2D.h"
 #include "node.h"
+#include <cmath>
 
 /**
  * @brief Action potential model based on APD restitution models.
@@ -75,7 +75,7 @@ public:
         if (di_ > 0.0)
         {
             this->last_di = di_;
-            // The next call can return NaN
+            // The next call can return -1, meaning no activation
             float new_apd = restitution_model->getValue(this->last_di,apd_)*this->correction_factor;
             // Check invalid value
             if(! restitution_model->is_novalue(new_apd) )
@@ -88,7 +88,7 @@ public:
             this->last_di = 100.0; /// @todo Should be a reverse mapping from apd_ to di_
             this->apd = apd_;
         }
-        this->ta = t0_ - (this->apd + this->last_di); ///< @todo Check if this is correct, this->apd is future
+        this->ta = t0_ - (this->apd + this->last_di); // We assume that the previous apd is the same as the current one
     };
 
     /**
@@ -112,15 +112,12 @@ public:
     {
         bool activated = false;
         float di = new_ta -(this->ta + this->apd);
-        if(di < 0.0)
-            return false;
 
-        //float new_apd = restitution_model->getValue(di,this->apd)*this->correction_factor;
         float new_apd = restitution_model->getValue(this->apd, di)*this->correction_factor;
         if (! restitution_model->is_novalue(new_apd) )
         {
             this->last_di = di;
-            this->delta_apd = fabs(new_apd - this->apd);    // Calculated without electrotonic effect !!
+            this->delta_apd = std::fabs(new_apd - this->apd);    // Calculated without electrotonic effect !!
             this->apd = new_apd;
             this->ta = new_ta;
             activated = true;
@@ -138,9 +135,10 @@ public:
      */
     bool Activate(float new_ta, float avg_apd, float e_eff = 0.0)
     {
-        bool res = Activate(new_ta);
+        if(not Activate(new_ta))
+            return false;
         this->apd = this->apd*(1.0 - e_eff) + avg_apd*e_eff;
-        return res;
+        return true;
     };
 
     /**
@@ -178,7 +176,6 @@ public:
     float getERP() const
     {
         return this->apd + restitution_model->GetLabelNoValue(0, this->apd);
-        //return this->apd;
     }
 
     /**

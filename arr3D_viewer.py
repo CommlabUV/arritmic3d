@@ -58,7 +58,7 @@ class DiffusionVisualizer:
             # Obtener los IDs originales de los puntos seleccionados
             ids_originales = thresholded["original_id"]
 
-            self.inital_node_id = np.where(ids_originales == self.config['STIMULATION_SITES'])[0]
+            self.inital_node_id = np.where(ids_originales == self.config['ACTIVATION_REGION'])[0]
 
             self.thresholded_meshes.append(thresholded)
 
@@ -250,7 +250,7 @@ class DiffusionVisualizer:
 
     # Función para mostrar/ocultar el nodo inicial
     def inital_node(self):
-        id_initial = self.inital_node_id #self.config['STIMULATION_SITES']
+        id_initial = self.inital_node_id #self.config['ACTIVATION_REGION']
         if self.showing_initial_node:
             self.plotter.remove_actor('initial_node')
         else:

@@ -10,10 +10,14 @@
 #ifndef NODE_PARAMETERS_H
 #define NODE_PARAMETERS_H
 
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include <vector>
 #include <map>
-
+#include <string>
+#include <fstream>
+#include <iostream>
+#include <cstring>
+#include <cassert>
 
 /**
  * @brief Parameters for a Node object.
@@ -129,6 +133,10 @@ public:
     */
     void Init(const NodeParameters & p)
     {
+        // Clear previous data
+        pool.clear();
+        index.clear();
+
         index.insert({p,0});
         pool.push_back(p);
     }
@@ -138,13 +146,16 @@ public:
     */
     void Init(const std::vector<NodeParameters> & vp)
     {
-        pool.reserve(vp.size());
+        // Clear previous data
+        pool.clear();
+        index.clear();
 
         // Insert parameters in the map
         for(auto & p : vp)
             index.insert({p, 0});
 
         // Put the parameters in the pool and update the index with the position in the pool
+        pool.reserve(index.size());
         size_t i = 0;
         for(auto & x : index)
         {
@@ -152,6 +163,14 @@ public:
             x.second = i;
             ++i;
         }
+    }
+
+    /**
+     * Clear the index map once the system is initialized.
+     */
+    void FinderClear()
+    {
+        index.clear();
     }
 
     /**
@@ -180,11 +199,47 @@ public:
         return info;
     }
 
+    /**
+     * Save the state of the parameters pool to a file.
+     * @param f Output file.
+    */
+    void SaveState(std::ofstream & f) const
+    {
+        const int version = 1;
+        f.write( (char *) &version, sizeof(int) );
+
+        // Save number of parameters in the pool
+        size_t n_params = pool.size();
+        f.write( (char *) &n_params, sizeof(size_t) );
+        // Save the parameters
+        f.write( (char *) &pool[0], sizeof(NodeParameters) * n_params );
+    }
+
+    /**
+     * Load the state of the parameters pool from a file.
+     * @param f Input file.
+    */
+    void LoadState(std::ifstream & f)
+    {
+        const int version = 1;
+
+        int file_version;
+        f.read( (char *) &file_version, sizeof(int) );
+        if(file_version != version)
+            throw std::runtime_error("ParametersPool::LoadState: Wrong file version.");
+
+        // Load number of parameters in the pool
+        size_t n_params;
+        f.read( (char *) &n_params, sizeof(size_t) );
+        // Load the parameters
+        pool.resize(n_params);
+        f.read( (char *) &pool[0], sizeof(NodeParameters) * n_params );
+    }
 
 
 private:
     std::vector<NodeParameters> pool;
-    std::map<NodeParameters, size_t> index;
+    std::map<NodeParameters, size_t> index;   // @todo Substitute NodeParameters by a hash value.
 };
 
 

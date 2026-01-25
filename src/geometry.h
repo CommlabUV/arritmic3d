@@ -3,7 +3,7 @@
 #define GEOMETRY_H
 
 #include <array>
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 // Define the maximum distance to consider neighbours. Can be set during compilation with -DNEIGHBOURS_DISTANCE=X
 #ifndef NEIGHBOURS_DISTANCE
@@ -185,6 +185,28 @@ public:
     {
         Eigen::Vector3i coords = GetCoords(index);
         return origin + Vector3(0.5*dx, 0.5*dy, 0.5*dz) + Vector3(coords[0]*dx, coords[1]*dy, coords[2]*dz);
+    }
+
+    void SaveState(std::ofstream & f) const
+    {
+        f.write( (const char*) (&size_x), sizeof(size_x) );
+        f.write( (const char*) (&size_y), sizeof(size_y) );
+        f.write( (const char*) (&size_z), sizeof(size_z) );
+        f.write( (const char*) (&dx), sizeof(dx) );
+        f.write( (const char*) (&dy), sizeof(dy) );
+        f.write( (const char*) (&dz), sizeof(dz) );
+        f.write( (const char*) (origin.data()), sizeof(float)*3 );
+    }
+
+    void LoadState(std::ifstream & f)
+    {
+        f.read( (char*) (&size_x), sizeof(size_x) );
+        f.read( (char*) (&size_y), sizeof(size_y) );
+        f.read( (char*) (&size_z), sizeof(size_z) );
+        f.read( (char*) (&dx), sizeof(dx) );
+        f.read( (char*) (&dy), sizeof(dy) );
+        f.read( (char*) (&dz), sizeof(dz) );
+        f.read( (char*) (origin.data()), sizeof(float)*3 );
     }
 
 };

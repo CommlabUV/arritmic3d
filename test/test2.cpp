@@ -48,13 +48,12 @@ int main(int argc, char **argv)
 {
 
     // Test of the CardiacTissue class
-    // Number of nodes: 98x98x98 - 88x88x88 = 941192 - 681472 = 259720
     CardiacTissue<ActionPotentialRestSurface,ConductionVelocity> tissue(N_NODES, N_NODES, N_NODES, 0.1, 0.1, 0.1);
     std::vector<CellType> v_type(TOTAL_NODES, HEALTHY_ENDO);
     //tissue.SetBorder(v_type, CELL_TYPE_VOID);
     SetCore(tissue, v_type, N_NODES-8, N_NODES-8, N_NODES-8, CELL_TYPE_VOID);
 
-    vector<NodeParameters> v_np(1);
+    std::vector<NodeParameters> v_np(1);
     Eigen::VectorXf fiber_dir = Eigen::Vector3f(0.7, 0.7, 0.0);
     tissue.InitModels("restitutionModels/config_TenTuscher_APD.csv","restitutionModels/config_TenTuscher_CV.csv");
     tissue.Init(v_type, v_np, {fiber_dir});

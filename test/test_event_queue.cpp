@@ -19,7 +19,9 @@ int main(int argc, char **argv)
 
     // Test of the CellEventQueue
     std::vector<Node> nodes(10);
-    CellEventQueue<Node> qq(nodes);
+    CellEventQueue<Node> qq;
+    qq.Init(nodes, nodes.size());
+
     Node::CellEvent *ev;
 
     ev = qq.GetEvent(0, CellEventType::ACTIVATION);
@@ -59,23 +61,52 @@ int main(int argc, char **argv)
 
     qq.InsertSystemEvent(1.0, SystemEventType::EXT_ACTIVATION, 0);
 
+    // Save state
+    std::ofstream f("event_queue_state.bin", std::ios::binary);
+    qq.SaveState(f, nodes);
+    f.close();
+
     while(not qq.IsEmpty())
     {
         auto [time, type] = qq.GetInfo();
-        std::cout << time << "  : " << int(type) << std::endl;
+        std::cout << "Time: " << time << "  : Type: " << int(type) ;
 
         if(type == SystemEventType::NODE_EVENT)
         {
             auto ev = qq.GetFirstCell();
-            std::cout << " Type: " << int(ev->event_type) << std::endl;
+            std::cout << " (Act 0 / Deact 1): " << int(ev->event_type);
             qq.ExtractFirstCell();
         }
         else
         {
             qq.ExtractFirstSystem();
         }
+        std::cout << std::endl;
     }
 
+    // Load state
+    std::ifstream f_in("event_queue_state.bin",  std::ios::binary);
+    qq.LoadState(f_in, nodes);
+    f_in.close();
+
+    std::cout << "After loading state:" << std::endl;
+    while(not qq.IsEmpty())
+    {
+        auto [time, type] = qq.GetInfo();
+        std::cout << "Time: " << time << "  : Type: " << int(type) ;
+
+        if(type == SystemEventType::NODE_EVENT)
+        {
+            auto ev = qq.GetFirstCell();
+            std::cout << " (Act 0 / Deact 1): " << int(ev->event_type);
+            qq.ExtractFirstCell();
+        }
+        else
+        {
+            qq.ExtractFirstSystem();
+        }
+        std::cout << std::endl;
+    }
 
     return 0;
 }

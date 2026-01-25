@@ -3,225 +3,41 @@ import numpy as np
 import argparse
 import json
 import os
-
-# Generate list of node ids to activate the tissue
-def get_activation_node_ids(grid, region_type="row", index=0, z_mode="zero", front_mode="all", nx=None, ny=None, nz=None, add_layer=True):
-    """
-    Returns a list of node ids for the tissue region, using block size and add_layer info.
-
-    Parameters:
-        grid (pv.RectilinearGrid): The grid to search.
-        region_type (str): Region type ("row", "column", "point").
-        index (int, tuple, or str): Row/column index or point coordinates (can be string for parsing).
-        z_mode (str or int): "zero" for Z=0, "center" for central Z, "all" for all Z, or an integer for specific Z.
-        front_mode (str or int): "zero", "center", "all", or an integer for specific X/Y.
-        nx, ny, nz (int): Number of divisions in X, Y, Z (without extra layer).
-        add_layer (bool): Whether the grid has an extra layer.
-
-    Returns:
-        list: List of node ids (only tissue, never -1).
-    """
-    dims = grid.dimensions  # (nx+2*offset, ny+2*offset, nz+2*offset)
-    offset = 1 if add_layer else 0
-
-    # Infer nx, ny, nz if not provided
-    if nx is None or ny is None or nz is None:
-        nx = dims[0] - 2*offset
-        ny = dims[1] - 2*offset
-        nz = dims[2] - 2*offset
-
-    # Parse index if string
-    if region_type == "point":
-        if isinstance(index, str):
-            index = tuple(map(int, index.strip("()").split(",")))
-        if not (isinstance(index, tuple) and len(index) == 3):
-            raise ValueError("For 'point', index must be a tuple (x, y, z)")
-    else:
-        if isinstance(index, str):
-            index = int(index)
-
-    # Parse z_mode
-    if isinstance(z_mode, str):
-        try:
-            z_mode_int = int(z_mode)
-            z_mode = z_mode_int
-        except ValueError:
-            pass
+from build_slab_regions import set_region, load_regions_from_file, parse_regions_from_cli, validate_region, apply_region
 
 
-    # Determine Z indices to use (all refer to tissue region)
-    if isinstance(z_mode, int):
-        z_indices = [z_mode]
-    elif z_mode == "zero":
-        z_indices = [0]
-    elif z_mode == "center":
-        z_indices = [nz // 2]
-    elif z_mode == "all":
-        z_indices = list(range(nz))
-    else:
-        raise ValueError("Invalid z_mode value")
-
-    # Determine x/y indices to use (ranges depend on region_type and front_mode)
-    if region_type == "row":
-        if front_mode == "zero":
-            x_indices = [0]
-        elif front_mode == "center":
-            x_indices = [nx // 2]
-        elif front_mode == "all":
-            x_indices = list(range(nx))
-        else:
-            try:
-                front_mode_int = int(front_mode)
-                x_indices = [front_mode_int]
-            except ValueError:
-                raise ValueError("Invalid front_mode value")
-        # For row, y is fixed
-        y_indices = [index]
-    elif region_type == "column":
-        if front_mode == "zero":
-            y_indices = [0]
-        elif front_mode == "center":
-            y_indices = [ny // 2]
-        elif front_mode == "all":
-            y_indices = list(range(ny))
-        else:
-            try:
-                front_mode_int = int(front_mode)
-                y_indices = [front_mode_int]
-            except ValueError:
-                raise ValueError("Invalid front_mode value")
-        # For column, x is fixed
-        x_indices = [index]
-    elif region_type == "point":
-        x_indices = [index[0]]
-        y_indices = [index[1]]
-        z_indices = [index[2]]
-    else:
-        raise ValueError("Invalid region_type value")
-
-    # Collect node ids
-    ids = []
-    for z in z_indices:
-        for y in y_indices:
-            for x in x_indices:
-                idx = np.ravel_multi_index((x + offset, y + offset, z + offset), dims, order="F")
-                ids.append(idx)
-    return ids
-
-
-def set_stimulation_sites(
-    grid,
-    region_type="row",
-    index=0,
-    z_mode="zero",
-    front_mode="all",
-    add_layer=True
-):
-    """
-    Sets the 'stimulation_sites' field in the grid and returns the activation sites dictionary.
-
-    Parameters:
-        grid (pv.RectilinearGrid): The grid to modify.
-        region_type (str): Region type ("row", "column", "point").
-        index (int, tuple, or str): Row/column index or point coordinates.
-        z_mode (str or int): Z mode for stim region.
-        front_mode (str or int): "zero", "center", "all", or an integer for specific X/Y.
-        nx, ny, nz (int): Number of divisions in X, Y, Z (without extra layer).
-        add_layer (bool): Whether the grid has an extra layer.
-
-    Returns:
-        dict: Dictionary with activation node ids.
-    """
-    activation_node_ids = get_activation_node_ids(
-        grid,
-        region_type=region_type,
-        index=index,
-        z_mode=z_mode,
-        front_mode=front_mode,
-        add_layer=add_layer
-    )
-    print("Node ids to activate:", activation_node_ids)
-    activation_node_ids = [int(i) for i in activation_node_ids]
-    stimulation_sites = np.zeros(grid.number_of_points, dtype=int)
-    for idx in activation_node_ids:
-        stimulation_sites[idx] = 1
-    grid.point_data["stimulation_sites"] = stimulation_sites
-    return {"STIMULATION_SITES": activation_node_ids}
-
-
-def set_center_square_restitution_model(grid, square_size=3):
-    """
-    Sets 'restitution_model' = 2 for a square region in the center of the XY plane at all Z layers,
-    but only for tissue nodes (restitution_model != -1).
-    """
-    x_len = grid.dimensions[0]
-    y_len = grid.dimensions[1]
-    z_len = grid.dimensions[2]
-
-    x_center = x_len // 2
-    y_center = y_len // 2
-    half = square_size // 2
-
-    if "restitution_model" in grid.point_data:
-        cell_type = grid.point_data["restitution_model"].copy()
-    else:
-        cell_type = np.zeros(grid.number_of_points, dtype=int)
-
-    for k in range(z_len):
-        for j in range(y_center - half, y_center + half + (square_size % 2)):
-            for i in range(x_center - half, x_center + half + (square_size % 2)):
-                if 0 <= i < x_len and 0 <= j < y_len:
-                    idx = np.ravel_multi_index((i, j, k), (x_len, y_len, z_len), order="F")
-                    if cell_type[idx] != 0:  # Only set if not exterior
-                        cell_type[idx] = 2
-
-    grid.point_data["restitution_model"] = cell_type
-
-def generate_rectilinear_slab(ndivs, spacing=(1.0, 1.0, 1.0),
-                              field_data=None, fallback_value_scalar=np.nan,
-                              fallback_value_vector=0.0, field_defaults=None, add_layer=True):
+def generate_rectilinear_slab(nnodes, spacing=(1.0, 1.0, 1.0), field_data={}):
     """
     Generates a rectilinear grid (slab) with specified number of divisions and assigns optional point data.
 
     Parameters:
         ndivs (tuple): (nx_divs, ny_divs, nz_divs) number of divisions along each axis.
         spacing (tuple): (dx, dy, dz) spacing between grid points.
-        field_data (dict): Optional. Dictionary of field_name: ndarray to assign as point data.
-        fallback_value_scalar (float): Default value for missing scalar data.
-        fallback_value_vector (float): Default value for missing vector data.
-        field_defaults (dict): Optional. Specific default values for fields.
-        add_layer (bool): If True, adds an extra layer at each edge of each axis.
+        field_data (dict): Optional. Dictionary of field_name: value to assign as point data.
+                          Values can be scalar (applied uniformly) or array of interior points (ndivs[0]*ndivs[1]*ndivs[2]).
 
     Returns:
         pv.RectilinearGrid: The generated rectilinear grid.
     """
-    def make_coords(n_divs, step):
-        """Generates coordinates for one axis, adding extra layers if specified."""
-        if add_layer:
-            # n_divs + 2 nodes: from -1 to n_divs (exclusive)
-            coords = np.arange(-1, n_divs + 1) * step
-        else:
-            # n_divs nodes: from 0 to n_divs-1
-            coords = np.arange(n_divs) * step
+    def make_coords(n_nodes, step):
+        """Generates coordinates for one axis, adding an extra layer of thickness 1."""
+        # nnodes + 2 nodes: padding -1 .. nnodes-1 (exclusive)
+        coords = np.arange(-1, n_nodes + 1) * step
         return coords
 
-    def make_mask(n_divs):
+    def make_mask(n_nodes):
         """Create an axis mask where 1 indicates tissue (interior) and 0 indicates exterior layer."""
-        if add_layer:
-            # interior nodes are ones, exterior padding (first and last) are zeros
-            mask = np.concatenate(([0], np.ones(n_divs, dtype=int), [0]))
-        else:
-            # no extra layer: all nodes are tissue
-            mask = np.ones(n_divs, dtype=int)
+        # interior nodes are ones, exterior padding (first and last) are zeros
+        mask = np.concatenate(([0], np.ones(n_nodes, dtype=int), [0]))
         return mask
 
-    x_coords = make_coords(ndivs[0], spacing[0])
-    y_coords = make_coords(ndivs[1], spacing[1])
-    z_coords = make_coords(ndivs[2], spacing[2])
+    x_coords = make_coords(nnodes[0], spacing[0])
+    y_coords = make_coords(nnodes[1], spacing[1])
+    z_coords = make_coords(nnodes[2], spacing[2])
 
-    x_mask = make_mask(ndivs[0])
-    y_mask = make_mask(ndivs[1])
-    z_mask = make_mask(ndivs[2])
+    x_mask = make_mask(nnodes[0])
+    y_mask = make_mask(nnodes[1])
+    z_mask = make_mask(nnodes[2])
 
     # Combine masks so that a cell is tissue only if it's interior on all three axes
     # use logical_and to get True only where all axis masks == 1
@@ -229,58 +45,228 @@ def generate_rectilinear_slab(ndivs, spacing=(1.0, 1.0, 1.0),
         np.logical_and.outer(x_mask, y_mask), z_mask
     ).astype(int)
 
-    # cell_type is now 1 for tissue, 0 for exterior (no inversion needed)
-    cell_type = mask_3d.ravel(order="F")
-
-    # Create the rectilinear grid and assign cell type as a field
+    # Create the rectilinear grid
     grid = pv.RectilinearGrid(x_coords, y_coords, z_coords)
     n_points = grid.number_of_points
+    n_interior = nnodes[0] * nnodes[1] * nnodes[2]
+    interior_mask = mask_3d.ravel(order="F") != 0
 
-    if field_data is None:
-        field_data = {}
-    field_data.setdefault("restitution_model", cell_type)
+    # Default fields
+    default_field_data = {
+        "restitution_model": 1,
+        "fibers_orientation": [0, 0, 0]
+    }
 
-    field_defaults = field_defaults or {}
-    if field_data:
-        for field_name, data in field_data.items():
-            if data.shape[0] != n_points:
-                # Fill with default if shape mismatch
-                if field_name in field_defaults:
-                    fill_value = field_defaults[field_name]
-                elif data.ndim == 1:
-                    fill_value = data[0]
+    # Merge with user-provided field_data (user values override defaults)
+    merged_field_data = {**default_field_data, **field_data}
+
+    # Process and assign fields
+    for field_name, val in merged_field_data.items():
+        if isinstance(val, (list, tuple)):
+            val = np.array(val)
+
+        if isinstance(val, np.ndarray):
+            # Could be a vector (components) or an array of values
+            if val.ndim == 1:
+                # 1D array: could be components (len <= 3) or values for interior points
+                if len(val) <= 3:
+                    # Treat as vector: zeros for exterior, val for interior
+                    values = np.zeros((n_points, len(val)))
+                    values[interior_mask] = val
+                elif len(val) == n_interior:
+                    # Treat as values for interior points: expand with padding (0 for exterior)
+                    full_val = np.zeros(n_points)
+                    full_val[interior_mask] = val
+                    values = full_val
                 else:
-                    fill_value = np.full(data.shape[1:], fallback_value_vector)
-                values = np.full((n_points,) + data.shape[1:], fill_value)
+                    raise ValueError(f"Field '{field_name}' has {len(val)} values, expected {n_interior} (interior points) or <= 3 (vector components).")
+            elif val.ndim == 2:
+                # 2D array: vector field (n_points, components) or (n_interior, components)
+                if val.shape[0] == n_points:
+                    values = val
+                elif val.shape[0] == n_interior:
+                    # Expand with zero vectors for exterior
+                    values = np.zeros((n_points, val.shape[1]))
+                    values[interior_mask] = val
+                else:
+                    raise ValueError(f"Field '{field_name}' has {val.shape[0]} rows, expected {n_interior} (interior) or {n_points} (all points).")
             else:
-                values = data
-            grid[field_name] = values
+                raise ValueError(f"Field '{field_name}' has invalid shape {val.shape}.")
+        else:
+            # Scalar: 0 for exterior, val for interior
+            values = np.zeros(n_points, dtype=int if isinstance(val, int) else float)
+            values[interior_mask] = val
+
+        grid[field_name] = values
 
     return grid
+
 
 def get_argument_parser():
     """
     Configures and returns the argument parser for the script.
     """
-    parser = argparse.ArgumentParser(description="Generate a rectilinear slab and save as VTK.")
-    parser.add_argument("output_file", help="Output VTK file path.")
-    parser.add_argument("--ndivs", type=int, nargs=3, required=True, help="Number of divisions per axis (nx,ny,nz).")
-    parser.add_argument("--spacing", type=float, nargs=3, default=[0.05, 0.05, 0.05], help="Spacing (dx, dy, dz).")
-    parser.add_argument("--fallback_scalar", type=float, default=np.nan, help="Fallback value for scalar fields. To be used if no specific default is provided.")
-    parser.add_argument("--fallback_vector", type=float, default=0.0, help="Fallback value for vector fields. To be used if no specific default is provided.")
-    parser.add_argument("--defaults", type=str, default="{}", help="A string with JSON dict of specific default values for fields.")
-    parser.add_argument("--field_data", type=str, default="{}", help="JSON dict of field_name: list/array.")
-    parser.add_argument("--add_no_layer", action="store_true", help="Do not add an extra layer beyond each face. In general, this layer is necessary for simulations.")
-    parser.add_argument("--add_square", action="store_true", help="If set, add a square region with restitution_model=2 in the center.")
-    parser.add_argument("--square_size", type=int, default=3, help="Size of the square region to set restitution_model=2 (used if --add_square).")
+    parser = argparse.ArgumentParser(
+        description="Generate a rectilinear slab (VTK RectilinearGrid) with point data fields and regions.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Basic slab with default values
+  python build_slab.py cases/slab.vtk --nnodes 20 20 5 --spacing 0.05 0.05 0.05
 
-    # Arguments for stim sites
-    parser.add_argument("--generate_stim_sites", action="store_true", help="If set, generate stim sites and label them in the stimulation_sites data field.")
-    parser.add_argument("--stim_region_type", type=str, default="row", choices=["row", "column", "point"], help="Region type for stim sites.")
-    parser.add_argument("--stim_index", type=str, default="0", help="Index for stim region (int for row/column index, tuple for point).")
-    parser.add_argument("--stim_z_mode", type=str, default="zero", choices=["zero", "center", "all"], help="Z mode for stim region (zero, center, all, or int).")
-    parser.add_argument("--stim_front_mode", type=str, default="all", choices=["zero", "center", "all"], help="X/Y mode for stim region (zero, center, all, or int).")
+  # Slab with custom field values and regions
+  python build_slab.py cases/slab.vtk --nnodes 20 20 5 --spacing 0.05 0.05 0.05 \\
+    --field restitution_model 2 --field fibers_orientation '[1,0,0]' \\
+    --region '{\"shape\":\"circle\",\"cx\":0.5,\"cy\":0.5,\"r1\":0.2,\"r2\":0.4,\"restitution_model\":3}'
+
+  # Using regions file and CLI regions
+  python build_slab.py cases/slab.vtk --nnodes 40 40 5 --spacing 0.05 0.05 0.05 \\
+    --regions-file ./regions_base.json \\
+    --region '{\"shape\":\"square\",\"cx\":1.0,\"cy\":1.0,\"r1\":0.1,\"r2\":0.2,\"restitution_model\":5}'
+        """
+    )
+
+    # Positional arguments
+    parser.add_argument(
+        "output_file",
+        help="Output VTK file path."
+    )
+
+    # Grid generation group
+    grid_group = parser.add_argument_group("Grid generation", "Define the slab grid dimensions and spacing.")
+    grid_group.add_argument(
+        "--nnodes",
+        type=int,
+        nargs=3,
+        required=True,
+        metavar=("NX", "NY", "NZ"),
+        help="Number of nodes per axis. Each dimension will have NX, NY, NZ points respectively."
+    )
+    grid_group.add_argument(
+        "--spacing",
+        type=float,
+        nargs=3,
+        default=[0.05, 0.05, 0.05],
+        metavar=("DX", "DY", "DZ"),
+        help="Spacing (world units) between grid points along each axis (default: 0.05 0.05 0.05)."
+    )
+
+    # Point data fields group
+    field_group = parser.add_argument_group("Point data fields", "Set default values for grid point data fields.")
+    field_group.add_argument(
+        "--field",
+        action="append",
+        nargs=2,
+        metavar=("FIELD_NAME", "VALUE"),
+        help="Add or override a point data field. VALUE can be a scalar or JSON array. "
+             "Example: --field restitution_model 1 or --field fibers_orientation '[1,0,0]'. "
+             "Can be used multiple times."
+    )
+
+    # Region modification group
+    region_group = parser.add_argument_group("Geometric regions", "Define regions to modify field values.")
+    region_group.add_argument(
+        "--regions-file",
+        type=str,
+        metavar="PATH",
+        help="Path to JSON file containing a list of region objects. Regions are applied in order. "
+             "Each region must specify 'shape' and required parameters (cx, cy, r1, r2 for circle/square/diamond; "
+             "side for edge; ids for node_ids). Field values can be scalar, vector, or gradient lists."
+    )
+    region_group.add_argument(
+        "--region",
+        action="append",
+        type=str,
+        metavar="JSON",
+        help="Add a region as a JSON object string. Supported shapes: circle, square, diamond, edge, node_ids. "
+             "Example: '{\"shape\":\"circle\",\"cx\":0.5,\"cy\":0.5,\"r1\":0.2,\"r2\":0.4,\"restitution_model\":3}'. "
+             "Can be used multiple times. CLI regions override file regions on overlap."
+    )
+
+    # Tissue activation group
+    activation_group = parser.add_argument_group("Tissue activation definition", "Define activation regions on the slab.")
+    activation_group.add_argument(
+        "--region-by-side",
+        action="append",
+        nargs=2,
+        metavar=("SIDE", "REGION_ID"),
+        help="Define an entire slab side as an activation region. SIDE must be one of: north, south, east, west. "
+             "REGION_ID is the integer value to assign to activation_region field. "
+             "Can be used multiple times to define multiple sides as activation regions."
+    )
+    activation_group.add_argument(
+        "--region-by-node-ids",
+        action="append",
+        nargs='+',
+        metavar=("NODE_ID", "REGION_ID"),
+        help="Define an activation region on specific nodes by their IDs. All arguments except the last are node IDs; "
+             "the last argument is REGION_ID (integer). "
+             "Example: --region-by-node-ids 100 200 300 1 defines nodes 100, 200, 300 as a region with activation_region=1. "
+             "Can be used multiple times to create multiple activation groups."
+    )
+
     return parser
+
+
+def build_slab(args):
+
+    # Parse field data from CLI
+    field_data = {}
+    if getattr(args, "field", None):
+        for field_name, value_str in args.field:
+            try:
+                # Try to parse as JSON (for arrays)
+                value = json.loads(value_str)
+            except (json.JSONDecodeError, ValueError):
+                # Try to parse as scalar
+                try:
+                    value = float(value_str)
+                except ValueError:
+                    value = value_str
+            field_data[field_name] = value
+
+    grid = generate_rectilinear_slab(
+        tuple(args.nnodes),
+        tuple(args.spacing),
+        field_data=field_data
+    )
+
+    # Regions handling (strict validation, precedence: regions-file first, then --region entries).
+    # Later regions overwrite earlier ones on overlap. No defaults or interactivity: invalid inputs raise.
+    regions = []
+    if getattr(args, "regions_file", None):
+        regions += load_regions_from_file(args.regions_file)
+    if getattr(args, "region", None):
+        regions += parse_regions_from_cli(args.region)
+
+    # Convert --region-by-side entries to region dicts
+    if getattr(args, "region_by_side", None):
+        for side, region_id_str in args.region_by_side:
+            region_id = int(region_id_str)
+            regions.append({
+                "shape": "side",
+                "side": side,
+                "activation_region": region_id
+            })
+
+    # Convert --region-by-node-ids entries to region dicts
+    if getattr(args, "region_by_node_ids", None):
+        for node_list in args.region_by_node_ids:
+            region_id = int(node_list[-1])
+            node_ids = [int(nid) for nid in node_list[:-1]]
+            regions.append({
+                "shape": "node_ids",
+                "ids": node_ids,
+                "activation_region": region_id
+            })
+
+    # Apply all regions (including activations)
+    for idx, reg in enumerate(regions, start=1):
+        validate_region(reg, idx)
+        apply_region(grid, reg)
+
+    return grid
+
 
 def main():
     """
@@ -289,46 +275,8 @@ def main():
     parser = get_argument_parser()
     args = parser.parse_args()
 
-    try:
-        field_defaults = json.loads(args.defaults)
-    except json.JSONDecodeError:
-        print("Error parsing the dictionary of default values. Ensure it is in valid JSON format.")
-        return
 
-    try:
-        field_data_dict = json.loads(args.field_data)
-        # Convert lists to numpy arrays
-        field_data = {k: np.array(v) for k, v in field_data_dict.items()}
-    except Exception:
-        print("Error parsing field_data. Ensure it is a valid JSON dictionary of arrays.")
-        return
-
-    if 'fibers_orientation' not in field_data:
-        field_data['fibers_orientation'] = np.array([[0,0,0]])
-
-    grid = generate_rectilinear_slab(
-        tuple(args.ndivs), tuple(args.spacing), field_data,
-        args.fallback_scalar, args.fallback_vector,
-        field_defaults, not args.add_no_layer
-    )
-    if args.add_square:
-        set_center_square_restitution_model(grid, args.square_size)
-
-    # Generate and save stim sites if requested
-    if args.generate_stim_sites:
-        stim_sites = set_stimulation_sites(
-            grid,
-            region_type=args.stim_region_type,
-            index=args.stim_index,
-            z_mode=args.stim_z_mode,
-            front_mode=args.stim_front_mode,
-            add_layer=not args.add_no_layer
-        )
-        # Build stimulation sites filename based on output_file
-        output_root, _ = os.path.splitext(args.output_file)
-        stimulation_sites_file = output_root + "_stimulation_sites.json"
-        with open(stimulation_sites_file, "w") as f:
-            json.dump(stim_sites, f, indent=4)
+    grid = build_slab(args)
 
     grid.save(args.output_file)
 
