@@ -1,11 +1,11 @@
-import tissue_module
+import arritmic
 import numpy as np
 
 HEALTHY_ENDO = 1
 
 def main():
     print("0", flush=True)
-    tissue = tissue_module.CardiacTissue(6, 6, 6, 0.1, 0.1, 0.2)
+    tissue = arritmic.CardiacTissue(6, 6, 6, 0.1, 0.1, 0.2)
     v_type = [HEALTHY_ENDO] * (6 * 6 * 6)
     initial_apd = 1.0
     #v_apd = np.full((6 * 6 * 6), initial_apd)

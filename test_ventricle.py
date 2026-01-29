@@ -1,24 +1,24 @@
-import tissue_module
+import arritmic
 import numpy as np
 import pyvista as pv
 
 # Conversion of int to CellType
 def convert_to_cell_type(cell_type):
     if cell_type == 0:
-        return tissue_module.CellType.HEALTHY
+        return arritmic.CellType.HEALTHY
     elif cell_type == 1:
-        return tissue_module.CellType.BORDER_ZONE
+        return arritmic.CellType.BORDER_ZONE
     else:
-        return tissue_module.CellType.CORE
+        return arritmic.CellType.CORE
 
 # Conversion to tissue region
 def convert_to_tissue_region(region):
     if region == 0:
-        return tissue_module.TissueRegion.ENDO
+        return arritmic.TissueRegion.ENDO
     elif region == 1:
-        return tissue_module.TissueRegion.MID
+        return arritmic.TissueRegion.MID
     else:
-        return tissue_module.TissueRegion.EPI
+        return arritmic.TissueRegion.EPI
 
 def main():
     vtk_file = "casos/ventricle_Tagged_2.vtk"
@@ -44,7 +44,7 @@ def main():
     ncells_x = dims[0]
     ncells_y = dims[1]
     ncells_z = dims[2]
-    tissue = tissue_module.CardiacTissue(ncells_x, ncells_y, ncells_z, x_spacing, y_spacing, z_spacing)
+    tissue = arritmic.CardiacTissue(ncells_x, ncells_y, ncells_z, x_spacing, y_spacing, z_spacing)
 
     sensor_point = 60382
     initial_apd = 300.0
@@ -52,7 +52,7 @@ def main():
     v_sensor = [0] * tissue.size()
     v_sensor[sensor_point] = 1  # Set the sensor point
     parameters = {"INITIAL_APD" : v_apd, "SENSOR" : v_sensor}
-    #v_region = [tissue_module.TissueRegion.ENDO] * (ncells_x * ncells_y * ncells_z)
+    #v_region = [arritmic.TissueRegion.ENDO] * (ncells_x * ncells_y * ncells_z)
     fiber_or = np.array(grid.point_data['fibers_OR'])
     print("Fibers OR:", fiber_or.shape)
 
@@ -65,20 +65,20 @@ def main():
             grid.point_data.remove(key)
 
     # Set the timer for saving the VTK files
-    tissue.SetTimer(tissue_module.SystemEventType.FILE_WRITE, 20)  # 20 ms
+    tissue.SetTimer(arritmic.SystemEventType.FILE_WRITE, 20)  # 20 ms
 
     # First activation
     initial_node = 12051 #tissue.GetIndex(2, 2, 1)
     beat = 0
-    tissue.SetSystemEvent(tissue_module.SystemEventType.EXT_ACTIVATION, 100)  # 100 ms for the first activation
-    tissue.SetSystemEvent(tissue_module.SystemEventType.EXT_ACTIVATION, 800)  # 800 ms for the second activation
+    tissue.SetSystemEvent(arritmic.SystemEventType.EXT_ACTIVATION, 100)  # 100 ms for the first activation
+    tissue.SetSystemEvent(arritmic.SystemEventType.EXT_ACTIVATION, 800)  # 800 ms for the second activation
     print(0)
 
     i = 1
     while tissue.GetTime() < 1000.0:
         tick = tissue.update(0)
 
-        if tick == tissue_module.SystemEventType.EXT_ACTIVATION:
+        if tick == arritmic.SystemEventType.EXT_ACTIVATION:
             beat += 1
             print("APD error: ", tissue.GetAPDMeanError())
             tissue.ResetErrors()
@@ -86,7 +86,7 @@ def main():
             tissue.ExternalActivation([initial_node], tissue.GetTime(), beat)
             print("Beat at time:", tissue.GetTime())
 
-        elif tick == tissue_module.SystemEventType.FILE_WRITE:
+        elif tick == arritmic.SystemEventType.FILE_WRITE:
             # Update the cell states
             grid.point_data['State'] = tissue.GetStates()
             grid.point_data['APD'] = tissue.GetAPD()

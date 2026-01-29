@@ -1,0 +1,52 @@
+[build-system]
+requires = ["scikit-build-core>=0.11.0", "pybind11"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "arritmic"
+version = "3.0.0-pre4"
+authors = [
+    {name = "Dolors Serra"},
+    {name = "Giada Romitti", email = "giada.romitti@uv.es"},
+    {name = "Fernando Barber", email = "fernando.barber@uv.es"},
+    {name = "Ignacio García-Fernández", email = "ignacio.garcia@uv.es"}
+]
+description = "Fast eikonal solver for electrophysiology simulation"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Education",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "numpy>=1.21",
+    "pyvista>=0.40",
+]
+
+
+[project.urls]
+"Homepage" = "https://github.com/CommlabUV/arritmic3d"
+"Issues" = "https://github.com/CommlabUV/arritmic3d/issues"
+"Repository" = "https://github.com/CommlabUV/arritmic3d.git"
+"Changelog" = "https://github.com/CommlabUV/arritmic3d/blob/main/CHANGELOG.md"
+
+
+[tool.scikit-build]
+wheel.packages = ["src/arritmic"]
+cmake.build-type = "Release"
+
+[project.scripts]
+arritmic3d = "arritmic.arritmic3D:main"
+build_slab = "arritmic.build_slab:main"
+
+[tool.scikit-build.sdist]
+include = ["restitutionModels/*.csv"]

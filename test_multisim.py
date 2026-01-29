@@ -1,4 +1,4 @@
-import tissue_module
+import arritmic
 import numpy as np
 import pyvista as pv
 import os
@@ -6,20 +6,20 @@ import os
 # Conversion of int to CellType
 def convert_to_cell_type(cell_type):
     if cell_type == 0:
-        return tissue_module.CellType.HEALTHY
+        return arritmic.CellType.HEALTHY
     elif cell_type == 1:
-        return tissue_module.CellType.BORDER_ZONE
+        return arritmic.CellType.BORDER_ZONE
     else:
-        return tissue_module.CellType.CORE
+        return arritmic.CellType.CORE
 
 # Conversion to tissue region
 def convert_to_tissue_region(region):
     if region == 0:
-        return tissue_module.TissueRegion.ENDO
+        return arritmic.TissueRegion.ENDO
     elif region == 1:
-        return tissue_module.TissueRegion.MID
+        return arritmic.TissueRegion.MID
     else:
-        return tissue_module.TissueRegion.EPI
+        return arritmic.TissueRegion.EPI
 
 def main():
     vtk_file = "casos/ventricle_Tagged_2.vtk"
@@ -45,7 +45,7 @@ def main():
     ncells_x = dims[0]
     ncells_y = dims[1]
     ncells_z = dims[2]
-    tissue = tissue_module.CardiacTissue(ncells_x, ncells_y, ncells_z, x_spacing, y_spacing, z_spacing)
+    tissue = arritmic.CardiacTissue(ncells_x, ncells_y, ncells_z, x_spacing, y_spacing, z_spacing)
 
     initial_apd = 300.0
     v_apd = [initial_apd] * (ncells_x * ncells_y * ncells_z)
@@ -72,7 +72,7 @@ def main():
     # First activation
     for i_pacing, initial_node in enumerate(p_sites_values):
         #initial_node = 12051 #tissue.GetIndex(2, 2, 1)
-        tissue = tissue_module.CardiacTissue(ncells_x, ncells_y, ncells_z, x_spacing, y_spacing, z_spacing)
+        tissue = arritmic.CardiacTissue(ncells_x, ncells_y, ncells_z, x_spacing, y_spacing, z_spacing)
         tissue.InitPy(v_type, v_region, parameters, fiber_or)
 
         tissue.SetTimer(20)  # 20 ms

@@ -1,4 +1,4 @@
-import tissue_module
+import arritmic
 import numpy as np
 import pyvista as pv
 
@@ -19,20 +19,20 @@ def main():
     print("Spacing:", x_spacing, y_spacing, z_spacing)
 
     print("Campos disponibles en point_data:", grid.point_data.keys())
-    v_type = list(map(tissue_module.CellType, np.array(grid.point_data['Type'])))
+    v_type = list(map(arritmic.CellType, np.array(grid.point_data['Type'])))
 
     # Number of cells in each dimension
     ncells_x = dims[0]
     ncells_y = dims[1]
     ncells_z = dims[2]
-    tissue = tissue_module.CardiacTissue(ncells_x, ncells_y, ncells_z, x_spacing, y_spacing, z_spacing)
-    #v_type = [tissue_module.CellType.HEALTHY] * (ncells_x * ncells_y * ncells_z)
+    tissue = arritmic.CardiacTissue(ncells_x, ncells_y, ncells_z, x_spacing, y_spacing, z_spacing)
+    #v_type = [arritmic.CellType.HEALTHY] * (ncells_x * ncells_y * ncells_z)
 
     initial_apd = 100.0
     #v_apd = np.full((6 * 6 * 6), initial_apd)
     v_apd = [initial_apd] * (ncells_x * ncells_y * ncells_z)
     parameters = {"INITIAL_APD" : v_apd}
-    v_region = [tissue_module.TissueRegion.ENDO] * (ncells_x * ncells_y * ncells_z)
+    v_region = [arritmic.TissueRegion.ENDO] * (ncells_x * ncells_y * ncells_z)
 
     tissue.InitPy(v_type, v_region, parameters)
     print("tissue initialized", flush=True)

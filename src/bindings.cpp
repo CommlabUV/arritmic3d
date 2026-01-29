@@ -8,7 +8,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(tissue_module, m) {
+PYBIND11_MODULE(_core, m) {
     // Define aliases for the template parameters
     using T_AP = ActionPotentialRestSurface;
     using T_CV = ConductionVelocity;
