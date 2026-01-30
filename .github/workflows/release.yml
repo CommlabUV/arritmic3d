@@ -29,8 +29,9 @@ jobs:
       with:
         python-version: '3.9'
 
-    - name: Install cibuildwheel
-      run: pip install cibuildwheel==2.20.*
+    - name: Install build tooling
+      # Install cibuildwheel and build packages
+      run: pip install cibuildwheel==2.20.* build
 
     - name: Build wheels (allow partial failures)
       # Do not fail the step if some builds fail; publish what was produced
