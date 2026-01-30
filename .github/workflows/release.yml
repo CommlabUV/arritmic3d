@@ -71,10 +71,23 @@ jobs:
     steps:
     - uses: actions/download-artifact@v4
       with:
-        path: dist
+        # Download all artifacts into a temporary folder
+        path: artifacts
+
+    - name: Gather distributions
+      # Ensure distribution files are at top-level in dist/
+      run: |
+        mkdir -p dist
+        find artifacts -type f \( -name "*.whl" -o -name "*.tar.gz" -o -name "*.zip" \) -exec cp {} dist/ \;
+        if [ -z "$(ls -A dist 2>/dev/null)" ]; then
+          echo "::error::No distribution files found in dist/; nothing to publish"
+          exit 1
+        fi
+        ls -la dist
 
     - name: Publish to Test PyPI
       uses: pypa/gh-action-pypi-publish@v1.10.0
       with:
         repository-url: https://test.pypi.org/legacy/
         password: ${{ secrets.TEST_PYPI_TOKEN }}
+        packages_dir: dist
