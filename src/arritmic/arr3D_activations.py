@@ -1,7 +1,7 @@
 import os
 import json
 import numpy as np
-import tissue_module
+import arritmic
 
 def load_json_list(file_path):
     """
@@ -211,6 +211,6 @@ def schedule_activation(cfg, grid, tissue):
 
     # Insert all activation times as system events
     for activation_time in activations:
-        tissue.SetSystemEvent(tissue_module.SystemEventType.EXT_ACTIVATION, activation_time)
+        tissue.SetSystemEvent(arritmic.SystemEventType.EXT_ACTIVATION, activation_time)
 
     return activations

@@ -6,11 +6,11 @@ import argparse
 import json
 import copy
 
-import tissue_module
-import build_slab
+import arritmic
+from . import build_slab
 
-from arr3D_config import check_directory, get_vectorial_parameters, load_config_file, make_default_config
-from arritmic3d_activations import schedule_activation
+from .arr3D_config import check_directory, get_vectorial_parameters, load_config_file, make_default_config
+from .arr3D_activations import schedule_activation
 
 
 def load_grid(vtk_file):
@@ -58,7 +58,7 @@ def create_tissue(grid, params):
     ncells_y = dims[1]
     ncells_z = dims[2]
 
-    tissue = tissue_module.CardiacTissue(ncells_x, ncells_y, ncells_z, x_spacing, y_spacing, z_spacing)
+    tissue = arritmic.CardiacTissue(ncells_x, ncells_y, ncells_z, x_spacing, y_spacing, z_spacing)
 
     vparams = get_vectorial_parameters(tissue, dims, params)
     print("Parameters:", params, flush=True)
@@ -97,7 +97,7 @@ def run_simulation(case_dir, cfg):
     tissue = create_tissue(grid, cfg)
 
     # Set the timer for saving the VTK files
-    tissue.SetTimer(tissue_module.SystemEventType.FILE_WRITE, cfg['VTK_OUTPUT_PERIOD'])  # time in ms
+    tissue.SetTimer(arritmic.SystemEventType.FILE_WRITE, cfg['VTK_OUTPUT_PERIOD'])  # time in ms
 
     # Schedule the activation protocol
     activations = schedule_activation(cfg, grid, tissue)
@@ -108,14 +108,14 @@ def run_simulation(case_dir, cfg):
         tick = tissue.update(0)
         time = tissue.GetTime()
 
-        if tick == tissue_module.SystemEventType.EXT_ACTIVATION:
+        if tick == arritmic.SystemEventType.EXT_ACTIVATION:
             if time in activations:
                 initial_nodes = activations[time][0]
                 beat = activations[time][1]
                 tissue.ExternalActivation(initial_nodes, time, beat)
                 print("Beat at time:", time, flush=True)
 
-        elif tick == tissue_module.SystemEventType.FILE_WRITE:
+        elif tick == arritmic.SystemEventType.FILE_WRITE:
             # Update the cell states
             grid.point_data['State'] = tissue.GetStates()
             grid.point_data['APD'] = tissue.GetAPD()

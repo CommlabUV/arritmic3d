@@ -5,13 +5,13 @@ A high-performance C++ eikonal solver with Python bindings for
 electrophysiology simulations in cardiac tissue.
 """
 
-__version__ = "3.0.0-rc4"
+__version__ = "3.0.0-rev5"
 __author__ = "CoMMLabUV"
 __license__ = "LGPL-3.0-or-later"
 
 # Import the compiled C++ module
 try:
-    from . import _core
+    from ._core import CardiacTissue, SystemEventType
 except ImportError as e:
     raise ImportError(
         "Cannot import C++ extension '_core'. "
@@ -22,6 +22,7 @@ except ImportError as e:
 
 # Expose the public API
 __all__ = [
-    "_core",
+    "CardiacTissue",
+    "SystemEventType",
     "__version__",
 ]

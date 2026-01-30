@@ -3,7 +3,7 @@ import numpy as np
 import argparse
 import json
 import os
-from build_slab_regions import set_region, load_regions_from_file, parse_regions_from_cli, validate_region, apply_region
+from .build_slab_regions import set_region, load_regions_from_file, parse_regions_from_cli, validate_region, apply_region
 
 
 def generate_rectilinear_slab(nnodes, spacing=(1.0, 1.0, 1.0), field_data={}):
