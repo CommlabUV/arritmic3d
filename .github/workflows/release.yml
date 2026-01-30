@@ -10,13 +10,13 @@ jobs:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     env:
-      # Avoids building PyPy wheels and any i686 wheels (32-bit)
-      CIBW_SKIP: 'pp* *-i686*'
-      # Runs inside the manylinux image before building to install Eigen
-      CIBW_BEFORE_BUILD: |
-        set -ex
-        yum -y install epel-release || true
-        yum -y install eigen3-devel || true
+      # Avoids building PyPy wheels, any i686 wheels (32-bit), and all CPython < 3.10
+      # Skips cp30, cp31, ... cp39 by pattern; keeps cp310 and above.
+      CIBW_SKIP: 'pp* *-i686* cp3[0-9]-* *-musllinux*'
+      # To speed up debug cycles, uncomment one of the following:
+      # CIBW_ARCHS: 'x86_64'           # build only x86_64 architectures
+      # CIBW_SKIP: 'pp* *-musllinux*'  # skip musllinux builds
+      # CIBW_SKIP: 'pp* *-i686*'       # skip i686 (32-bit) builds
     strategy:
       matrix:
         os: [ubuntu-22.04]
