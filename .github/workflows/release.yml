@@ -17,6 +17,13 @@ jobs:
         set -ex
         yum -y install epel-release || true
         yum -y install eigen3-devel || true
+        if ! rpm -q eigen3-devel >/dev/null 2>&1; then
+          EIGEN_VER=3.4.0
+          curl -L https://gitlab.com/libeigen/eigen/-/archive/${EIGEN_VER}/eigen-${EIGEN_VER}.tar.gz -o eigen.tar.gz
+          tar -xzf eigen.tar.gz
+          mkdir -p /usr/local/include/eigen3
+          cp -r eigen-${EIGEN_VER}/Eigen /usr/local/include/eigen3/
+        fi
     strategy:
       matrix:
         os: [ubuntu-22.04]
