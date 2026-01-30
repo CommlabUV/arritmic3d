@@ -12,11 +12,11 @@ jobs:
     env:
       # Avoids building PyPy wheels, any i686 wheels (32-bit), and all CPython < 3.10
       # Skips cp30, cp31, ... cp39 by pattern; keeps cp310 and above.
-      CIBW_SKIP: 'pp* *-i686* cp3[0-9]-* *-musllinux*'
+      CIBW_SKIP: 'pp* *_i686* cp3[0-9]-* *-musllinux*'
       # To speed up debug cycles, uncomment one of the following:
       # CIBW_ARCHS: 'x86_64'           # build only x86_64 architectures
       # CIBW_SKIP: 'pp* *-musllinux*'  # skip musllinux builds
-      # CIBW_SKIP: 'pp* *-i686*'       # skip i686 (32-bit) builds
+      # CIBW_SKIP: 'pp* *_i686*'       # skip i686 (32-bit) builds
     strategy:
       matrix:
         os: [ubuntu-22.04]
