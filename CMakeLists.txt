@@ -3,12 +3,24 @@ project(arritmic3d CXX)
 
 # Find dependencies
 find_package(pybind11 REQUIRED)
-find_package(Eigen3 REQUIRED)
-if(NOT Eigen3_FOUND)
-  # Fallback: use pkg-config
-  find_package(PkgConfig REQUIRED)
-  pkg_check_modules(Eigen3 REQUIRED eigen3)
+
+# Fetch Eigen automatically if not found
+include(FetchContent)
+if (NOT TARGET Eigen3::Eigen)
+  if (NOT DEFINED EIGEN_FALLBACK_VERSION)
+    set(EIGEN_FALLBACK_VERSION "3.4.0" CACHE STRING "Version of Eigen to fetch if missing")
+  endif()
+  message(STATUS "Eigen not found: fetching Eigen ${EIGEN_FALLBACK_VERSION}")
+  FetchContent_Declare(
+    eigen
+    GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
+    GIT_TAG        ${EIGEN_FALLBACK_VERSION}
+  )
+  FetchContent_MakeAvailable(eigen)
 endif()
+
+# Find Eigen3
+find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 
 # Build Python extension module
 pybind11_add_module(_core src/bindings.cpp)

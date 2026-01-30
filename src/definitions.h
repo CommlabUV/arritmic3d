@@ -9,7 +9,7 @@
 
 #include <vector>
 #include <limits>
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 constexpr float ALMOST_ZERO = 1e-8;
 constexpr float MAX_TIME = std::numeric_limits<float>::max();
