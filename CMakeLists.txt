@@ -4,6 +4,11 @@ project(arritmic3d CXX)
 # Find dependencies
 find_package(pybind11 REQUIRED)
 find_package(Eigen3 REQUIRED)
+if(NOT Eigen3_FOUND)
+  # Fallback: use pkg-config
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(Eigen3 REQUIRED eigen3)
+endif()
 
 # Build Python extension module
 pybind11_add_module(_core src/bindings.cpp)
