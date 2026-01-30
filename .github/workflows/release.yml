@@ -10,6 +10,8 @@ jobs:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     env:
+      # Evitar construir PyPy wheels (fallan con pybind11 en este proyecto)
+      CIBW_SKIP: pp*
       # Ejecuta dentro de la imagen manylinux antes de la compilación para instalar Eigen
       CIBW_BEFORE_BUILD: |
         set -ex
