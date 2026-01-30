@@ -1,0 +1,54 @@
+name: Multiplatform Wheels
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, windows-2022, macos-13]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Linux deps
+      if: matrix.os == 'Linux'
+      run: sudo apt-get update && sudo apt-get install -y libeigen3-dev
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.9'
+
+    - name: Install cibuildwheel
+      run: pip install cibuildwheel==2.20.*
+
+    - name: Build wheels + sdist
+      run: |
+        cibuildwheel --output-dir wheelhouse
+        python -m build --sdist
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: wheels-${{ matrix.os }}
+        path: |
+          wheelhouse/*.whl
+          dist/*.tar.gz
+
+  pypi-publish:
+    needs: build_wheels
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        path: dist
+
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@v1.10.0
