@@ -5,6 +5,8 @@ import sys
 import argparse
 import json
 import copy
+import csv
+import shutil
 
 import arritmic
 from . import arr3D_build_slab
@@ -337,10 +339,50 @@ def ensure_vtk_input(cfg):
 
 def save_run_configuration(cfg, case_dir):
     """
-    Save the run configuration (with paths relative to case_dir) into case_dir/arr3D_config_run.json.
+    Saves the run configuration (with paths relative to case_dir) in case_dir/arr3D_config_run.json.
+    Also copies the model config files and all files listed in them to restitutionModels/.
+    Updates the JSON to point to those relative paths.
+    Only copies files if they are not already inside the output directory.
     """
     used_path = os.path.join(case_dir, "arr3D_config_run.json")
     cfg_for_output = prepare_cfg_for_output(cfg, case_dir)
+
+    import csv
+
+    model_keys = ["APD_MODEL_CONFIG_PATH", "CV_MODEL_CONFIG_PATH"]
+    models_dir = os.path.join(case_dir, "restitutionModels")
+    os.makedirs(models_dir, exist_ok=True)
+
+    for key in model_keys:
+        if key in cfg and os.path.isfile(cfg[key]):
+            src = os.path.abspath(cfg[key])
+            dst = os.path.join(models_dir, os.path.basename(src))
+            # Only copy if not already in output dir
+            if not os.path.commonpath([src, case_dir]) == os.path.abspath(case_dir):
+                shutil.copy2(src, dst)
+            else:
+                dst = src  # Already in output dir, don't copy
+            # Read the CSV and copy the files from the second column
+            with open(src, "r") as f:
+                reader = csv.reader(f)
+                for row in reader:
+                    if not row or row[0].strip().startswith("#"):
+                        continue
+                    if len(row) < 2:
+                        continue
+                    model_file = row[1].strip()
+                    if not model_file:
+                        continue
+                    src_model_file = os.path.abspath(os.path.join(os.path.dirname(src), model_file))
+                    dst_model_file = os.path.join(models_dir, os.path.basename(model_file))
+                    # Only copy if not already in output dir
+                    if not os.path.commonpath([src_model_file, case_dir]) == os.path.abspath(case_dir):
+                        if os.path.isfile(src_model_file):
+                            shutil.copy2(src_model_file, dst_model_file)
+                    # else: already in output dir, do not copy
+            # Update the path in the JSON to be relative from case_dir
+            cfg_for_output[key] = os.path.relpath(dst, case_dir)
+
     with open(used_path, "w") as fh:
         json.dump(cfg_for_output, fh, indent=2)
     print(f"Saved run configuration to {used_path}", flush=True)
