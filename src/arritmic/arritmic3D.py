@@ -270,6 +270,15 @@ def apply_config_overrides(cfg, args):
 
     return cfg
 
+
+def ensure_abs_paths(cfg):
+    """Convert known path keys in cfg to absolute paths in-place."""
+    path_keys = {"VTK_INPUT_FILE", "APD_MODEL_CONFIG_PATH", "CV_MODEL_CONFIG_PATH"}
+    for key in path_keys:
+        if key in cfg and isinstance(cfg[key], str):
+            cfg[key] = cfg[key] if os.path.isabs(cfg[key]) else os.path.abspath(cfg[key])
+
+
 def resolve_input_file(cfg):
     """
     Validate that VTK_INPUT_FILE in cfg exists.
@@ -286,13 +295,12 @@ def resolve_input_file(cfg):
 
     return vtk_abs
 
-def prepare_cfg_for_output(cfg, case_dir, path_keys=None):
+def prepare_cfg_for_output(cfg, case_dir):
     """
     Return a copy of cfg with paths relative to case_dir (for saving to case_dir).
     Original cfg retains absolute paths (for runtime).
     """
-    if path_keys is None:
-        path_keys = ["VTK_INPUT_FILE", "APD_MODEL_CONFIG_PATH", "CV_MODEL_CONFIG_PATH"]
+    path_keys = ["VTK_INPUT_FILE", "APD_MODEL_CONFIG_PATH", "CV_MODEL_CONFIG_PATH"]
     cfg_for_output = copy.deepcopy(cfg)
     for key in path_keys:
         if key in cfg_for_output:
@@ -359,6 +367,11 @@ def generate_slab_to_output(case_dir, slab_args):
 def run_arritmic3D(case_dir, config, save_run_config=True):
     # Validate that VTK input file exists
     ensure_vtk_input(config)
+
+    # Ensure model names are resolved to concrete config paths and paths are absolute
+    # (idempotent: if already resolved/absolute, no change)
+    resolve_models_in_parameters(config)
+    ensure_abs_paths(config)
 
     # Save simulation configuration (relative paths) if requested
     if save_run_config:
