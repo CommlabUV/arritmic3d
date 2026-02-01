@@ -42,7 +42,7 @@ For now, we recommend using the solver in a Python virtual environment. Once the
 
 # An overview of Arritmic3D
 
-The solver is presented as a C++ library with a Python interface. The main script to run simulations is `arritmic3D.py`. Typically, you will need a VTK file with the definition of the tissue to simulate and a configuration file.
+The solver is presented as a C++ library with a Python interface. The main script to run simulations is `arritmic3d`. Typically, you will need a VTK file with the definition of the tissue to simulate and a configuration file.
 
 The simulator expects a rectangular 3-dimensional domain, defined by a uniform grid. Each node in this grid is taken as a portion of cardiac tissue with its activation and conduction properties. These properties, which define the dynamics of electrophysiology of the tissue, are determined by a set of restitution models, that describe how the tissue behaves after a depolarization.
 
@@ -65,12 +65,12 @@ A detailed description of the configuration parameters and input requirements is
 The python script allows the execution of a simulation on a rectilinear grid (slab) with an S1-S2 protocol. You can just run the following command:
 
 ```bash
-python arritmic3D.py --test test_case/
+arritmic3d --test test_case/
 ```
 
 This command will run a simulation on a slab with some predefined parameters, applying an S1-S2 protocol with a first base cycle length (BCL) of 800 ms and a second BCL of 400 ms. The simulation will last for 3500 ms, and the results will be saved in the `test_case/` directory in the form of a series of VTK files. Note that the case directory must not exist prior to running the command or it must be empty.
 
-By running this example, you will have an idea of how the simulator works and the type of output it generates. In addition to the simulation result, `arritmic3D.py` will generate a configuration JSON file in the case directory, as well as a vtk with the input simulation domain in `test_case/input_data`, which you can use as a starting point for your own simulations.
+By running this example, you will have an idea of how the simulator works and the type of output it generates. In addition to the simulation result, `arritmic3d` will generate a configuration JSON file in the case directory, as well as a vtk with the input simulation domain in `test_case/input_data`, which you can use as a starting point for your own simulations.
 You can modify the configuration parameters to explore different scenarios.
 
 ## Inspection of the test case
@@ -101,7 +101,7 @@ The stimulation protocol is defined in the `PROTOCOL` section of the configurati
 Now that we have a a basic case, we can use it as a template for other simulations. The first thing we can do is to run the same case again, as is. To do so, we can run the following command:
 
 ```bash
-python arritmic3D.py test_case/
+arritmic3d test_case/
 ```
 
 This command will run the simulation again, using the same configuration file and input data as before. The results will be saved in the `test_case/` directory, overwriting the previous results. Yoy can open the new VTK files in ParaView to see the results, that should be identical to the previous run.
@@ -134,7 +134,7 @@ The output cadence is controlled by `TK_OUTPUT_PERIOD` (ms). Disable/enable via 
 
 # Runing simulations
 
-Once we have an overall idea of how Arritmic3D works, we present a more detailed explanation of how to run simulations. To simulate a case using `arritmic3D.py`, you need:
+Once we have an overall idea of how Arritmic3D works, we present a more detailed explanation of how to run simulations. To simulate a case using `arritmic3d`, you need:
 
 - A VTK file containing a `RectilinearGrid` with at least the required **point data** field `restitution_model`.
 - A case directory to write results.
@@ -144,7 +144,7 @@ Once we have an overall idea of how Arritmic3D works, we present a more detailed
 The program is invoked from the command line by passing the case directory as an argument:
 
 ```bash
-python arritmic3D.py <case_directory>
+arritmic3d <case_directory>
 ```
 
 It will look for the configuration file inside `case_directory`. In the configuration file, one of the options sets the input file that defines the simulation domain.
@@ -169,7 +169,7 @@ Additionally the following optional point data fields can be defined:
 You can set the configuration parameters in two ways: using a configuration JSON file or passing configuration options via the command line interface (CLI). By default, the program looks for a configuration JSON file in the case directory (see below). But you can also specify a different configuration file using the `--config-file` option:
 
 ```bash
-python arritmic3D.py <case_directory> --config-file path/to/config.json
+arritmic3d <case_directory> --config-file path/to/config.json
 ```
 
 Configuration files are handled as follows:
@@ -182,7 +182,7 @@ Addtionally, you can override specific configuration parameters directly from th
 For instance, when we ran the test case we modified the configuration file located in the case directory to change the frequenciy at which VTK files are written. Instead of modifying the file, we could have changed this an other parameters directly from the command line as follows:
 
 ```bash
-python arritmic3D.py test_case/ -p VTK_OUTPUT_PERIOD=5 -p SIMULATION_DURATION=2500
+arritmic3d test_case/ -p VTK_OUTPUT_PERIOD=5 -p SIMULATION_DURATION=2500
 ```
 
 Arritmic3D would have used the configuration file in `test_case/`, but the value of `VTK_OUTPUT_PERIOD` and of `SIMULATION_DURATION` would have been overridden to 5 ms and 2500 ms respectively. In this way, you can easily modify specific parameters without changing the configuration file.
@@ -194,7 +194,11 @@ Arritmic3D uses the following precedence rules when combining configuration sour
 
 The actual configuration used in the execution is the result of combining the base JSON (if any) with all CLI overrides (including --input-file). We call this the “run configuration”. For reproducibility, this exact configuration is written to disk so the run can be replicated.
 The configuration used for the run is saved to `<case_directory>/arr3D_config_run.json`.
-You can disable saving of the run configuration with `--no-output-run-config` if you do not want to write the file.
+
+Moreover, the retitution models used in the run are copied to a subdirectory `<case_directory>/restitutionModels/`, and the paths in the saved run configuration are updated accordingly. This ensures that all necessary files to reproduce the simulation are stored in the case directory. This will only happen if the restitution model paths in the provided configuration are not inside the case directory already.
+
+You can disable saving of the run configuration and restitution models with `--no-output-run-config` if you do not want to write the file.
+
 
 ### Paths and reproducibility
 In order to facilitate reproducibility and sharing of cases, paths are handled consistently as follows:
@@ -425,12 +429,12 @@ As discussed, index '0' is reserved for non-tissue regions and cannot be used.
 
 # Generating tissue slabs
 
-Using the `build_slab.py` utility, you can generate a rectangular tissue domain (a tissue slab) for testing. This script creates a VTK file with the required fields for simulation.
+Using the `build_slab` utility, you can generate a rectangular tissue domain (a tissue slab) for testing. This script creates a VTK file with the required fields for simulation.
 
 For example, to generate a slab with 10 nodes in X, 10 in Y, and 5 in Z, with spacing of 0.05 mm, run:
 
 ```bash
-python build_slab.py cases/slab.vtk --nnodes 10 10 5 --spacing 0.05 0.05 0.05
+build_slab cases/slab.vtk --nnodes 10 10 5 --spacing 0.05 0.05 0.05
 ```
 
 This will create a VTK file at `cases/slab.vtk` with the necessary structure and a point data field named `restitution_model` with a value of 1.
@@ -444,7 +448,7 @@ Note that a value of `nnodes` equal to 10 means that the slab will have 10 point
 You can set default values for point data fields using the `--field FIELD_NAME VALUE` option. This option can be used multiple times to set different fields. For example, to set the default restitution model to 1 and the fibers orientation to [1,0,0], run:
 
 ```bash
-python build_slab.py cases/slab.vtk --nnodes 20 20 5 --spacing 0.05 0.05 0.05 \
+build_slab cases/slab.vtk --nnodes 20 20 5 --spacing 0.05 0.05 0.05 \
   --field restitution_model 1 \
   --field fibers_orientation [1,0,0]
 ```
@@ -457,7 +461,7 @@ In particular, and as mentioned above, you can set the restitution model for all
 For example, to set the default restitution model to 2, run:
 
 ```bash
-python build_slab.py cases/slab.vtk --nnodes 20 20 5 \
+build_slab cases/slab.vtk --nnodes 20 20 5 \
     --spacing 0.05 0.05 0.05 --field restitution_model 2
 ```
 
@@ -496,16 +500,16 @@ Precedence and behavior
 
 ```bash
 # multiple regions via CLI (repeat --region)
-python build_slab.py cases/out.vtk --nnodes 20 20 5 --spacing 0.05 0.05 0.05 \
+build_slab cases/out.vtk --nnodes 20 20 5 --spacing 0.05 0.05 0.05 \
    --region '{"shape":"square","cx":0.5,"cy":0.5,"r1":0.05,"r2":0.1,"restitution_model":7}' \
    --region '{"shape":"circle","cx":0.1,"cy":0.1,"r1":0.1,"r2":0.4,"restitution_model":[1,2,3]}'
 
 # regions-file containing a list of regions
-python build_slab.py cases/out.vtk --nnodes 20 20 5 --spacing 0.05 0.05 0.05 \
+build_slab cases/out.vtk --nnodes 20 20 5 --spacing 0.05 0.05 0.05 \
    --regions-file ./cases/regions_example.json
 
 # file + CLI: CLI regions override file regions on overlap
-python build_slab.py cases/out_mix.vtk --nnodes 40 40 5 --spacing 0.05 0.05 0.05 \
+build_slab cases/out_mix.vtk --nnodes 40 40 5 --spacing 0.05 0.05 0.05 \
     --regions-file ./cases/regions_example.json \
     --region '{"shape":"diamond","cx":1.5,"cy":1.0,"r1":0.5,"r2":0.8,"restitution_model":[9,5,4]}'
 ```
@@ -529,15 +533,15 @@ You can define activation sites by including the `activation_region` field in re
 
 ```bash
 # Define a square region with activation_region=1
-python build_slab.py cases/slab.vtk --nnodes 50 50 5 --spacing 0.05 0.05 0.05 \
+build_slab cases/slab.vtk --nnodes 50 50 5 --spacing 0.05 0.05 0.05 \
   --region '{"shape":"square","cx":0.5,"cy":0.5,"size":0.2,"activation_region":1}'
 
 # Activate south side with activation_region=1
-python build_slab.py cases/slab.vtk --nnodes 50 50 5 --spacing 0.05 0.05 0.05 \
+build_slab cases/slab.vtk --nnodes 50 50 5 --spacing 0.05 0.05 0.05 \
   --region '{"shape":"side","side":"south","activation_region":1}'
 
 # Activate specific nodes with activation_region=2
-python build_slab.py cases/slab.vtk --nnodes 50 50 5 --spacing 0.05 0.05 0.05 \
+build_slab cases/slab.vtk --nnodes 50 50 5 --spacing 0.05 0.05 0.05 \
   --region '{"shape":"node_ids","ids":[100,200,300],"activation_region":2}'
 ```
 
@@ -565,20 +569,20 @@ Examples:
 
 ```bash
 # Activate south side with region_id=1
-python build_slab.py cases/slab.vtk --nnodes 50 50 5 --spacing 0.05 0.05 0.05 \
+build_slab cases/slab.vtk --nnodes 50 50 5 --spacing 0.05 0.05 0.05 \
   --region-by-side south 1
 
 # Activate multiple sides with different region IDs
-python build_slab.py cases/slab.vtk --nnodes 50 50 5 --spacing 0.05 0.05 0.05 \
+build_slab cases/slab.vtk --nnodes 50 50 5 --spacing 0.05 0.05 0.05 \
   --region-by-side south 1 \
   --region-by-side north 2
 
 # Activate specific nodes
-python build_slab.py cases/slab.vtk --nnodes 50 50 5 --spacing 0.05 0.05 0.05 \
+build_slab cases/slab.vtk --nnodes 50 50 5 --spacing 0.05 0.05 0.05 \
   --region-by-node-ids 2775 2776 2777 2778 2779 1
 
 # Combine geometric regions with activations
-python build_slab.py cases/slab.vtk --nnodes 50 50 5 --spacing 0.05 0.05 0.05 \
+build_slab cases/slab.vtk --nnodes 50 50 5 --spacing 0.05 0.05 0.05 \
   --region '{"shape":"square","cx":1.225,"cy":1.225,"size":1.0,"restitution_model":5}' \
   --region-by-side south 1 \
   --region-by-node-ids 2775 2776 2777 2778 2779 2
@@ -628,12 +632,12 @@ Examples:
 
 # Direct execution of tissue slabs
 
-The `arritmic3D.py` script includes a `--slab` option that allows you to directly build and run a slab simulation without needing to create the VTK file separately. This option generates a rectilinear grid slab based on the provided parameters and runs the simulation using default or specified configuration settings.
+The `arritmic3d` script includes a `--slab` option that allows you to directly build and run a slab simulation without needing to create the VTK file separately. This option generates a rectilinear grid slab based on the provided parameters and runs the simulation using default or specified configuration settings.
 
-When using `--slab`, you can use in `arritmic3D.py` the same options available in `build_slab.py` to define the slab properties and regions. For instance:
+When using `--slab`, you can use in `arritmic3d` the same options available in `build_slab` to define the slab properties and regions. For instance:
 
 ```bash
-python arritmic3D.py case_dir --slab --nnodes 20 20 5 --spacing 0.05 0.05 0.05 \
+arritmic3d case_dir --slab --nnodes 20 20 5 --spacing 0.05 0.05 0.05 \
   --region '{"shape":"square","cx":0.5,"cy":0.5,"r1":0.05,"r2":0.1,"restitution_model":7}' \
   --region-by-side 'south' 1 \
   -p ACTIVATE_NODES='[{"ACTIVATION_REGION" : 1,"ACTIVATION_TIMES":[[500,1],[1000,1]]}]'
