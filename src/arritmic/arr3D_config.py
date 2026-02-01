@@ -51,6 +51,8 @@ def resolve_models_in_parameters(parameters, package='arritmic.restitutionModels
     """If parameters contain 'CV_MODEL' or 'APD_MODEL' (model names), set the corresponding
     '<...>_CONFIG_PATH' entries to the package resource absolute path when available.
     Does not overwrite existing *_CONFIG_PATH keys.
+    Removes the label keys only if the corresponding *_CONFIG_PATH' was set.
+    Raises FileNotFoundError if a model cannot be resolved.
     """
     if not isinstance(parameters, dict):
         return parameters
@@ -61,7 +63,7 @@ def resolve_models_in_parameters(parameters, package='arritmic.restitutionModels
         if p:
             parameters['CV_MODEL_CONFIG_PATH'] = p
         else:
-            print(f"CV_MODEL '{cv_name}' not found in package '{package}'.")
+            raise FileNotFoundError(f"CV_MODEL '{cv_name}' not found in package '{package}'.")
 
     apd_name = parameters.get('APD_MODEL')
     if apd_name and 'APD_MODEL_CONFIG_PATH' not in parameters:
@@ -69,7 +71,13 @@ def resolve_models_in_parameters(parameters, package='arritmic.restitutionModels
         if p:
             parameters['APD_MODEL_CONFIG_PATH'] = p
         else:
-            print(f"APD_MODEL '{apd_name}' not found in package '{package}'.")
+            raise FileNotFoundError(f"APD_MODEL '{apd_name}' not found in package '{package}'.")
+
+    # Remove label keys only if the corresponding *_CONFIG_PATH exists
+    if 'CV_MODEL_CONFIG_PATH' in parameters and 'CV_MODEL' in parameters:
+        del parameters['CV_MODEL']
+    if 'APD_MODEL_CONFIG_PATH' in parameters and 'APD_MODEL' in parameters:
+        del parameters['APD_MODEL']
 
     return parameters
 
