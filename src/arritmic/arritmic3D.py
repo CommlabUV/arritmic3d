@@ -9,7 +9,7 @@ import copy
 import arritmic
 from . import build_slab
 
-from .arr3D_config import check_directory, get_vectorial_parameters, load_config_file, make_default_config
+from .arr3D_config import check_directory, get_vectorial_parameters, load_config_file, make_default_config, resolve_models_in_parameters
 from .arr3D_activations import schedule_activation
 
 
@@ -68,10 +68,14 @@ def create_tissue(grid, params):
     else:
         fiber_or = [[0, 0, 0]] * (ncells_x * ncells_y * ncells_z)
 
+
+    # Resolve CV/APD model names to package paths if provided (does not overwrite existing *_CONFIG_PATH)
+    params = resolve_models_in_parameters(params)
+
     # Ensure restitution model paths are provided in the params dict
     # If not present, raise an informative error
     if 'APD_MODEL_CONFIG_PATH' not in params or 'CV_MODEL_CONFIG_PATH' not in params:
-        raise ValueError("params must include 'APD_MODEL_CONFIG_PATH' and 'CV_MODEL_CONFIG_PATH' with file paths to restitution model CSVs")
+        raise ValueError("params must include 'APD_MODEL_CONFIG_PATH' and 'CV_MODEL_CONFIG_PATH' (or 'APD_MODEL'/'CV_MODEL' names resolvable to module-installed models).")
     apd_cfg = params['APD_MODEL_CONFIG_PATH']
     cv_cfg = params['CV_MODEL_CONFIG_PATH']
     # Initialize restitution and CV models using the provided file paths

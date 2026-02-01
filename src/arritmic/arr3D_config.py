@@ -2,6 +2,7 @@ import sys
 import argparse
 import os
 import json
+from importlib import resources
 
 def check_directory(output_dir):
     """Check if the output directory exists and return a configuration file path if present.
@@ -22,11 +23,62 @@ def check_directory(output_dir):
         return config_file
     return None
 
-def load_config_file(config_file, resolve_to_absolute=False, path_keys=["VTK_INPUT_FILE", "APD_MODEL_CONFIG_PATH", "CV_MODEL_CONFIG_PATH"]):
+def _resolve_model_name_to_pkg_path(model_name, package='arritmic.restitutionModels'):
+    """Resolve a model name (e.g. 'TorOrd_CV') to an installed package resource path
+    'config_<name>.csv' inside the given package. Returns absolute path or None.
+    """
+    if not isinstance(model_name, str):
+        return None
+
+    # Normalize name: strip extension and optional 'config_' prefix
+    name = os.path.splitext(model_name)[0]
+    if name.startswith('config_'):
+        name = name[len('config_'):]
+
+    # Reject things that look like paths
+    if os.path.sep in name or '/' in name:
+        return None
+
+    resource = f'config_{name}.csv'
+    try:
+        with resources.path(package, resource) as p:
+            return str(p)
+    except (FileNotFoundError, ModuleNotFoundError):
+        # resource not found in package
+        return None
+
+def resolve_models_in_parameters(parameters, package='arritmic.restitutionModels'):
+    """If parameters contain 'CV_MODEL' or 'APD_MODEL' (model names), set the corresponding
+    '<...>_CONFIG_PATH' entries to the package resource absolute path when available.
+    Does not overwrite existing *_CONFIG_PATH keys.
+    """
+    if not isinstance(parameters, dict):
+        return parameters
+
+    cv_name = parameters.get('CV_MODEL')
+    if cv_name and 'CV_MODEL_CONFIG_PATH' not in parameters:
+        p = _resolve_model_name_to_pkg_path(cv_name, package=package)
+        if p:
+            parameters['CV_MODEL_CONFIG_PATH'] = p
+        else:
+            print(f"CV_MODEL '{cv_name}' not found in package '{package}'.")
+
+    apd_name = parameters.get('APD_MODEL')
+    if apd_name and 'APD_MODEL_CONFIG_PATH' not in parameters:
+        p = _resolve_model_name_to_pkg_path(apd_name, package=package)
+        if p:
+            parameters['APD_MODEL_CONFIG_PATH'] = p
+        else:
+            print(f"APD_MODEL '{apd_name}' not found in package '{package}'.")
+
+    return parameters
+
+def load_config_file(config_file, resolve_to_absolute=False, path_keys=["VTK_INPUT_FILE", "APD_MODEL_CONFIG_PATH", "CV_MODEL_CONFIG_PATH"], module_models_package='arritmic.restitutionModels'):
     """
     Load configuration from JSON file.
     If resolve_to_absolute=True, convert relative paths to absolute paths (relative to the JSON file location).
     If the file does not exist, return an empty dict (default parameters).
+    If 'CV_MODEL' or 'APD_MODEL' are present, try to resolve them to package-installed model files.
     """
     parameters = {}
 
@@ -35,6 +87,9 @@ def load_config_file(config_file, resolve_to_absolute=False, path_keys=["VTK_INP
             parameters = json.load(f)
     else:
         print(f"Configuration file {config_file} not found. Using default parameters.")
+
+    # Resolve model names to package paths if provided
+    resolve_models_in_parameters(parameters, package=module_models_package)
 
     if resolve_to_absolute and config_file:
         base_dir = os.path.dirname(os.path.abspath(config_file))
@@ -84,8 +139,8 @@ def make_default_config():
     Paths are assumed relative to the current working directory; saving to JSON will convert to paths relative to output_dir.
     """
     return {
-        "CV_MODEL_CONFIG_PATH": os.path.abspath("restitutionModels/config_TorOrd_CV.csv"),
-        "APD_MODEL_CONFIG_PATH": os.path.abspath("restitutionModels/config_TorOrd_APD.csv"),
+        "CV_MODEL": "TorOrd_CV",
+        "APD_MODEL": "TorOrd_APD",
         "COND_VELOC_TRANSVERSAL_REDUCTION": 0.25,
         "CORRECTION_FACTOR_APD": 1.0,
         "CORRECTION_FACTOR_CV": 1.0,
