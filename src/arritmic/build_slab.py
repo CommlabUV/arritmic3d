@@ -209,6 +209,16 @@ Examples:
 
 
 def build_slab(args,save=True):
+    """
+    Build the slab grid based on parsed arguments and optionally save to file.
+
+    Parameters:
+        args: Parsed arguments from argparse (see documentation).
+        save (bool): If True, saves the generated slab to the specified output file.
+
+    Returns:
+        pv.RectilinearGrid: The generated rectilinear grid.
+    """
 
     # Parse field data from CLI
     field_data = {}

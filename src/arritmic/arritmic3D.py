@@ -365,6 +365,16 @@ def generate_slab_to_output(case_dir, slab_args):
 
 
 def run_arritmic3D(case_dir, config, save_run_config=True):
+    """
+    Run the Arritmic3D simulation in the given case directory with the provided configuration dict
+
+    Arguments:
+    - case_dir: Output directory where results will be saved.
+    - config: Configuration dictionary with simulation parameters (see documentation).
+    - save_run_config: If True (default), saves the actual run configuration to case_dir/arr3D_config_run.json.
+    """
+
+
     # Validate that VTK input file exists
     ensure_vtk_input(config)
 
@@ -385,6 +395,9 @@ def run_test_case(output_dir):
     """
     Generate and run a built-in S1-S2 test case in the given output directory.
     Uses build_slab and the standard config/output logic.
+
+    Arguments:
+    - output_dir: Output directory where results will be saved. Must not exist or be empty
     """
     if os.path.exists(output_dir) and os.listdir(output_dir):
         print(f"Error: Output directory '{output_dir}' must not exist or must be empty.", flush=True)
