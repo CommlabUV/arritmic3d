@@ -46,7 +46,7 @@ cmake.build-type = "Release"
 
 [project.scripts]
 arritmic3d = "arritmic.arritmic3D:main"
-build_slab = "arritmic.build_slab:main"
+build_slab = "arritmic.arr3D_build_slab:main"
 
 [tool.scikit-build.sdist]
 include = ["restitutionModels/*.csv"]

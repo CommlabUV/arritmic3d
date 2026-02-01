@@ -21,11 +21,8 @@ try:
             from .arritmic3D import run_test_case as test_case
             return test_case
         if name == "build_slab":
-            from importlib import import_module
-            mod = import_module(".build_slab", __name__)
-            func = getattr(mod, "build_slab")
-            globals()["build_slab"] = func
-            return func
+            from .arr3D_build_slab import build_slab
+            return build_slab
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
     def __dir__():

@@ -112,15 +112,15 @@ def get_argument_parser():
         epilog="""
 Examples:
   # Basic slab with default values
-  python build_slab.py cases/slab.vtk --nnodes 20 20 5 --spacing 0.05 0.05 0.05
+  build_slab cases/slab.vtk --nnodes 20 20 5 --spacing 0.05 0.05 0.05
 
   # Slab with custom field values and regions
-  python build_slab.py cases/slab.vtk --nnodes 20 20 5 --spacing 0.05 0.05 0.05 \\
+  build_slab cases/slab.vtk --nnodes 20 20 5 --spacing 0.05 0.05 0.05 \\
     --field restitution_model 2 --field fibers_orientation '[1,0,0]' \\
     --region '{\"shape\":\"circle\",\"cx\":0.5,\"cy\":0.5,\"r1\":0.2,\"r2\":0.4,\"restitution_model\":3}'
 
   # Using regions file and CLI regions
-  python build_slab.py cases/slab.vtk --nnodes 40 40 5 --spacing 0.05 0.05 0.05 \\
+  build_slab cases/slab.vtk --nnodes 40 40 5 --spacing 0.05 0.05 0.05 \\
     --regions-file ./regions_base.json \\
     --region '{\"shape\":\"square\",\"cx\":1.0,\"cy\":1.0,\"r1\":0.1,\"r2\":0.2,\"restitution_model\":5}'
         """

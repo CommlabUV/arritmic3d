@@ -7,7 +7,7 @@ import json
 import copy
 
 import arritmic
-from . import build_slab
+from . import arr3D_build_slab
 
 from .arr3D_config import check_directory, get_vectorial_parameters, load_config_file, make_default_config, resolve_models_in_parameters
 from .arr3D_activations import schedule_activation
@@ -187,7 +187,7 @@ Examples:
         dest="slab",
         action="store_true",
         help="Generate a slab VTK and run the simulation."
-            "You can configure the slab using any of the build_slab.py script options after --slab (run build_slab.py --help for details)."
+            "You can configure the slab using any of the build_slab script options after --slab (run build_slab --help for details)."
             "When using --slab, the generated VTK you are not allowed to use the --input-file option and any VTK_INPUT_FILE present in the JSON is ignored."
              "The slab is saved to case_dir/cases/slab.vtk."
     )
@@ -355,11 +355,11 @@ def generate_slab_to_output(case_dir, slab_args):
     slab_path = os.path.abspath(os.path.join(cases_dir, "slab.vtk"))
 
     # Parse build_slab args with forced positional output_file set to our default path
-    bs_parser = build_slab.get_argument_parser()
+    bs_parser = arr3D_build_slab.get_argument_parser()
     # Ensure our default output_file is used; do not accept alternative output path
     bs_ns = bs_parser.parse_args([slab_path] + slab_args)
 
-    grid = build_slab.build_slab(bs_ns, save = True)
+    grid = arr3D_build_slab.build_slab(bs_ns, save = True)
 
     return slab_path
 
