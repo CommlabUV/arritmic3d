@@ -12,6 +12,24 @@ __license__ = "LGPL-3.0-or-later"
 # Import the compiled C++ module
 try:
     from ._core import CardiacTissue, SystemEventType
+    # Expose arritmic3d and test_case lazily (avoid exposing submodules in package namespace)
+    def __getattr__(name):
+        if name == "arritmic3d":
+            from .arritmic3D import run_arritmic3D as arritmic3d
+            return arritmic3d
+        if name == "test_case":
+            from .arritmic3D import run_test_case as test_case
+            return test_case
+        if name == "build_slab":
+            from importlib import import_module
+            mod = import_module(".build_slab", __name__)
+            func = getattr(mod, "build_slab")
+            globals()["build_slab"] = func
+            return func
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+    def __dir__():
+        return sorted(list(globals().keys()) + ["arritmic3d", "test_case", "build_slab"])
 except ImportError as e:
     raise ImportError(
         "Cannot import C++ extension '_core'. "
@@ -25,4 +43,7 @@ __all__ = [
     "CardiacTissue",
     "SystemEventType",
     "__version__",
+    "arritmic3d",
+    "test_case",
+    "build_slab",
 ]
