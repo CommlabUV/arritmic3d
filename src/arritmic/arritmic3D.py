@@ -337,7 +337,7 @@ def save_run_configuration(cfg, case_dir):
         json.dump(cfg_for_output, fh, indent=2)
     print(f"Saved run configuration to {used_path}", flush=True)
 
-def generate_slab_to_output(case_dir, slab_args, save=True):
+def generate_slab_to_output(case_dir, slab_args):
     """
     Parse build_slab options and generate the slab VTK into case_dir/cases/slab.vtk.
     Returns absolute path to the generated VTK.
@@ -351,12 +351,7 @@ def generate_slab_to_output(case_dir, slab_args, save=True):
     # Ensure our default output_file is used; do not accept alternative output path
     bs_ns = bs_parser.parse_args([slab_path] + slab_args)
 
-    grid = build_slab.build_slab(bs_ns)
-    if save:
-        grid.save(slab_path)
-        print(f"Generated slab VTK at: {slab_path}", flush=True)
-    else:
-        print("Slab generated (in memory) for validation only.", flush=True)
+    grid = build_slab.build_slab(bs_ns, save = True)
 
     return slab_path
 
@@ -390,7 +385,7 @@ def run_test_case(output_dir):
         "--region-by-side", "south", "1"
     ]
     # Generate slab using the standard build_slab logic (handles regions, fields, etc.)
-    slab_vtk = generate_slab_to_output(output_dir, slab_args, save=True)
+    slab_vtk = generate_slab_to_output(output_dir, slab_args)
 
     # Prepare minimal config for S1-S2 protocol
     config = make_default_config()
@@ -439,7 +434,7 @@ def main():
 
     # Slab generation and VTK override (slab wins over any previous VTK)
     if args.slab:
-        slab_vtk = generate_slab_to_output(args.case_dir, remainder, save=True)
+        slab_vtk = generate_slab_to_output(args.case_dir, remainder)
         cfg["VTK_INPUT_FILE"] = slab_vtk
 
     # Execute with support for dry-run and optional config saving

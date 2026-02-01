@@ -208,7 +208,7 @@ Examples:
     return parser
 
 
-def build_slab(args):
+def build_slab(args,save=True):
 
     # Parse field data from CLI
     field_data = {}
@@ -265,6 +265,11 @@ def build_slab(args):
         validate_region(reg, idx)
         apply_region(grid, reg)
 
+    if save:
+        print(f"Saving slab to {args.output_file}...")
+        grid.save(args.output_file)
+        print("Slab saved.")
+
     return grid
 
 
@@ -276,9 +281,7 @@ def main():
     args = parser.parse_args()
 
 
-    grid = build_slab(args)
-
-    grid.save(args.output_file)
+    grid = build_slab(args, save=True)
 
 
 if __name__ == "__main__":
