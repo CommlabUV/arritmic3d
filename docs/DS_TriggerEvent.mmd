@@ -1,0 +1,46 @@
+%% Sequence diagram for the node activation process
+%% With functions
+%% More detailed
+sequenceDiagram
+    participant update as update(int)
+    participant EventQueue
+    participant CellEvent
+    participant TriggerEvent as TriggerEvent
+    participant ActivateF as node.ActivateF
+    participant ComputeActivation as node.ComputeActivation
+    participant ComputeCV as node.ComputeConductionVelocity
+    participant ActivateAtTime as neigh.ActivateAtTime
+
+    update->>EventQueue: ExtractFirst()
+    EventQueue-->>update: CellEvent*
+    update->>TriggerEvent: TriggerEvent(ev)
+    %% TriggerEvent detalles
+    alt ACTIVATION
+        Note over TriggerEvent: Safety Factor check
+        TriggerEvent->>ActivateF: node.ActivateF(current_time)
+        TriggerEvent->>CellEvent: next_event.ChangeEvent(next_activation_time)
+        TriggerEvent->>EventQueue: InsertEvent(next_event)
+        %% Propagación a vecinos
+        Note over TriggerEvent: Potential sent to neighbors
+        loop Para cada vecino
+            TriggerEvent->>ComputeCV: node.ComputeConductionVelocity()
+            TriggerEvent->>ActivateAtTime: neigh.ActivateAtTime(node, direct_activation_time)
+
+            %% Detalle ActivateAtTime
+            Activate ActivateAtTime
+            Note over ActivateAtTime: Safety Factor check ??
+            opt Si GetState(activation_time) <= WAITING_FOR_ACTIVATION
+                opt Si GetState(current_time) <= WAITING_FOR_ACTIVATION
+                    ActivateAtTime->>CellEvent: next_event.ChangeEvent(next_activation_time)
+                end
+            end
+            Deactivate ActivateAtTime
+
+            TriggerEvent->>EventQueue: InsertEvent(ev_neigh)
+        end
+
+    else DEACTIVATION
+        TriggerEvent->>CellEvent: next_event.ChangeEvent(next_activation_time)
+        TriggerEvent->>EventQueue: InsertEvent(next_event)
+    end
+
