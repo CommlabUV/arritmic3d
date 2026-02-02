@@ -161,7 +161,7 @@ void CardiacTissue<APM,CVM>::TriggerEvent(CellEvent* ev)
     if ( this->tissue_time == node_->next_activation_time )
     {
         // Safety factor
-        if ( not node_->external_activation and node_->received_potential < node_->parameters->min_potential*node_->parameters->safety_factor)
+        if ( ! node_->external_activation && node_->received_potential < node_->parameters->min_potential*node_->parameters->safety_factor)
         {
             // No activation. Potential too low
             LOG::Info(true, "TriggerEvent(): Safety factor acting. Node ", node_->id, " NOT activated with total potential ", node_->received_potential,

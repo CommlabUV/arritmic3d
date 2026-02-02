@@ -75,7 +75,7 @@ public:
     void SetRestitutionModel(CellType type)
     {
         this->restitution_model = splines.getSpline(type);
-        if(this->restitution_model == nullptr and type != CELL_TYPE_VOID)
+        if(this->restitution_model == nullptr && type != CELL_TYPE_VOID)
             throw std::runtime_error("conduction_velocity.h: no CV restitution model found for cell type " + std::to_string(static_cast<int>(type)));
     };
 

@@ -93,7 +93,7 @@ public:
      */
     float getActionPotential(float t_) const
     {
-        if(t_ < this->ta or t_ > this->ta + this->apd)
+        if(t_ < this->ta || t_ > this->ta + this->apd)
             return this->resting_potential;
         else
             return this->peak_potential;
@@ -104,7 +104,7 @@ public:
     */
     bool IsActive(float t_) const
     {
-        return (t_ >= this->ta and t_ <= this->ta + this->apd);
+        return (t_ >= this->ta && t_ <= this->ta + this->apd);
     };
 
     /**

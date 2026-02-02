@@ -202,7 +202,7 @@ public:
     {
         size_t pos_in_tree = event->position_in_tree;
 
-        if(pos_in_tree >= this->tree.size() or event != this->tree[pos_in_tree])
+        if(pos_in_tree >= this->tree.size() || event != this->tree[pos_in_tree])
         {
             std::cerr << "QUEUE WARNING: the event is not where it was suposed to be. Insert." << std::endl;
             InsertCellEvent(event);
@@ -235,7 +235,7 @@ public:
     {
         int pos = event->position_in_tree;
         // If the event is in the queue
-        if( pos >= 0 and pos < int(tree.size()) and event == tree[pos])
+        if( pos >= 0 && pos < int(tree.size()) && event == tree[pos])
             this->Update(event);
         else
         {
@@ -419,7 +419,7 @@ void CellEventQueue<Node>::BubbleUp(size_t index)
     int i = index;  // Position of element going up
     size_t j = GetPredecessor(i);
 
-    while( i > 0 and *tree[i] < *tree[j] )
+    while( i > 0 && *tree[i] < *tree[j] )
     {
         // @todo Use std::swap(tree[i], tree[j]);  Update position_in_tree at the end
         //SwapEvents(i,j);
@@ -443,12 +443,12 @@ void CellEventQueue<Node>::BubbleDown(size_t index)
         i = min;  // Position of element going down
         size_t left_desc = GetLeftDescendant(i);
 
-        if ( left_desc < tree.size() and *tree[left_desc] < *tree[min] )
+        if ( left_desc < tree.size() && *tree[left_desc] < *tree[min] )
             min = left_desc;
 
         size_t right_desc = GetRightDescendant(i);
 
-        if ( right_desc < tree.size() and *tree[right_desc] < *tree[min] )
+        if ( right_desc < tree.size() && *tree[right_desc] < *tree[min] )
             min = right_desc;
 
         if (min != i)
