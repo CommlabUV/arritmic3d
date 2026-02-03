@@ -236,6 +236,7 @@ public:
         f.read( (char *) &pool[0], sizeof(NodeParameters) * n_params );
     }
 
+    const std::vector<NodeParameters>& get_pool() const { return pool; }
 
 private:
     std::vector<NodeParameters> pool;

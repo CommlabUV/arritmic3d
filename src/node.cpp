@@ -321,7 +321,7 @@ void NodeT<APD, CVM>::SaveState(std::ofstream & f, const class ParametersPool & 
     size_t param_index = std::numeric_limits<size_t>::max();
     if(parameters != nullptr)
     {
-        param_index = parameters - & (parameters_pool.pool[0]);
+        param_index = parameters - & (parameters_pool.get_pool()[0]);
     }
     f.write( (char *) &param_index, sizeof(size_t) );
 
