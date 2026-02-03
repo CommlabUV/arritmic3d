@@ -22,7 +22,7 @@ jobs:
       # CIBW_SKIP: 'pp* *_i686*'       # skip i686 (32-bit) builds
     strategy:
       matrix:
-        os: [macos-13]
+        os: [macos-latest]
 
     steps:
     - uses: actions/checkout@v4
