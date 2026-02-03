@@ -1,6 +1,17 @@
 cmake_minimum_required(VERSION 3.15)
 project(arritmic3d CXX)
 
+# C++ standard
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Build type and flags
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Fast CACHE STRING "Choose the type of build." FORCE)
+endif()
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInfo MinSizeRel Fast)
+
 # Find dependencies
 find_package(pybind11 REQUIRED)
 
@@ -39,9 +50,29 @@ target_compile_features(_core PRIVATE cxx_std_17)
 
 # Cross-platform compiler flags
 if(MSVC)
-    target_compile_options(_core PRIVATE /W4 /O2)
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        target_compile_options(_core PRIVATE /W4 /Od /Zi /DDEBUG)
+    elseif(CMAKE_BUILD_TYPE STREQUAL "Fast")
+        target_compile_options(_core PRIVATE /W4 /O2 /DNDEBUG /arch:AVX)
+    elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+        target_compile_options(_core PRIVATE /W4 /O2 /Zi)
+    elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+        target_compile_options(_core PRIVATE /W4 /O1)
+    else() # Release
+        target_compile_options(_core PRIVATE /W4 /O2 /DNDEBUG)
+    endif()
 else()
-    target_compile_options(_core PRIVATE -Wall -O3)
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        target_compile_options(_core PRIVATE -Wall -O0 -g -DDEBUG -fno-omit-frame-pointer -fsanitize=address,undefined)
+    elseif(CMAKE_BUILD_TYPE STREQUAL "Fast")
+        target_compile_options(_core PRIVATE -Wall -O3 -DNDEBUG -mavx -ffast-math)
+    elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+        target_compile_options(_core PRIVATE -Wall -O2 -g)
+    elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+        target_compile_options(_core PRIVATE -Wall -Os)
+    else() # Release
+        target_compile_options(_core PRIVATE -Wall -O3)
+    endif()
 endif()
 
 # Install C++ module into arritmic/
