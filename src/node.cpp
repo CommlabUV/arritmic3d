@@ -39,8 +39,8 @@ typename NodeT<APD, CVM>::CellActivationState NodeT<APD, CVM>::GetState(float cu
     CellActivationState state = CellActivationState::INACTIVE;
     if(this->type != CELL_TYPE_VOID && this->apd_model.IsActive(current_time_))
         state = CellActivationState::ACTIVE;
-    else if( this->type != CELL_TYPE_VOID and
-            this->next_activation_time > current_time_ and
+    else if( this->type != CELL_TYPE_VOID &&
+            this->next_activation_time > current_time_ &&
             this->next_activation_time < MAX_TIME )
         state = CellActivationState::WAITING_FOR_ACTIVATION;
     else
