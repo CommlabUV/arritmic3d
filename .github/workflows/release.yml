@@ -12,7 +12,7 @@ jobs:
     env:
       # Only build CPython 3.10 x86_64 on Windows for quick testing
       # CIBW_BUILD: 'cp310-win_amd64'
-      CIBW_BUILD: 'cp310-macosx_x86_64 cp310-macosx_arm64'
+      # CIBW_BUILD: 'cp310-macosx_x86_64 cp310-macosx_arm64'
       # Avoids building PyPy wheels, any i686 wheels (32-bit), all CPython < 3.10, and win32
       # Skips cp30, cp31, ... cp39 by pattern; keeps cp310 and above.
       CIBW_SKIP: 'pp* *_i686* cp3[0-9]-* *-musllinux* *win32*'
@@ -22,7 +22,7 @@ jobs:
       # CIBW_SKIP: 'pp* *_i686*'       # skip i686 (32-bit) builds
     strategy:
       matrix:
-        os: [macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
     - uses: actions/checkout@v4
