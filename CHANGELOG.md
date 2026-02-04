@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [3.0.b5] - 2026-02-04
+
+### Changed
+- Build infrastructure improvements to set up CI/CD pipelines with github actions.
+
+### Contributors
+- Ignacio García-Fernández
+
 ## [3.0.b4] - 2026-01-25
 
 ### Added
