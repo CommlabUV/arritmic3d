@@ -42,11 +42,24 @@ dependencies = [
 
 [tool.scikit-build]
 wheel.packages = ["src/arritmic"]
-cmake.build-type = "Release"
+cmake.build-type = "Fast"
+
+wheel.exclude = [
+    "include/eigen3/*",
+    "share/eigen3/*",
+    "share/pkgconfig/*",
+    "bin/*"
+]
 
 [project.scripts]
 arritmic3d = "arritmic.arritmic3D:main"
 build_slab = "arritmic.arr3D_build_slab:main"
 
 [tool.scikit-build.sdist]
-include = ["restitutionModels/*.csv"]
+include = []
+exclude = ["test/**",
+    "docs/**",
+    "tools/**",
+    "**/__pycache__",
+    ".github/**",
+    ".gitignore"]

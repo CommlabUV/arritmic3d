@@ -15,23 +15,27 @@ set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInf
 # Find dependencies
 find_package(pybind11 REQUIRED)
 
-# Fetch Eigen automatically if not found
-include(FetchContent)
-if (NOT TARGET Eigen3::Eigen)
-  if (NOT DEFINED EIGEN_FALLBACK_VERSION)
-    set(EIGEN_FALLBACK_VERSION "3.4.0" CACHE STRING "Version of Eigen to fetch if missing")
-  endif()
+# --- EIGEN SETUP ---
+if (NOT DEFINED EIGEN_FALLBACK_VERSION)
+  set(EIGEN_FALLBACK_VERSION "3.4.0" CACHE STRING "Version of Eigen to fetch if missing")
+endif()
+
+find_package(Eigen3 3.4 QUIET)
+
+if (NOT Eigen3_FOUND AND NOT TARGET Eigen3::Eigen)
   message(STATUS "Eigen not found: fetching Eigen ${EIGEN_FALLBACK_VERSION}")
+  include(FetchContent)
   FetchContent_Declare(
     eigen
     GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
     GIT_TAG        ${EIGEN_FALLBACK_VERSION}
   )
-  FetchContent_MakeAvailable(eigen)
+  FetchContent_GetProperties(eigen)
+  if(NOT eigen_POPULATED)
+    FetchContent_Populate(eigen)
+    add_subdirectory(${eigen_SOURCE_DIR} ${eigen_BINARY_DIR} EXCLUDE_FROM_ALL)
+  endif()
 endif()
-
-# Find Eigen3
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 
 # Build Python extension module
 pybind11_add_module(_core src/bindings.cpp)
@@ -40,38 +44,35 @@ pybind11_add_module(_core src/bindings.cpp)
 target_link_libraries(_core PRIVATE Eigen3::Eigen)
 
 # Include directories
-target_include_directories(_core PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
-    ${EIGEN3_INCLUDE_DIRS}
-)
+target_include_directories(_core PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
 # C++ standard
 target_compile_features(_core PRIVATE cxx_std_17)
 
 # Cross-platform compiler flags
 if(MSVC)
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        target_compile_options(_core PRIVATE /W4 /Od /Zi /DDEBUG)
-    elseif(CMAKE_BUILD_TYPE STREQUAL "Fast")
-        target_compile_options(_core PRIVATE /W4 /O2 /DNDEBUG /arch:AVX)
-    elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-        target_compile_options(_core PRIVATE /W4 /O2 /Zi)
-    elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
-        target_compile_options(_core PRIVATE /W4 /O1)
+    target_compile_options(_core PRIVATE /W4)
+    if(CMAKE_BUILD_TYPE STREQUAL "Fast")
+        target_compile_options(_core PRIVATE /O2 /DNDEBUG /arch:AVX)
+        message(STATUS "Build configuration: FAST (Windows AVX)")
+    elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        target_compile_options(_core PRIVATE /Od /Zi /DDEBUG)
+        message(STATUS "Build configuration: DEBUG (Windows)")
     else() # Release
-        target_compile_options(_core PRIVATE /W4 /O2 /DNDEBUG)
+        target_compile_options(_core PRIVATE /O2 /DNDEBUG)
+        message(STATUS "Build configuration: RELEASE (Windows)")
     endif()
 else()
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        target_compile_options(_core PRIVATE -Wall -O0 -g -DDEBUG -fno-omit-frame-pointer -fsanitize=address,undefined)
-    elseif(CMAKE_BUILD_TYPE STREQUAL "Fast")
-        target_compile_options(_core PRIVATE -Wall -O3 -DNDEBUG -mavx -ffast-math)
-    elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-        target_compile_options(_core PRIVATE -Wall -O2 -g)
-    elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
-        target_compile_options(_core PRIVATE -Wall -Os)
+    target_compile_options(_core PRIVATE -Wall)
+    if(CMAKE_BUILD_TYPE STREQUAL "Fast")
+        target_compile_options(_core PRIVATE -O3 -DNDEBUG -mavx -ffast-math)
+        message(STATUS "Build configuration: FAST (Linux/macOS AVX)")
+    elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        target_compile_options(_core PRIVATE -O0 -g -DDEBUG -fno-omit-frame-pointer -fsanitize=address,undefined)
+        message(STATUS "Build configuration: DEBUG (Linux/macOS)")
     else() # Release
-        target_compile_options(_core PRIVATE -Wall -O3)
+        target_compile_options(_core PRIVATE -O3 -DNDEBUG)
+        message(STATUS "Build configuration: RELEASE (Linux/macOS)")
     endif()
 endif()
 
