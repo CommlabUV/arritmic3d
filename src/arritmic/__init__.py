@@ -5,7 +5,7 @@ A high-performance C++ eikonal solver with Python bindings for
 electrophysiology simulations in cardiac tissue.
 """
 
-__version__ = "3.0.0-rev5"
+__version__ = "3.0b6"
 __author__ = "CoMMLabUV"
 __license__ = "LGPL-3.0-or-later"
 
