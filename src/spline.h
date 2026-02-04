@@ -141,6 +141,18 @@ public:
      * @param region Cell region
      * @param filename Name of the csv file
     */
+    void addSpline(CellType type, const std::filesystem::path& filename)
+    {
+        addSpline(type, filename.string());
+    }
+
+
+    /**
+     * @brief Add a new spline using a csv file.
+     * @param type Cell type
+     * @param region Cell region
+     * @param filename Name of the csv file
+    */
     void addSpline(CellType type, std::string filename)
     {
         try{

@@ -182,7 +182,7 @@ void BasicTissue<APM,CVM>::Init(const vector<CellType> & cell_types_, vector<Nod
     if( fiber_orientation_.size() == n_nodes )
         this->tissue_fiber_orientation = FiberOrientation::HETEROGENEOUS;
     else
-        if( fiber_orientation_.size() == 1 and fiber_orientation_.at(0).norm() > ALMOST_ZERO )
+        if( fiber_orientation_.size() == 1 && fiber_orientation_.at(0).norm() > ALMOST_ZERO )
             this->tissue_fiber_orientation = FiberOrientation::HOMOGENEOUS;
         else
             this->tissue_fiber_orientation = FiberOrientation::ISOTROPIC;

@@ -10,16 +10,19 @@ jobs:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     env:
-      # Avoids building PyPy wheels, any i686 wheels (32-bit), and all CPython < 3.10
+      # Only build CPython 3.10 x86_64 on Windows for quick testing
+      # CIBW_BUILD: 'cp310-win_amd64'
+      # CIBW_BUILD: 'cp310-macosx_x86_64 cp310-macosx_arm64'
+      # Avoids building PyPy wheels, any i686 wheels (32-bit), all CPython < 3.10, and win32
       # Skips cp30, cp31, ... cp39 by pattern; keeps cp310 and above.
-      CIBW_SKIP: 'pp* *_i686* cp3[0-9]-* *-musllinux*'
+      CIBW_SKIP: 'pp* *_i686* cp3[0-9]-* *-musllinux* *win32*'
       # To speed up debug cycles, uncomment one of the following:
       # CIBW_ARCHS: 'x86_64'           # build only x86_64 architectures
       # CIBW_SKIP: 'pp* *-musllinux*'  # skip musllinux builds
       # CIBW_SKIP: 'pp* *_i686*'       # skip i686 (32-bit) builds
     strategy:
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
     - uses: actions/checkout@v4
@@ -27,7 +30,7 @@ jobs:
     - name: Setup Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.9'
+        python-version: '3.10'
 
     - name: Install build tooling
       # Install cibuildwheel and build packages
@@ -54,6 +57,7 @@ jobs:
           echo "::error::No built artifacts found. Failing job."
           exit 1
         fi
+      shell: bash
 
     - uses: actions/upload-artifact@v4
       with:

@@ -37,10 +37,10 @@ typename NodeT<APD, CVM>::CellActivationState NodeT<APD, CVM>::GetState(float cu
     assert(current_time_ >= local_activation_time || local_activation_time == MAX_TIME);  // In the current beat
 
     CellActivationState state = CellActivationState::INACTIVE;
-    if(this->type != CELL_TYPE_VOID and this->apd_model.IsActive(current_time_))
+    if(this->type != CELL_TYPE_VOID && this->apd_model.IsActive(current_time_))
         state = CellActivationState::ACTIVE;
-    else if( this->type != CELL_TYPE_VOID and
-            this->next_activation_time > current_time_ and
+    else if( this->type != CELL_TYPE_VOID &&
+            this->next_activation_time > current_time_ &&
             this->next_activation_time < MAX_TIME )
         state = CellActivationState::WAITING_FOR_ACTIVATION;
     else
@@ -175,7 +175,7 @@ bool NodeT<APD, CVM>::Activate(float current_time_, const Geometry &geometry)
 
     if (this->GetState(current_time_) <= CellActivationState::WAITING_FOR_ACTIVATION)
     {
-        if( not this->ComputeActivation(current_time_, geometry))
+        if( ! this->ComputeActivation(current_time_, geometry))
             activated = false;
         else
         {
@@ -321,7 +321,7 @@ void NodeT<APD, CVM>::SaveState(std::ofstream & f, const class ParametersPool & 
     size_t param_index = std::numeric_limits<size_t>::max();
     if(parameters != nullptr)
     {
-        param_index = parameters - & (parameters_pool.pool[0]);
+        param_index = parameters - & (parameters_pool.get_pool()[0]);
     }
     f.write( (char *) &param_index, sizeof(size_t) );
 

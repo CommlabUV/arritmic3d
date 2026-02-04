@@ -63,7 +63,7 @@ public:
             {
                 for(int k = -distance; k <= distance; ++k)  // x
                 {
-                    if(i == 0 and j == 0 and k == 0)
+                    if(i == 0 && j == 0 && k == 0)
                         continue;
                     neighbours[pos] = i*size_x*size_y + j*size_x + k;
                     ++pos;
@@ -130,7 +130,7 @@ public:
             {
                 for(int k = -distance; k <= distance; ++k)  // x
                 {
-                    if(i == 0 and j == 0 and k == 0)
+                    if(i == 0 && j == 0 && k == 0)
                         continue;
                     neighbours[pos] = Vector3(k*dx, j*dy, i*dz);
                     ++pos;

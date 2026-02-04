@@ -94,7 +94,7 @@ public:
     void SetRestitutionCurve(CellType type)
     {
         this->restitution_curve = splines.getSpline(type);
-        if(this->restitution_curve == nullptr and type != CELL_TYPE_VOID)
+        if(this->restitution_curve == nullptr && type != CELL_TYPE_VOID)
             throw std::runtime_error("action_potential_rc.h: no APD restitution model found for cell type " + std::to_string(static_cast<int>(type)));
     };
 
@@ -129,7 +129,7 @@ public:
      */
     bool Activate(float new_ta, float avg_apd, float e_eff = 0.0)
     {
-        if( not Activate(new_ta) )
+        if( ! Activate(new_ta) )
             return false;
         this->apd = this->apd*(1.0 - e_eff) + avg_apd*e_eff;
         return true;
@@ -143,7 +143,7 @@ public:
      */
     float getActionPotential(float t_) const
     {
-        if(t_ < this->ta or t_ > this->ta + this->apd)
+        if(t_ < this->ta || t_ > this->ta + this->apd)
             return this->resting_potential;
         else
             return this->peak_potential;
@@ -154,7 +154,7 @@ public:
     */
     bool IsActive(float t_) const
     {
-        return (t_ >= this->ta and t_ < this->ta + this->apd);
+        return (t_ >= this->ta && t_ < this->ta + this->apd);
     };
 
     /**
