@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [3.0.0-rc4] - 2026-01-25
+## [3.0.b4] - 2026-01-25
 
 ### Added
 - Activations: new management and definitions for activation regions and lists, including support for external files with node lists (commits ce9424f, 1bbda7b, b8a7c60).
@@ -31,7 +31,7 @@
 - Fernando Barber
 - Giada Romitti
 
-## [3.0.0-rc3] - 2025-11-17
+## [3.0b3] - 2025-11-17
 
 ### Added
 - README updated with installation and usage instructions (commit d696ac7).
@@ -59,7 +59,7 @@
 - Fernando Barber
 - Ignacio García-Fernández
 
-## [3.0.0-rc2] - 2025-09-24
+## [3.0b2] - 2025-09-24
 
 ### Added
 - Developed tools for case initialization and conversion.
@@ -69,7 +69,7 @@
 ### Fixed
 - Fixed activation bugs.
 
-## [3.0.0-rc1] - 2025-06-12
+## [3.0b1] - 2025-06-12
 
 ### Added
 - Initial migration of arritmic3D to C++/Python.
