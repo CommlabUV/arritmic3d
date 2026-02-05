@@ -33,6 +33,7 @@ if (NOT Eigen3_FOUND AND NOT TARGET Eigen3::Eigen)
   FetchContent_GetProperties(eigen)
   if(NOT eigen_POPULATED)
     FetchContent_Populate(eigen)
+    # EXCLUDE_FROM_ALL prevents Eigen's own install rules from polluting the wheel
     add_subdirectory(${eigen_SOURCE_DIR} ${eigen_BINARY_DIR} EXCLUDE_FROM_ALL)
   endif()
 endif()
@@ -51,38 +52,63 @@ target_compile_features(_core PRIVATE cxx_std_17)
 
 # Cross-platform compiler flags
 include(CheckCXXCompilerFlag)
+
+# --- Define Flags by Profile (NO QUOTES to define them as lists) ---
 if(MSVC)
-    target_compile_options(_core PRIVATE /W4)
-    if(CMAKE_BUILD_TYPE STREQUAL "Fast")
-        target_compile_options(_core PRIVATE /O2 /DNDEBUG /arch:AVX)
-        message(STATUS "Build configuration: FAST (Windows AVX)")
-    elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        target_compile_options(_core PRIVATE /Od /Zi /DDEBUG)
-        message(STATUS "Build configuration: DEBUG (Windows)")
-    else() # Release
-        target_compile_options(_core PRIVATE /O2 /DNDEBUG)
-        message(STATUS "Build configuration: RELEASE (Windows)")
-    endif()
+    set(FLAGS_DEBUG          /Od /Zi /RTC1 /DDEBUG)
+    set(FLAGS_FAST           /O2 /DNDEBUG)
+    set(FLAGS_RELEASE        /O2)
+    set(AVX_FLAG             "/arch:AVX")
 else()
-    target_compile_options(_core PRIVATE -Wall)
-    if(CMAKE_BUILD_TYPE STREQUAL "Fast")
-        target_compile_options(_core PRIVATE -O3 -DNDEBUG -ffast-math)
-        # Check compatibility for AVX
-        check_cxx_compiler_flag("-mavx" COMPILER_SUPPORTS_AVX)
-        if(COMPILER_SUPPORTS_AVX)
-            target_compile_options(_core PRIVATE -mavx)
-            message(STATUS "Build configuration: FAST (Linux/macOS) with AVX enabled")
-        else()
-            message(STATUS "Build configuration: FAST (Linux/macOS) AVX not supported by compiler")
-        endif()
-    elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        target_compile_options(_core PRIVATE -O0 -g -DDEBUG -fno-omit-frame-pointer -fsanitize=address,undefined)
-        message(STATUS "Build configuration: DEBUG (Linux/macOS)")
-    else() # Release
-        target_compile_options(_core PRIVATE -O3 -DNDEBUG)
-        message(STATUS "Build configuration: RELEASE (Linux/macOS)")
+    set(FLAGS_DEBUG          -O0 -g -DDEBUG -fno-omit-frame-pointer -fsanitize=address,undefined)
+    set(FLAGS_FAST           -O3 -DNDEBUG -ffast-math)
+    set(FLAGS_RELEASE        -O3)
+    set(AVX_FLAG             "-mavx")
+endif()
+
+
+# Apply base flags using Generator Expressions
+# We use JOIN to ensure the list expands correctly inside the expression
+target_compile_options(_core PRIVATE
+    $<$<CONFIG:Debug>:${FLAGS_DEBUG}>
+    $<$<CONFIG:Fast>:${FLAGS_FAST}>
+    $<$<CONFIG:Release>:${FLAGS_RELEASE}>
+)
+
+# AVX Logic (Only for Fast build type)
+set(AVX_STATUS "Not applicable")
+if(CMAKE_BUILD_TYPE STREQUAL "Fast")
+    check_cxx_compiler_flag("${AVX_FLAG}" COMPILER_SUPPORTS_AVX)
+    if(COMPILER_SUPPORTS_AVX)
+        target_compile_options(_core PRIVATE ${AVX_FLAG})
+        set(AVX_STATUS "Supported (Enabled)")
+    else()
+        set(AVX_STATUS "Not supported (Skipped)")
     endif()
 endif()
+
+# --- Build Configuration Report ---
+
+# Resolve which flags are active for the current build type
+string(TOUPPER "${CMAKE_BUILD_TYPE}" CURRENT_CONFIG_UPPER)
+set(CURRENT_FLAGS "${FLAGS_${CURRENT_CONFIG_UPPER}}")
+
+# Convert list to string for pretty printing (replaces semicolons with spaces)
+string(REPLACE ";" " " PRINTABLE_FLAGS "${CURRENT_FLAGS}")
+
+message(STATUS "-----------------------------------------------------------")
+message(STATUS " ARRITMIC 3D - Build Configuration Summary:")
+message(STATUS "   Build Type:           ${CMAKE_BUILD_TYPE}")
+message(STATUS "   Active Profile Flags: ${PRINTABLE_FLAGS}")
+
+if(CMAKE_BUILD_TYPE STREQUAL "Fast")
+    message(STATUS "   AVX Optimization:     ${AVX_STATUS}")
+endif()
+
+message(STATUS "   Compiler ID:          ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
+message(STATUS "   System Architecture:  ${CMAKE_SYSTEM_PROCESSOR}")
+message(STATUS "   Build System:         ${CMAKE_GENERATOR}")
+message(STATUS "-----------------------------------------------------------")
 
 # Install C++ module into arritmic/
 install(
