@@ -1,4 +1,14 @@
 cmake_minimum_required(VERSION 3.15)
+
+# --- 1. Custom Configurations (MUST BE BEFORE project()) ---
+# We define 'Fast' as a valid configuration for Multi-config generators (Visual Studio)
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE Fast CACHE STRING "Choose the type of build." FORCE)
+endif()
+
+# This tells Visual Studio to actually create a "Fast" profile in the .sln/.vcxproj files
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release;Fast" CACHE STRING "" FORCE)
+
 project(arritmic3d CXX)
 
 # C++ standard
