@@ -10,7 +10,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Fast CACHE STRING "Choose the type of build." FORCE)
 endif()
-set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInfo MinSizeRel Fast)
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release Fast)
 
 # Find dependencies
 find_package(pybind11 REQUIRED)
