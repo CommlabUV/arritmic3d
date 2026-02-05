@@ -16,10 +16,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Build type and flags
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Fast CACHE STRING "Choose the type of build." FORCE)
-endif()
+# Build type strings for IDEs
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release Fast)
 
 # Find dependencies
@@ -57,13 +54,10 @@ target_link_libraries(_core PRIVATE Eigen3::Eigen)
 # Include directories
 target_include_directories(_core PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
-# C++ standard
-target_compile_features(_core PRIVATE cxx_std_17)
-
 # Cross-platform compiler flags
 include(CheckCXXCompilerFlag)
 
-# --- Define Flags by Profile (NO QUOTES to define them as lists) ---
+# --- Define Flags by Profile (Lists without quotes) ---
 if(MSVC)
     set(FLAGS_DEBUG          /Od /Zi /RTC1 /DDEBUG)
     set(FLAGS_FAST           /O2 /DNDEBUG)
@@ -76,35 +70,31 @@ else()
     set(AVX_FLAG             "-mavx")
 endif()
 
-
 # Apply base flags using Generator Expressions
-# We use JOIN to ensure the list expands correctly inside the expression
 target_compile_options(_core PRIVATE
     $<$<CONFIG:Debug>:${FLAGS_DEBUG}>
     $<$<CONFIG:Fast>:${FLAGS_FAST}>
     $<$<CONFIG:Release>:${FLAGS_RELEASE}>
 )
 
-# AVX Logic (Only for Fast build type)
+# --- AVX Logic and Report Preparation ---
 set(AVX_STATUS "Not applicable")
+string(TOUPPER "${CMAKE_BUILD_TYPE}" CURRENT_CONFIG_UPPER)
+set(REPORT_FLAGS ${FLAGS_${CURRENT_CONFIG_UPPER}})
+
 if(CMAKE_BUILD_TYPE STREQUAL "Fast")
     check_cxx_compiler_flag("${AVX_FLAG}" COMPILER_SUPPORTS_AVX)
     if(COMPILER_SUPPORTS_AVX)
         target_compile_options(_core PRIVATE ${AVX_FLAG})
         set(AVX_STATUS "Supported (Enabled)")
+        list(APPEND REPORT_FLAGS ${AVX_FLAG}) # Add AVX to the report list
     else()
         set(AVX_STATUS "Not supported (Skipped)")
     endif()
 endif()
 
 # --- Build Configuration Report ---
-
-# Resolve which flags are active for the current build type
-string(TOUPPER "${CMAKE_BUILD_TYPE}" CURRENT_CONFIG_UPPER)
-set(CURRENT_FLAGS "${FLAGS_${CURRENT_CONFIG_UPPER}}")
-
-# Convert list to string for pretty printing (replaces semicolons with spaces)
-string(REPLACE ";" " " PRINTABLE_FLAGS "${CURRENT_FLAGS}")
+string(REPLACE ";" " " PRINTABLE_FLAGS "${REPORT_FLAGS}")
 
 message(STATUS "-----------------------------------------------------------")
 message(STATUS " ARRITMIC 3D - Build Configuration Summary:")
