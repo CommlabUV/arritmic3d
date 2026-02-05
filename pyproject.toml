@@ -42,7 +42,7 @@ dependencies = [
 
 [tool.scikit-build]
 wheel.packages = ["src/arritmic"]
-cmake.build-type = "Fast"
+cmake.build-type = "Release"
 
 wheel.exclude = [
     "include/eigen3/*",
