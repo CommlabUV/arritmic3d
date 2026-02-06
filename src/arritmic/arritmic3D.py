@@ -357,8 +357,9 @@ def save_run_configuration(cfg, case_dir):
         if key in cfg and os.path.isfile(cfg[key]):
             src = os.path.abspath(cfg[key])
             dst = os.path.join(models_dir, os.path.basename(src))
+            abs_case_dir = os.path.abspath(case_dir)
             # Only copy if not already in output dir
-            if not os.path.commonpath([src, case_dir]) == os.path.abspath(case_dir):
+            if not os.path.commonpath([src, abs_case_dir]) == abs_case_dir:
                 shutil.copy2(src, dst)
             else:
                 dst = src  # Already in output dir, don't copy
@@ -376,12 +377,12 @@ def save_run_configuration(cfg, case_dir):
                     src_model_file = os.path.abspath(os.path.join(os.path.dirname(src), model_file))
                     dst_model_file = os.path.join(models_dir, os.path.basename(model_file))
                     # Only copy if not already in output dir
-                    if not os.path.commonpath([src_model_file, case_dir]) == os.path.abspath(case_dir):
+                    if not os.path.commonpath([src_model_file, abs_case_dir]) == abs_case_dir:
                         if os.path.isfile(src_model_file):
                             shutil.copy2(src_model_file, dst_model_file)
                     # else: already in output dir, do not copy
             # Update the path in the JSON to be relative from case_dir
-            cfg_for_output[key] = os.path.relpath(dst, case_dir)
+            cfg_for_output[key] = os.path.relpath(dst, abs_case_dir)
 
     with open(used_path, "w") as fh:
         json.dump(cfg_for_output, fh, indent=2)
