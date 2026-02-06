@@ -1,16 +1,43 @@
 # Changelog
 
-## [Unreleased]
-
-## [3.0.b5] - 2026-02-04
+## [3.0b6.dev1] - 2026-02-04
 
 ### Changed
 - Build infrastructure improvements to set up CI/CD pipelines with github actions.
+- Improved management of library restitution models.
+- Changed versioning scheme to use semantic versioning with beta indicators.
+
+### Added
+- Restitution models are now distributed with the main package.
+- Restitution models are saved with the case files after a simulation run for reproducibility.
 
 ### Contributors
 - Ignacio García-Fernández
 
-## [3.0.b4] - 2026-01-25
+## [3.0b5] - 2026-01-30
+
+### Added
+- Updated build infrastructure to generate a Python module installable via pip.
+- Release file for GitHub Actions, enabling automatic publication to PyPI.
+- `tools` directory to store utility scripts.
+- Additional checks for eigenvalue search.
+
+### Changed
+- Main files moved to the `arritmic` folder to facilitate module building.
+- License updated to GPLv3.
+- Publish step now uses Test PyPI.
+- Python test files moved to the `test` directory.
+
+### Removed
+- Old build/install infrastructure removed.
+
+### Fixed
+- Typo correction in references.
+
+### Contributors
+- Ignacio García-Fernández
+
+## [3.0b4] - 2026-01-25
 
 ### Added
 - Activations: new management and definitions for activation regions and lists, including support for external files with node lists (commits ce9424f, 1bbda7b, b8a7c60).
