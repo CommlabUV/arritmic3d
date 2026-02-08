@@ -463,7 +463,9 @@ def run_test_case(output_dir):
     slab_args = [
         "--nnodes", "20", "20", "5",
         "--spacing", "0.05", "0.05", "0.05",
-        "--region-by-side", "south", "1"
+        "--region-by-side", "south", "1",
+        "--field", "restitution_model", "2",
+        "--region", '{"shape" : "square", "cx" : 0.5, "cy" : 0.5, "r1" : 0.2, "r2" : 0.2, "restitution_model" : 5}'
     ]
     # Generate slab using the standard build_slab logic (handles regions, fields, etc.)
     slab_vtk = generate_slab_to_output(output_dir, slab_args)
