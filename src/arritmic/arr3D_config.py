@@ -81,7 +81,7 @@ def resolve_models_in_parameters(parameters, package='arritmic.restitutionModels
 
     return parameters
 
-def load_config_file(config_file, resolve_to_absolute=False, path_keys=["VTK_INPUT_FILE", "APD_MODEL_CONFIG_PATH", "CV_MODEL_CONFIG_PATH"], module_models_package='arritmic.restitutionModels'):
+def load_config_file(config_file, resolve_to_absolute=True, path_keys=["VTK_INPUT_FILE", "APD_MODEL_CONFIG_PATH", "CV_MODEL_CONFIG_PATH"], module_models_package='arritmic.restitutionModels'):
     """
     Load configuration from JSON file.
     If resolve_to_absolute=True, convert relative paths to absolute paths (relative to the JSON file location).

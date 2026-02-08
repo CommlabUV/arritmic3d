@@ -495,7 +495,7 @@ def main():
     if not config_file and not args.slab:
         raise FileNotFoundError("No configuration file found. Provide --config-file or ensure arr3D_config.json exists in case_dir.")
     else:
-        cfg = load_config_file(config_file, resolve_to_absolute=True) if config_file else make_default_config()
+        cfg = load_config_file(config_file) if config_file else make_default_config()
 
     # Apply all CLI overrides (paths resolved to absolute), including --input-file if provided
     cfg = apply_config_overrides(cfg, args)
