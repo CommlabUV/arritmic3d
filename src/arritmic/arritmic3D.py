@@ -133,7 +133,7 @@ def run_simulation(case_dir, cfg):
             grid.point_data['Beat'] = tissue.GetBeat()
 
 
-            grid.save(f"{os.path.join(case_dir, out_file_name)}_{int(time)}.vtk")
+            grid.save(f"{os.path.join(case_dir, out_file_name)}_{int(time):05d}.vtk")
 
 
 def get_arg_parser():
