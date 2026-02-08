@@ -407,15 +407,32 @@ def generate_slab_to_output(case_dir, slab_args):
     return slab_path
 
 
-def run_arritmic3D(case_dir, config, save_run_config=True):
+def run_arritmic3D(case_dir, config : dict = {}, save_run_config=True):
     """
     Run the Arritmic3D simulation in the given case directory with the provided configuration dict
 
     Arguments:
     - case_dir: Output directory where results will be saved.
-    - config: Configuration dictionary with simulation parameters (see documentation).
+    - config: Configuration dictionary with simulation parameters (see documentation). Fields provided here override those in any configuration file found in case_dir. If no configuration file is found, this config is applied on top of defaults.
     - save_run_config: If True (default), saves the actual run configuration to case_dir/arr3D_config_run.json.
     """
+
+    # Read configuration from case directory
+    config_file_path = check_directory(case_dir)
+    if config_file_path:
+        case_config = load_config_file(config_file_path)
+    else:
+        case_config = None
+
+    # If no configuration found raise an error
+    if not config and not case_config:
+        raise FileNotFoundError("No configuration file found. Provide --config-file or ensure arr3D_config.json exists in case_dir.")
+
+    # Apply overrides from config argument on top of case_config (if exists) or defaults (if not). Paths are resolved to absolute.
+    if not case_config:
+        config = make_default_config() | config
+    else:
+        config = case_config | config
 
 
     # Validate that VTK input file exists
@@ -505,8 +522,8 @@ def main():
         slab_vtk = generate_slab_to_output(args.case_dir, remainder)
         cfg["VTK_INPUT_FILE"] = slab_vtk
 
-    # Execute with support for dry-run and optional config saving
-    run_arritmic3D(args.case_dir, cfg, save_run_config=args.output_run_config)
+    # Execute the simulation with the prepared configuration
+    run_arritmic3D(args.case_dir, config = cfg, save_run_config = args.output_run_config)
 
 if __name__ == "__main__":
     main()
