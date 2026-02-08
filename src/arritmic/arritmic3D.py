@@ -471,14 +471,14 @@ def run_test_case(output_dir):
     # Prepare minimal config for S1-S2 protocol
     config = make_default_config()
     config["VTK_INPUT_FILE"] = slab_vtk
-    config["SIMULATION_DURATION"] = 3500
-    config["VTK_OUTPUT_PERIOD"] = 10
+    config["SIMULATION_DURATION"] = 1500
+    config["VTK_OUTPUT_PERIOD"] = 1
     config["PROTOCOL"] = [
         {
             "ACTIVATION_REGION": 1,
             "FIRST_ACTIVATION_TIME": 100,
-            "N_STIMS_PACING": [3, 2],
-            "BCL": [800, 400]
+            "N_STIMS_PACING": [3,1],
+            "BCL": [400,300]
         }
     ]
 
