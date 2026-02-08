@@ -23,6 +23,9 @@ try:
         if name == "build_slab":
             from .arr3D_build_slab import build_slab
             return build_slab
+        if name == "load_case_config":
+            from .arr3D_config import load_case_config
+            return load_case_config
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
     def __dir__():
@@ -43,4 +46,5 @@ __all__ = [
     "arritmic3d",
     "test_case",
     "build_slab",
+    "load_case_config"
 ]

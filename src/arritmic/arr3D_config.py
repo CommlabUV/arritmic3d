@@ -109,6 +109,12 @@ def load_config_file(config_file, resolve_to_absolute=True, path_keys=["VTK_INPU
 
     return parameters
 
+def load_case_config(case_dir):
+    """Check for a config file in the case directory and load it if present. Returns parameters dict or None."""
+    config_file_path = check_directory(case_dir)
+    if config_file_path:
+        return load_config_file(config_file_path)
+    return None
 
 def get_vectorial_parameters(tissue, dims, prms):
 

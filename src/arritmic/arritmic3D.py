@@ -11,7 +11,7 @@ import shutil
 import arritmic
 from . import arr3D_build_slab
 
-from .arr3D_config import check_directory, get_vectorial_parameters, load_config_file, make_default_config, resolve_models_in_parameters
+from .arr3D_config import check_directory, get_vectorial_parameters, load_config_file, load_case_config, make_default_config, resolve_models_in_parameters
 from .arr3D_activations import schedule_activation
 
 
@@ -418,11 +418,7 @@ def run_arritmic3D(case_dir, config : dict = {}, save_run_config=True):
     """
 
     # Read configuration from case directory
-    config_file_path = check_directory(case_dir)
-    if config_file_path:
-        case_config = load_config_file(config_file_path)
-    else:
-        case_config = None
+    case_config = load_case_config(case_dir)
 
     # If no configuration found raise an error
     if not config and not case_config:
