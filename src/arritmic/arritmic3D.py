@@ -320,8 +320,7 @@ def get_config_file_path(args):
     if args.config_file:
         provided = args.config_file
         if not os.path.isfile(provided):
-            print(f"Config file not found: {provided}", flush=True)
-            sys.exit(1)
+            raise FileNotFoundError(f"Config file not found: {provided}")
         return provided
     return check_directory(args.case_dir)
 
@@ -334,8 +333,9 @@ def ensure_vtk_input(cfg):
         print(f"Using VTK file: {vtk_file_abs}", flush=True)
         return vtk_file_abs
     except FileNotFoundError as e:
-        print(f"Error: {e}", flush=True)
-        sys.exit(1)
+        print(f"Error ensuring VTK input: {e}", flush=True)
+        raise
+
 
 def save_run_configuration(cfg, case_dir):
     """
@@ -443,8 +443,7 @@ def run_test_case(output_dir):
     - output_dir: Output directory where results will be saved. Must not exist or be empty
     """
     if os.path.exists(output_dir) and os.listdir(output_dir):
-        print(f"Error: Output directory '{output_dir}' must not exist or must be empty.", flush=True)
-        sys.exit(1)
+        raise FileExistsError(f"Output directory '{output_dir}' must not exist or must be empty.")
     os.makedirs(output_dir, exist_ok=True)
 
     # Prepare slab args: south side activation, activation_region=1
