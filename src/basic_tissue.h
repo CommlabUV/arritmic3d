@@ -96,9 +96,9 @@ public:
     void SaveState(const std::string & filename) const;
     void LoadState(const std::string & filename);
 
-    void ShowSensorData() const
+    void ShowSensorData(std::ostream& os = std::cout) const
     {
-        sensor_dict.Show();
+        sensor_dict.Show(os);
     }
 
     /**

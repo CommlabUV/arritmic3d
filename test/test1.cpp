@@ -4,6 +4,8 @@
  * (C) CoMMLab-UV 2023
  * */
 #include <iostream>
+#include <fstream>
+#include <vector>
 #include <string>
 #include "../src/node.h"
 #include "../src/tissue.h"
@@ -24,6 +26,7 @@ int main(int argc, char **argv)
 
     NodeParameters np;
     np.initial_apd = 100.0;
+    np.correction_factor_apd = 1.0;
     vector<NodeParameters> v_np(tissue.size(), np);
     v_np.at(tissue.GetIndex(5, 3, 1)).sensor = 1;  // Set a sensor
 
@@ -64,7 +67,9 @@ int main(int argc, char **argv)
         //tissue.SaveVTK("output/test"+ std::to_string(i) +".vtk");
     }
 
-    tissue.ShowSensorData();
+    std::ofstream sensor_file("sensor_0.txt");
+    tissue.ShowSensorData(sensor_file);
+    sensor_file.close();
 
     return 0;
 }
