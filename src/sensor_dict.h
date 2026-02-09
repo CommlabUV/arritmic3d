@@ -9,6 +9,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "utility.h"
 
 // File for showing the contents of any container.
 #include "prettyprint.hpp"
@@ -54,23 +55,42 @@ public:
         return data_names;
     }
 
-    void Show() const
+    /**
+     * Show the contents of a node of the sensor dictionary.
+     *
+     * @param pair Pair containing the node ID and its data to show.
+     * @param os Output stream to write to.
+     * @param separator Separator between data values.
+     */
+    void ShowNode(const std::pair<int, std::vector<T>>& pair, std::ostream& os = std::cout, std::string separator = ", ") const
     {
-        std::cout << "Sensor contents:\n (";
+        for (auto const &data : pair.second)
+        {
+            print_tuple(os, separator, data);
+            os << "\n";
+        }
+    }
+
+    /**
+     * Show the contents of the sensor dictionary.
+     *
+     * @param os Output stream to write to.
+     * @param separator Separator between data values.
+     */
+    void Show(std::ostream& os = std::cout, std::string separator = ", ") const
+    {
+        os << "Sensor contents:\n ";
         for (unsigned i = 0; i < data_names.size(); ++i)
         {
-            std::cout << data_names[i];
+            os << data_names[i];
             if (i < data_names.size() - 1)
-                std::cout << ", ";
+                os << separator;
         }
-        std::cout << ")\n";
+        os << "\n";
         for (const auto &pair : sensor_info)
         {
-            std::cout << "Node ID: " << pair.first << "\n";
-            for (auto const &data : pair.second)
-            {
-                std::cout << " " << data << "\n";
-            }
+            os << "Node ID: " << pair.first << "\n";
+            ShowNode(pair, os, separator);
         }
     }
 };
