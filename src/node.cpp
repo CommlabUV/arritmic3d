@@ -321,7 +321,7 @@ void NodeT<APD, CVM>::SaveState(std::ofstream & f, const class ParametersPool & 
     size_t param_index = std::numeric_limits<size_t>::max();
     if(parameters != nullptr)
     {
-        param_index = parameters - & (parameters_pool.get_pool()[0]);
+        param_index = parameters_pool.GetIndex(parameters);
     }
     f.write( (char *) &param_index, sizeof(size_t) );
 
@@ -341,17 +341,17 @@ void NodeT<APD, CVM>::SaveState(std::ofstream & f, const class ParametersPool & 
     // Save CV model state
     cv_model.SaveState(f);
 
-    // Save events. It is possible to know the index directly, but this way is safer and prepared for possible changes.
+    // Save events. It is possible to know the index directly from node position, but this way is safer and prepared for possible changes.
     // Save next activation event state
     size_t next_act_index = std::numeric_limits<size_t>::max();
     if(next_activation_event != nullptr)
-        next_act_index = next_activation_event - & (event_queue.events[0]);
+        next_act_index = event_queue.GetIndex(next_activation_event);
     f.write( (char *) &next_act_index, sizeof(size_t) );
 
     // Save next deactivation event state
     size_t next_deact_index = std::numeric_limits<size_t>::max();
     if(next_deactivation_event != nullptr)
-        next_deact_index = next_deactivation_event - & (event_queue.events[0]);
+        next_deact_index = event_queue.GetIndex(next_deactivation_event);
     f.write( (char *) &next_deact_index, sizeof(size_t) );
 }
 

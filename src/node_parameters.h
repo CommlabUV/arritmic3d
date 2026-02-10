@@ -238,6 +238,17 @@ public:
 
     const std::vector<NodeParameters>& get_pool() const { return pool; }
 
+    /**
+     * @brief Get the index of a NodeParameters in the pool.
+     * @param ptr Pointer to the NodeParameters in the pool.
+     * @return Index of the NodeParameters in the pool.
+     */
+    size_t GetIndex(const NodeParameters * ptr) const
+    {
+        assert(ptr != nullptr);
+        return ptr - &pool[0];
+    }
+
 private:
     std::vector<NodeParameters> pool;
     std::map<NodeParameters, size_t> index;   // @todo Substitute NodeParameters by a hash value.

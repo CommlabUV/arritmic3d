@@ -181,6 +181,12 @@ public:
         return &events[2*node_id + int(type)];
     }
 
+    size_t GetIndex(CellEvent * event) const
+    {
+        assert(event != nullptr);
+        return event - &events[0];
+    }
+
     /**
      * @brief Update the priority of an event in the queue
      *
