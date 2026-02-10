@@ -74,6 +74,9 @@ int main(int argc, char **argv)
         //tissue.SaveVTK("output/test"+ std::to_string(i) +".vtk");
     }
 
+    // Save the state to a file
+    tissue.SaveState("tissue_state.bin");
+
     // Re-initialize tissue with different parameters
     std::vector<CellType> v_type2(10*6*4, BZ_ENDO);
     NodeParameters np2;
