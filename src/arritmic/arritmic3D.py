@@ -467,11 +467,11 @@ def run_test_case(output_dir):
 
     # Prepare slab args: south side activation, activation_region=1
     slab_args = [
-        "--nnodes", "20", "20", "5",
-        "--spacing", "0.05", "0.05", "0.05",
+        "--nnodes", "15", "15", "5",
+        "--spacing", "0.4", "0.4", "0.4",
         "--region-by-side", "south", "1",
         "--field", "restitution_model", "2",
-        "--region", '{"shape" : "square", "cx" : 0.5, "cy" : 0.5, "r1" : 0.2, "r2" : 0.2, "restitution_model" : 5}'
+        "--region", '{"shape" : "square", "cx" : 3.0, "cy" : 3.0, "r1" : 2.0, "r2" : 2.0, "restitution_model" : 5}'
     ]
     # Generate slab using the standard build_slab logic (handles regions, fields, etc.)
     slab_vtk = generate_slab_to_output(output_dir, slab_args)
@@ -482,12 +482,13 @@ def run_test_case(output_dir):
     config["APD_MODEL"] = "TenTuscher_APD"
     config["CV_MODEL"] = "TenTuscher_CV"
     config["SIMULATION_DURATION"] = 5000
+    config["VTK_OUTPUT_PERIOD"] = 5
     config["PROTOCOL"] = [
         {
             "ACTIVATION_REGION": 1,
             "FIRST_ACTIVATION_TIME": 100,
-            "N_STIMS_PACING": [3,1],
-            "BCL": [400,300]
+            "N_STIMS_PACING": [6,3],
+            "BCL": [600,400]
         }
     ]
 
