@@ -3,7 +3,7 @@ requires = ["scikit-build-core>=0.11.0", "pybind11"]
 build-backend = "scikit_build_core.build"
 
 [project]
-name = "arritmic"
+name = "arritmic3d"
 version = "3.0b6.dev2"
 authors = [
     {name = "Dolors Serra"},
@@ -41,7 +41,7 @@ dependencies = [
 
 
 [tool.scikit-build]
-wheel.packages = ["src/arritmic"]
+wheel.packages = ["src/arritmic3d"]
 cmake.build-type = "Release"
 
 wheel.exclude = [
@@ -52,8 +52,8 @@ wheel.exclude = [
 ]
 
 [project.scripts]
-arritmic3d = "arritmic.arritmic3D:main"
-build_slab = "arritmic.arr3D_build_slab:main"
+arritmic3d = "arritmic3d.arritmic3D:main"
+build_slab = "arritmic3d.arr3D_build_slab:main"
 
 [tool.scikit-build.sdist]
 include = []

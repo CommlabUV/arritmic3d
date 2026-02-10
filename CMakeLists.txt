@@ -110,16 +110,16 @@ message(STATUS "   System Architecture:  ${CMAKE_SYSTEM_PROCESSOR}")
 message(STATUS "   Build System:         ${CMAKE_GENERATOR}")
 message(STATUS "-----------------------------------------------------------")
 
-# Install C++ module into arritmic/
+# Install C++ module into arritmic3d/
 install(
     TARGETS _core
-    DESTINATION arritmic
+    DESTINATION arritmic3d
 )
 
 # Install CSV files (always from restitutionModels/ in project root)
 install(
     DIRECTORY "${CMAKE_SOURCE_DIR}/restitutionModels/"
-    DESTINATION "arritmic/restitutionModels"
+    DESTINATION "arritmic3d/restitutionModels"
     FILES_MATCHING PATTERN "*.csv"
     PATTERN "*/.git" EXCLUDE
 )

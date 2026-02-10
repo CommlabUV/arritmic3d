@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+- Example case made more meaningful.
+- Changed module name to arritmic3d and imported as a3d.
+
 ## [3.0b6.dev1] - 2026-02-04
 
 ### Changed

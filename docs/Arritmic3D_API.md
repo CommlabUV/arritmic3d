@@ -12,7 +12,7 @@
 
 > NO_EVENT : There are no more events. Simulation has finished.
 
-## `arritmic.CardiacTissue(ncells_x, ncells_y, ncells_z, x_spacing, y_spacing, z_spacing)`
+## `arritmic3d.CardiacTissue(ncells_x, ncells_y, ncells_z, x_spacing, y_spacing, z_spacing)`
 
 Constructor of the CardiacTissue class.
 

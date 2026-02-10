@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-import arritmic
+import arritmic3d
 import pyvista as pv
 import numpy as np
 import os
@@ -16,7 +16,7 @@ Steps performed:
 4. Shows how to re-run a case using its existing configuration file.
 """
 
-from arritmic import load_case_config
+from arritmic3d import load_case_config
 
 def visualize_case_matplotlib(case_dir, time_ms, field = "State"):
     """
@@ -227,7 +227,7 @@ if os.path.exists(case_dir):
 # - Applies an S1-S2 stimulation protocol (electric pulses).
 # - Runs the simulation for 3500 milliseconds.
 print("Starting simulation... This may take a few seconds.")
-arritmic.test_case(case_dir)
+arritmic3d.test_case(case_dir)
 print("Simulation completed successfully!")
 
 # --- STEP 3: Visualization of Results ---
@@ -239,7 +239,7 @@ visualize_case_matplotlib(case_dir, 104)
 # Arritmic3D is designed so that you can easily re-run a simulation
 # using the configuration file saved in the case directory.
 print("\n--- STEP 4: Re-running the case ---")
-arritmic.arritmic3d(case_dir)
+arritmic3d.arritmic3d(case_dir)
 print("Re-run completed!")
 
 

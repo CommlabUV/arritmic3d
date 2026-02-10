@@ -23,7 +23,7 @@ def check_directory(output_dir):
         return config_file
     return None
 
-def _resolve_model_name_to_pkg_path(model_name, package='arritmic.restitutionModels'):
+def _resolve_model_name_to_pkg_path(model_name, package='arritmic3d.restitutionModels'):
     """Resolve a model name (e.g. 'TorOrd_CV') to an installed package resource path
     'config_<name>.csv' inside the given package. Returns absolute path or None.
     """
@@ -47,7 +47,7 @@ def _resolve_model_name_to_pkg_path(model_name, package='arritmic.restitutionMod
         # resource not found in package
         return None
 
-def resolve_models_in_parameters(parameters, package='arritmic.restitutionModels'):
+def resolve_models_in_parameters(parameters, package='arritmic3d.restitutionModels'):
     """If parameters contain 'CV_MODEL' or 'APD_MODEL' (model names), set the corresponding
     '<...>_CONFIG_PATH' entries to the package resource absolute path when available.
     Does not overwrite existing *_CONFIG_PATH keys.
@@ -81,7 +81,7 @@ def resolve_models_in_parameters(parameters, package='arritmic.restitutionModels
 
     return parameters
 
-def load_config_file(config_file, resolve_to_absolute=True, path_keys=["VTK_INPUT_FILE", "APD_MODEL_CONFIG_PATH", "CV_MODEL_CONFIG_PATH"], module_models_package='arritmic.restitutionModels'):
+def load_config_file(config_file, resolve_to_absolute=True, path_keys=["VTK_INPUT_FILE", "APD_MODEL_CONFIG_PATH", "CV_MODEL_CONFIG_PATH"], module_models_package='arritmic3d.restitutionModels'):
     """
     Load configuration from JSON file.
     If resolve_to_absolute=True, convert relative paths to absolute paths (relative to the JSON file location).
