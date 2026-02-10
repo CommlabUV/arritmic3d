@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "arritmic"
-version = "3.0b6.dev1"
+version = "3.0b6.dev2"
 authors = [
     {name = "Dolors Serra"},
     {name = "Giada Romitti", email = "giada.romitti@uv.es"},
