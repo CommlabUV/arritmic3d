@@ -358,11 +358,17 @@ def save_run_configuration(cfg, case_dir):
             src = os.path.abspath(cfg[key])
             dst = os.path.join(models_dir, os.path.basename(src))
             abs_case_dir = os.path.abspath(case_dir)
+
             # Only copy if not already in output dir
-            if not os.path.commonpath([src, abs_case_dir]) == abs_case_dir:
+            try:
+                if not os.path.commonpath([src, abs_case_dir]) == abs_case_dir:
+                    shutil.copy2(src, dst)
+                else:
+                    dst = src  # Already in output dir, don't copy
+            except ValueError:
+                # Assume different drives on Windows, treat as not in output dir
                 shutil.copy2(src, dst)
-            else:
-                dst = src  # Already in output dir, don't copy
+
             # Read the CSV and copy the files from the second column
             with open(src, "r") as f:
                 reader = csv.reader(f)
