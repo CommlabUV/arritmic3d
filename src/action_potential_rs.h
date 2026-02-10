@@ -219,6 +219,35 @@ public:
         return this->delta_apd;
     };
 
+
+    /**
+     * Save the state of the model to a file.
+     * The correct restitution model will be set when loading according to the cell type.
+     */
+    void SaveState(std::ofstream & f) const
+    {
+        f.write( (char *) &apd, sizeof(float) );
+        f.write( (char *) &ta, sizeof(float) );
+        f.write( (char *) &last_di, sizeof(float) );
+        f.write( (char *) &delta_apd, sizeof(float) );
+        f.write( (char *) &correction_factor, sizeof(float) );
+    }
+
+    /**
+    * Load the state of the model from a file.
+    * The correct restitution model will be set according to the cell type.
+    */
+    void LoadState(std::ifstream & f, CellType type)
+    {
+        f.read( (char *) &apd, sizeof(float) );
+        f.read( (char *) &ta, sizeof(float) );
+        f.read( (char *) &last_di, sizeof(float) );
+        f.read( (char *) &delta_apd, sizeof(float) );
+        f.read( (char *) &correction_factor, sizeof(float) );
+
+        SetRestitutionModel(type);
+    }
+
 private:
     float apd; /**< Action potential duration. */
     float ta; /**< Time of the activation. */
