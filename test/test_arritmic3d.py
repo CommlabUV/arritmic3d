@@ -233,7 +233,7 @@ print("Simulation completed successfully!")
 # --- STEP 3: Visualization of Results ---
 # We use our new Matplotlib-based function to visualize the result
 # This works in Google Colab without needing an interactive 3D window.
-visualize_case_matplotlib(case_dir, 104)
+visualize_case_matplotlib(case_dir, 120, field="AP")
 
 # --- STEP 4: Re-run Case ---
 # Arritmic3D is designed so that you can easily re-run a simulation
