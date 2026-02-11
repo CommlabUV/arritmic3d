@@ -575,6 +575,49 @@ void BasicTissue<APM,CVM>::SaveState(const std::string & filename) const
 }
 
 template <typename APM,typename CVM>
+void BasicTissue<APM,CVM>::LoadState(const std::string & filename)
+{
+    std::ifstream state_file;
+    state_file.open(filename, std::ios::binary);
+    if(!state_file)
+    {
+        LOG::Error(true, "Could not open file " + filename + " for reading.");
+        return;
+    }
+
+    // Load version
+    int version;
+    state_file.read( (char*) (&version), sizeof(version) );
+    if(version != SAVE_VERSION)
+    {
+        LOG::Error(true, "Save version (", version, ") does not match current version (", SAVE_VERSION, ").");
+        return;
+    }
+
+    // Load tissue time
+    state_file.read( (char*) (&tissue_time), sizeof(tissue_time) );
+    // Load timer
+    state_file.read( (char*) (timer.data()), sizeof(float) * int(SystemEventType::SIZE) );
+    // Load number of live nodes
+    state_file.read( (char*) (&n_live_nodes), sizeof(n_live_nodes) );
+
+    // Load geometry
+    tissue_geometry.LoadState(state_file);
+    // Load parameters pool
+    parameters_pool.LoadState(state_file);
+    // Load event queue
+    event_queue.LoadState(state_file, tissue_nodes);
+
+    // Load each node
+    for(auto & node : tissue_nodes)
+    {
+        node.LoadState(state_file, parameters_pool, event_queue);
+    }
+
+    state_file.close();
+}
+
+template <typename APM,typename CVM>
 void BasicTissue<APM,CVM>::SaveVTK(const std::string & filename) const
 {
     std::ofstream vtk_file;
