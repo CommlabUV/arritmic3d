@@ -143,7 +143,7 @@ window.Quarto = {
   <li><a href="#running-existing-cases" id="toc-running-existing-cases" class="nav-link" data-scroll-target="#running-existing-cases">Running existing cases</a></li>
   </ul></li>
   <li><a href="#simulation-output" id="toc-simulation-output" class="nav-link" data-scroll-target="#simulation-output">Simulation output</a></li>
-  <li><a href="#runing-simulations" id="toc-runing-simulations" class="nav-link" data-scroll-target="#runing-simulations">Runing simulations</a>
+  <li><a href="#running-simulations" id="toc-running-simulations" class="nav-link" data-scroll-target="#running-simulations">Running simulations</a>
   <ul class="collapse">
   <li><a href="#definition-of-the-simulation-domain" id="toc-definition-of-the-simulation-domain" class="nav-link" data-scroll-target="#definition-of-the-simulation-domain">Definition of the simulation domain</a></li>
   <li><a href="#setting-configuration-parameters" id="toc-setting-configuration-parameters" class="nav-link" data-scroll-target="#setting-configuration-parameters">Setting configuration parameters</a></li>
@@ -387,28 +387,28 @@ Warning
 <td style="text-align: left;">Current cell state. 0 means inactive and 2 means active.</td>
 </tr>
 <tr class="even">
+<td style="text-align: left;"><code>AP</code></td>
+<td style="text-align: left;">Action potential.</td>
+</tr>
+<tr class="odd">
 <td style="text-align: left;"><code>APD</code></td>
 <td style="text-align: left;">Action potential duration.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;"><code>DI</code></td>
 <td style="text-align: left;">Diastolic inverval.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;"><code>LastDI</code></td>
 <td style="text-align: left;">Last diastolic interval used in the computation of the APD.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;"><code>CV</code></td>
 <td style="text-align: left;">Conduction velocity.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;"><code>LAT</code></td>
 <td style="text-align: left;">Local activation time.</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><code>LifeTime</code></td>
-<td style="text-align: left;">Cumulative time since last activation.</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;"><code>Beat</code></td>
@@ -416,10 +416,10 @@ Warning
 </tr>
 </tbody>
 </table>
-<p>The output cadence is controlled by <code>VTK_OUTPUT_PERIOD</code>, and it can be enabled/disabled via <code>VTK_OUTPUT_SAVE</code>.</p>
+<p>The output frequency is controlled by <code>VTK_OUTPUT_PERIOD</code>, and it can be enabled/disabled via <code>VTK_OUTPUT_SAVE</code>.</p>
 </section>
-<section id="runing-simulations" class="level1">
-<h1>Runing simulations</h1>
+<section id="running-simulations" class="level1">
+<h1>Running simulations</h1>
 <p>Once we have an overall idea of how Arritmic3D works, we present a more detailed explanation of how to run simulations. To simulate a case using <code>arritmic3d</code>, you need:</p>
 <ul>
 <li>A VTK file containing a <code>RectilinearGrid</code> with at least the required <strong>point data</strong> field <code>restitution_model</code>.</li>
@@ -492,7 +492,7 @@ Warning
 <h1>The configuration file</h1>
 <p>The configuration file is a JSON file with the following parameters:</p>
 <table class="caption-top table">
-<caption>Model configuration</caption>
+<caption>Model / model file configuration</caption>
 <colgroup>
 <col style="width: 23%">
 <col style="width: 76%">
@@ -511,6 +511,14 @@ Warning
 <tr class="even">
 <td style="text-align: left;"><code>APD_MODEL_CONFIG_PATH</code></td>
 <td style="text-align: left;">Path to the <code>csv</code> configuration file of the action potential duration models.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>CV_MODEL</code></td>
+<td style="text-align: left;">Name of the CV model to use. Use this instead of the path to use library models.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>APD_MODEL</code></td>
+<td style="text-align: left;">Name of the APD model to use. Use this instead of the path to use library models.</td>
 </tr>
 </tbody>
 </table>

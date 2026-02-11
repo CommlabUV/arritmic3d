@@ -9,7 +9,7 @@ CoMMLab
   - [Inspection of the test case](#inspection-of-the-test-case)
   - [Running existing cases](#running-existing-cases)
 - [Simulation output](#simulation-output)
-- [Runing simulations](#runing-simulations)
+- [Running simulations](#running-simulations)
   - [Definition of the simulation
     domain](#definition-of-the-simulation-domain)
   - [Setting configuration
@@ -310,21 +310,21 @@ the pattern:
 
 Each VTK contains the following point data fields:
 
-| Field      | Description                                                 |
-|:-----------|:------------------------------------------------------------|
-| `State`    | Current cell state. 0 means inactive and 2 means active.    |
-| `APD`      | Action potential duration.                                  |
-| `DI`       | Diastolic inverval.                                         |
-| `LastDI`   | Last diastolic interval used in the computation of the APD. |
-| `CV`       | Conduction velocity.                                        |
-| `LAT`      | Local activation time.                                      |
-| `LifeTime` | Cumulative time since last activation.                      |
-| `Beat`     | Beat counter per cell                                       |
+| Field    | Description                                                 |
+|:---------|:------------------------------------------------------------|
+| `State`  | Current cell state. 0 means inactive and 2 means active.    |
+| `AP`     | Action potential.                                           |
+| `APD`    | Action potential duration.                                  |
+| `DI`     | Diastolic inverval.                                         |
+| `LastDI` | Last diastolic interval used in the computation of the APD. |
+| `CV`     | Conduction velocity.                                        |
+| `LAT`    | Local activation time.                                      |
+| `Beat`   | Beat counter per cell                                       |
 
-The output cadence is controlled by `VTK_OUTPUT_PERIOD`, and it can be
+The output frequency is controlled by `VTK_OUTPUT_PERIOD`, and it can be
 enabled/disabled via `VTK_OUTPUT_SAVE`.
 
-# Runing simulations
+# Running simulations
 
 Once we have an overall idea of how Arritmic3D works, we present a more
 detailed explanation of how to run simulations. To simulate a case using
@@ -473,8 +473,10 @@ The configuration file is a JSON file with the following parameters:
 |:---|:---|
 | `CV_MODEL_CONFIG_PATH` | Path to the `csv` configuration file of the conduction velocities models. |
 | `APD_MODEL_CONFIG_PATH` | Path to the `csv` configuration file of the action potential duration models. |
+| `CV_MODEL` | Name of the CV model to use. Use this instead of the path to use library models. |
+| `APD_MODEL` | Name of the APD model to use. Use this instead of the path to use library models. |
 
-Model configuration
+Model / model file configuration
 
 | Field | Description |
 |:---|:---|
