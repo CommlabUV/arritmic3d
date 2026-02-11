@@ -36,7 +36,7 @@ PYBIND11_MODULE(_core, m) {
         .def("GetDI", &CardiacTissue<T_AP, T_CV>::GetDI)
         .def("GetLastDI", &CardiacTissue<T_AP, T_CV>::GetLastDI)
         .def("GetLAT", &CardiacTissue<T_AP, T_CV>::GetLAT)
-        .def("GetLT", &CardiacTissue<T_AP, T_CV>::GetLT)
+        .def("GetLife", &CardiacTissue<T_AP, T_CV>::GetLife)
         .def("GetBeat", &CardiacTissue<T_AP, T_CV>::GetBeat)
         .def("GetAPDVariation", &CardiacTissue<T_AP, T_CV>::GetAPDVariation)
         .def("GetIndex", &CardiacTissue<T_AP, T_CV>::GetIndex)

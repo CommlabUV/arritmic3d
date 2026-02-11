@@ -67,7 +67,7 @@ public:
     vector<float> GetDI() const;
     vector<float> GetLastDI() const;
     vector<float> GetLAT() const;
-    vector<float> GetLT() const;
+    vector<float> GetLife() const;
     vector<int> GetBeat() const;
     vector<float> GetAPDVariation() const;
     /** Get the current time of the tissue */
@@ -415,15 +415,18 @@ vector<float> BasicTissue<APM,CVM>::GetLAT() const
 }
 
 /**
- * Get the LT (life time) of the tissue nodes.
- * @return Vector of life times of the tissue nodes.
+ * Get the Life (life time) of the tissue nodes.
+ * Life is a value between 0 and 1 that indicates how long the cell
+ * has been active, normalized by its APD.
+ * It is 0 if the cell is inactive and 1 if the cell has been active for a time equal to its APD.
+ * @return Vector of life values of the tissue nodes.
  */
 template <typename APM,typename CVM>
-vector<float> BasicTissue<APM,CVM>::GetLT() const
+vector<float> BasicTissue<APM,CVM>::GetLife() const
 {
     vector<float> lt(tissue_nodes.size());
     for(size_t i = 0; i < tissue_nodes.size(); i++)
-        lt[i] = GetTime() - tissue_nodes[i].apd_model.getActivationTime();
+        lt[i] = tissue_nodes[i].apd_model.getLife(GetTime());
     return lt;
 }
 

@@ -210,6 +210,28 @@ public:
     };
 
     /**
+     * @brief Get the normalized life time of the action potential.
+     *
+     * LT is a value between 0 and 1 that indicates how long the cell
+     * has been active, normalized by its APD.
+     *
+     * @return The normalized life time of the action potential. It
+     * is 0 if the cell is inactive and 1 if the cell has been
+     * active for a time equal to its APD.
+     */
+    float getLife(float t) const
+    {
+        if(this->apd <= 0.0)
+            return 0.0;
+        if(t < this->ta)
+            return 0.0;
+        else if(t >= this->ta + this->apd)
+            return 1.0;
+        else
+            return (t - this->ta) / this->apd;
+    };
+
+    /**
      * @brief Get the variation in APD due to restitution models (without electrotonic effect).
      *
      * @return The variation in APD.
