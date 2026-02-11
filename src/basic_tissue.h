@@ -63,6 +63,7 @@ public:
     void ChangeParameters(vector<NodeParameters> & parameters_);
     vector<int> GetStates() const;
     vector<float> GetAPD() const;
+    vector<float> GetAP() const;
     vector<float> GetCV() const;
     vector<float> GetDI() const;
     vector<float> GetLastDI() const;
@@ -360,6 +361,19 @@ vector<float> BasicTissue<APM,CVM>::GetAPD() const
     for(size_t i = 0; i < tissue_nodes.size(); i++)
         apd[i] = tissue_nodes[i].apd_model.getAPD();
     return apd;
+}
+
+/**
+ * Get the AP of the tissue nodes.
+ * @return Vector of AP of the tissue nodes.
+ */
+template <typename APM,typename CVM>
+vector<float> BasicTissue<APM,CVM>::GetAP() const
+{
+    vector<float> ap(tissue_nodes.size());
+    for(size_t i = 0; i < tissue_nodes.size(); i++)
+        ap[i] = tissue_nodes[i].apd_model.getActionPotential(GetTime());
+    return ap;
 }
 
 /**

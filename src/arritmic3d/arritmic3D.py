@@ -125,11 +125,10 @@ def run_simulation(case_dir, cfg):
             # Update the cell states
             grid.point_data['State'] = tissue.GetStates()
             grid.point_data['APD'] = tissue.GetAPD()
-            grid.point_data['DI'] = tissue.GetDI()
-            grid.point_data['LastDI'] = tissue.GetLastDI()
+            grid.point_data['DI'] = tissue.GetLastDI()
             grid.point_data['CV'] = tissue.GetCV()
+            grid.point_data['AP'] = tissue.GetAP()
             grid.point_data['LAT'] = tissue.GetLAT()
-            grid.point_data['LifeTime'] = tissue.GetLT()
             grid.point_data['Beat'] = tissue.GetBeat()
 
 

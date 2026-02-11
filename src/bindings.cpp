@@ -32,6 +32,7 @@ PYBIND11_MODULE(_core, m) {
         //.def("Reset", &CardiacTissue<T_AP, T_CV>::Reset)
         .def("GetStates", &CardiacTissue<T_AP, T_CV>::GetStates)
         .def("GetAPD", &CardiacTissue<T_AP, T_CV>::GetAPD)
+        .def("GetAP", &CardiacTissue<T_AP, T_CV>::GetAP)
         .def("GetCV", &CardiacTissue<T_AP, T_CV>::GetCV)
         .def("GetDI", &CardiacTissue<T_AP, T_CV>::GetDI)
         .def("GetLastDI", &CardiacTissue<T_AP, T_CV>::GetLastDI)

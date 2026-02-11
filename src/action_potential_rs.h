@@ -142,6 +142,56 @@ public:
     };
 
     /**
+     * @brief Simple polynomial approximation of a Ventricular Cardiomyocyte Action Potential.
+     *
+     * Optimized for high-performance simulations (no tanh, exp, or pow).
+     *
+     * @param t Time normalized to the APD (0 to 1).
+     * @return The action potential at time t, in mV.
+     */
+    double pseudoAP(double t) const
+    {
+        // Clamp t to [0, 1] range to prevent out-of-bounds behavior
+        if (t < 0.0) t = 0.0;
+        if (t > 1.0) t = 1.0;
+
+        double apRange = this->peak_potential - this->resting_potential;
+        double yNorm = 0.0;
+
+        if (t < 0.01)
+        {
+            // PHASE 0: Fast Depolarization (Na+ influx)
+            // Rapid linear upstroke
+            yNorm = t / 0.01;
+        }
+        else if (t < 0.06)
+        {
+            // PHASE 1: Early Repolarization (Notch / Ito current)
+            // Linear drop from peak to plateau level
+            double tn = (t - 0.01) / 0.05;
+            yNorm = 1.0 - 0.2 * tn;
+        }
+        else if (t < 0.65)
+        {
+            // PHASE 2: Plateau (Balance of Ca2+ influx and K+ efflux)
+            // Nearly flat with a slight negative slope
+            double tn = (t - 0.06) / 0.59;
+            yNorm = 0.8 - (0.02 * tn);
+        }
+        else
+        {
+            // PHASE 3: Final Repolarization (K+ efflux - Ikr/Iks)
+            // We use a cubic term (tn*tn*tn) to create the characteristic curve
+            // without the cost of transcendental functions.
+            double tn = (t - 0.65) / 0.35;
+            double tn3 = tn * tn * tn;
+            yNorm = 0.78 * (1.0 - tn3);
+        }
+
+        return this->resting_potential + (apRange * yNorm);
+    }
+
+    /**
      * @brief Get the action potential at a given time.
      *
      * @param t_ Time.
@@ -149,10 +199,7 @@ public:
      */
     float getActionPotential(float t_) const
     {
-        if(t_ < this->ta || t_ > this->ta + this->apd)
-            return this->resting_potential;
-        else
-            return this->peak_potential;
+        return pseudoAP( getLife(t_) );
     };
 
     /**
