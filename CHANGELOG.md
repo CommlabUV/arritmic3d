@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Added getter for AP in the C++ tissue class and exposed it in the Python bindings and examples.
 - Example case made more meaningful.
 - Changed module name to arritmic3d and imported as a3d.
 
