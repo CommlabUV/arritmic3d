@@ -478,8 +478,8 @@ def run_test_case(output_dir):
     # Prepare minimal config for S1-S2 protocol
     config = make_default_config()
     config["VTK_INPUT_FILE"] = slab_vtk
-    config["APD_MODEL"] = "TenTuscher_APD"
-    config["CV_MODEL"] = "TenTuscher_CV"
+    config["APD_MODEL"] = "TenTuscher"
+    config["CV_MODEL"] = "TenTuscher"
     config["SIMULATION_DURATION"] = 5000
     config["VTK_OUTPUT_PERIOD"] = 5
     config["PROTOCOL"] = [
