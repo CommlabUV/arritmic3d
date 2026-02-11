@@ -205,18 +205,18 @@ Each VTK contains the following point data fields:
 |   Field    |                         Description                         |
 |:-----------|:------------------------------------------------------------|
 |  `State`   |  Current cell state. 0 means inactive and 2 means active.   |
+|   `AP`     |  Action potential.   |
 |   `APD`    |                 Action potential duration.                  |
 |    `DI`    |                     Diastolic inverval.                     |
 |  `LastDI`  | Last diastolic interval used in the computation of the APD. |
 |    `CV`    |                    Conduction velocity.                     |
 |   `LAT`    |                   Local activation time.                    |
-| `LifeTime` |           Cumulative time since last activation.            |
 |   `Beat`   |                    Beat counter per cell                    |
 
-The output cadence is controlled by `VTK_OUTPUT_PERIOD`, and it can be enabled/disabled via `VTK_OUTPUT_SAVE`.
+The output frequency is controlled by `VTK_OUTPUT_PERIOD`, and it can be enabled/disabled via `VTK_OUTPUT_SAVE`.
 
 
-# Runing simulations
+# Running simulations
 
 Once we have an overall idea of how Arritmic3D works, we present a more detailed explanation of how to run simulations. To simulate a case using `arritmic3d`, you need:
 
