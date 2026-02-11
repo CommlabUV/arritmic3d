@@ -18,6 +18,7 @@ Steps performed:
 
 from arritmic3d import load_case_config
 
+
 def visualize_case(case_dir, time_ms, field = "State"):
     """
     Loads results from a simulation case and displays them in a 2D window using Matplotlib.
@@ -129,6 +130,65 @@ def visualize_case(case_dir, time_ms, field = "State"):
 
     return fig, axes
 
+def visualize_single_field(case_dir, time_ms, field="State"):
+    """
+    Displays a single 2D image of the specified field for the given case and time.
+    Uses Matplotlib to show the result.
+    """
+    import matplotlib.pyplot as plt
+    import pyvista as pv
+    import numpy as np
+    import os
+
+    # Load input file
+    path_input = os.path.join(case_dir, "input_data", "slab.vtk")
+    if not os.path.exists(path_input):
+        print(f"Error: Input file {path_input} not found.")
+        return
+    grid_input = pv.read(path_input)
+
+    # Load output file for the requested time
+    path_output = os.path.join(case_dir, f"slab_{time_ms:05d}.vtk")
+    if not os.path.exists(path_output):
+        print(f"Error: Output file {path_output} not found.")
+        return
+    grid_output = pv.read(path_output)
+
+    # Extract dimensions
+    dims = grid_input.dimensions
+    nx, ny, nz = dims
+
+    def get_slice(grid, mesh_field):
+        data = grid.point_data[mesh_field]
+        if len(data.shape) == 1:
+            reshaped = data.reshape((nx, ny, nz), order="F")
+            slice_2d = reshaped[:, :, nz // 2]
+            return slice_2d.T
+        else:
+            n_comp = data.shape[1]
+            reshaped = data.reshape((nx, ny, nz, n_comp), order="F")
+            slice_2d = reshaped[:, :, nz // 2, :]
+            return np.transpose(slice_2d, (1, 0, 2))
+
+    # Mask for tissue (restitution_model > 0)
+    restitution_full_slice = get_slice(grid_input, "restitution_model")
+    mask = restitution_full_slice > 0.5
+
+    # Get the field to display
+    field_data = get_slice(grid_output, field)
+
+    # Apply mask: non-tissue areas to NaN
+    masked_data = np.where(mask, field_data, np.nan)
+
+    plt.figure(figsize=(8, 6))
+    im = plt.imshow(masked_data, origin='lower', cmap="coolwarm", interpolation='bilinear')
+    plt.title(f"{field} - {time_ms} ms")
+    plt.colorbar(im)
+    plt.tight_layout()
+    plt.show()
+
+    return im
+
 
 def render_anim():
     """
@@ -188,6 +248,7 @@ print("Simulation completed successfully!")
 # We use our new Matplotlib-based function to visualize the result
 # This works in Google Colab without needing an interactive 3D window.
 visualize_case(case_dir, 120, field="AP")
+visualize_single_field(case_dir, 120, field="AP")  # Show just the AP field at 120 ms
 render_anim()  # This will create an animation of the simulation results over time
 
 # --- STEP 4: Re-run Case ---
