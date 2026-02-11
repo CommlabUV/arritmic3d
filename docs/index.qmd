@@ -306,8 +306,10 @@ The configuration file is a JSON file with the following parameters:
 |:-----------------------|:------------------------------------------------------------------------------|
 | `CV_MODEL_CONFIG_PATH` | Path to the `csv` configuration file of the conduction velocities models.     |
 | `APD_MODEL_CONFIG_PATH` | Path to the `csv` configuration file of the action potential duration models. |
+| `CV_MODEL`             | Name of the CV model to use. Use this instead of the path to use library models. |
+| `APD_MODEL`             | Name of the APD model to use. Use this instead of the path to use library models. |
 
-: Model configuration
+: Model / model file configuration
 
 
 | Field                              | Description                                            |
