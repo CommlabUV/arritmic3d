@@ -187,6 +187,13 @@ public:
         return event - &events[0];
     }
 
+    CellEvent* GetEventPtr(size_t index)
+    {
+        if(index >= events.size())
+            return nullptr;
+        return &events[index];
+    }
+
     /**
      * @brief Update the priority of an event in the queue
      *

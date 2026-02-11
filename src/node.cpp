@@ -355,4 +355,60 @@ void NodeT<APD, CVM>::SaveState(std::ofstream & f, const class ParametersPool & 
     f.write( (char *) &next_deact_index, sizeof(size_t) );
 }
 
+template <typename APD, typename CVM>
+void NodeT<APD, CVM>::LoadState(std::ifstream & f, ParametersPool & parameters_pool, CellEventQueue<NodeT> & event_queue)
+{
+    int version;
+    f.read( (char *) &version, sizeof(int) );
+    if(version != SAVE_VERSION)
+        throw std::runtime_error("NodeT::LoadState: Wrong file version.");
+
+    // Load id
+    f.read( (char *) &id, sizeof(id) );
+    // Load type
+    f.read( (char *) &type, sizeof(CellType) );
+    // Load external activation flag
+    f.read( (char *) &external_activation, sizeof(external_activation) );
+
+    // Get the pointer to the parameters
+    size_t param_index;
+    f.read( (char *) &param_index, sizeof(size_t) );
+    if(param_index != std::numeric_limits<size_t>::max())
+        parameters = parameters_pool.GetParamPtr(param_index);
+    else
+        parameters = nullptr;
+
+    // Load activation data
+    f.read( (char *) &beat, sizeof(beat) );
+    f.read( (char *) &conduction_vel, sizeof(conduction_vel) );
+
+    f.read( (char *) &local_activation_time, sizeof(local_activation_time) );
+    f.read( (char *) &kapd_v, sizeof(kapd_v) );
+    f.read( (char *) &received_potential, sizeof(received_potential) );
+    f.read( (char *) &next_activation_time, sizeof(next_activation_time) );
+    f.read( (char *) &next_deactivation_time, sizeof(next_deactivation_time) );
+
+    // Load APD model state
+    apd_model.LoadState(f, type);
+
+    // Load CV model state
+    cv_model.LoadState(f, type);
+
+    // Load next activation event state
+    size_t next_act_index;
+    f.read( (char *) &next_act_index, sizeof(size_t) );
+    if(next_act_index != std::numeric_limits<size_t>::max())
+        next_activation_event = event_queue.GetEventPtr(next_act_index);
+    else
+        next_activation_event = nullptr;
+
+    // Load next deactivation event state
+    size_t next_deact_index;
+    f.read( (char *) &next_deact_index, sizeof(size_t) );
+    if(next_deact_index != std::numeric_limits<size_t>::max())
+        next_deactivation_event = event_queue.GetEventPtr(next_deact_index);
+    else
+        next_deactivation_event = nullptr;
+}
+
 

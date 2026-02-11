@@ -236,8 +236,6 @@ public:
         f.read( (char *) &pool[0], sizeof(NodeParameters) * n_params );
     }
 
-    const std::vector<NodeParameters>& get_pool() const { return pool; }
-
     /**
      * @brief Get the index of a NodeParameters in the pool.
      * @param ptr Pointer to the NodeParameters in the pool.
@@ -247,6 +245,17 @@ public:
     {
         assert(ptr != nullptr);
         return ptr - &pool[0];
+    }
+
+    /**
+     * @brief Get a pointer to a NodeParameters in the pool.
+     * @param index Index of the NodeParameters in the pool.
+     * @return Pointer to the NodeParameters in the pool.
+     */
+    NodeParameters * GetParamPtr(size_t index)
+    {
+        assert(index < pool.size());
+        return &pool[index];
     }
 
 private:
