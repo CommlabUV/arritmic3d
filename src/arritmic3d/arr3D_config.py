@@ -23,9 +23,13 @@ def check_directory(output_dir):
         return config_file
     return None
 
-def _resolve_model_name_to_pkg_path(model_name, package='arritmic3d.restitutionModels'):
+def _resolve_model_name_to_pkg_path(model_name, variable):
     """Resolve a model name (e.g. 'TorOrd_CV') to an installed package resource path
     'config_<name>.csv' inside the given package. Returns absolute path or None.
+
+    Parameters:
+    - model_name: str, the name of the model (e.g. 'TorOrd', 'TenTusscher',...)
+    - variable: str, either 'CV' or 'APD', used to construct the expected resource name.
     """
     if not isinstance(model_name, str):
         return None
@@ -39,7 +43,8 @@ def _resolve_model_name_to_pkg_path(model_name, package='arritmic3d.restitutionM
     if os.path.sep in name or '/' in name:
         return None
 
-    resource = f'config_{name}.csv'
+    resource = f'config_{name}_{variable}.csv'
+    package='arritmic3d.restitutionModels'
     try:
         with resources.path(package, resource) as p:
             return str(p)
@@ -47,7 +52,7 @@ def _resolve_model_name_to_pkg_path(model_name, package='arritmic3d.restitutionM
         # resource not found in package
         return None
 
-def resolve_models_in_parameters(parameters, package='arritmic3d.restitutionModels'):
+def resolve_models_in_parameters(parameters):
     """If parameters contain 'CV_MODEL' or 'APD_MODEL' (model names), set the corresponding
     '<...>_CONFIG_PATH' entries to the package resource absolute path when available.
     Does not overwrite existing *_CONFIG_PATH keys.
@@ -59,19 +64,19 @@ def resolve_models_in_parameters(parameters, package='arritmic3d.restitutionMode
 
     cv_name = parameters.get('CV_MODEL')
     if cv_name and 'CV_MODEL_CONFIG_PATH' not in parameters:
-        p = _resolve_model_name_to_pkg_path(cv_name, package=package)
+        p = _resolve_model_name_to_pkg_path(cv_name,variable='CV')
         if p:
             parameters['CV_MODEL_CONFIG_PATH'] = p
         else:
-            raise FileNotFoundError(f"CV_MODEL '{cv_name}' not found in package '{package}'.")
+            raise FileNotFoundError(f"CV_MODEL '{cv_name}' not found in arritmic3d library.")
 
     apd_name = parameters.get('APD_MODEL')
     if apd_name and 'APD_MODEL_CONFIG_PATH' not in parameters:
-        p = _resolve_model_name_to_pkg_path(apd_name, package=package)
+        p = _resolve_model_name_to_pkg_path(apd_name,variable='APD')
         if p:
             parameters['APD_MODEL_CONFIG_PATH'] = p
         else:
-            raise FileNotFoundError(f"APD_MODEL '{apd_name}' not found in package '{package}'.")
+            raise FileNotFoundError(f"APD_MODEL '{apd_name}' not found in arritmic3d library.")
 
     # Remove label keys only if the corresponding *_CONFIG_PATH exists
     if 'CV_MODEL_CONFIG_PATH' in parameters and 'CV_MODEL' in parameters:
@@ -81,7 +86,7 @@ def resolve_models_in_parameters(parameters, package='arritmic3d.restitutionMode
 
     return parameters
 
-def load_config_file(config_file, resolve_to_absolute=True, path_keys=["VTK_INPUT_FILE", "APD_MODEL_CONFIG_PATH", "CV_MODEL_CONFIG_PATH"], module_models_package='arritmic3d.restitutionModels'):
+def load_config_file(config_file, resolve_to_absolute=True):
     """
     Load configuration from JSON file.
     If resolve_to_absolute=True, convert relative paths to absolute paths (relative to the JSON file location).
@@ -97,10 +102,11 @@ def load_config_file(config_file, resolve_to_absolute=True, path_keys=["VTK_INPU
         print(f"Configuration file {config_file} not found. Using default parameters.")
 
     # Resolve model names to package paths if provided
-    resolve_models_in_parameters(parameters, package=module_models_package)
+    resolve_models_in_parameters(parameters)
 
     if resolve_to_absolute and config_file:
         base_dir = os.path.dirname(os.path.abspath(config_file))
+        path_keys = ["VTK_INPUT_FILE", "APD_MODEL_CONFIG_PATH", "CV_MODEL_CONFIG_PATH"]
         for key in path_keys:
             if key in parameters and isinstance(parameters[key], str):
                 val = parameters[key]
