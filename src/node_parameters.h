@@ -194,7 +194,7 @@ public:
         info += "Pool size: " + std::to_string(pool.size()) + " Size of NodeParameters struct: " + std::to_string(sizeof(NodeParameters)) + "\n";
         for(auto & p : pool)
         {
-            info += " APD: " + std::to_string(p.initial_apd) + "\n";
+            info += " APD: " + std::to_string(p.initial_apd) + " Isotropic: " + std::to_string(p.isotropic_diffusion) + "\n";
         }
         return info;
     }
