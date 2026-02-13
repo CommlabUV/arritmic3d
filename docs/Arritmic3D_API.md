@@ -46,6 +46,16 @@ Initialize the models for the APD and CV update. ** Should be called before Init
 ## `ChangeParameters(parameters_)`
 Change the parameters of the tissue nodes. Simulation can continue normally.
 
+## `SaveState(binaryFile)`
+Save the state of simulation. It stores the state of all nodes and the event queue, so simulation can continue at this exact moment in a different program.
+
+> binaryFile : Name of the binary file where the state will be stored
+
+## `LoadState(binaryFile)`
+Load the state of a simulation. Size and spacing of the grid should be exactly the same as the stored simulation. InitModels should be called before calling LoadState. InitPy should ** not ** be called.
+
+> binaryFile : Name of the binary file
+
 ## `size()`
 
 Get the number of nodes in the tissue
