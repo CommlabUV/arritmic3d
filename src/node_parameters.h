@@ -194,7 +194,7 @@ public:
         info += "Pool size: " + std::to_string(pool.size()) + " Size of NodeParameters struct: " + std::to_string(sizeof(NodeParameters)) + "\n";
         for(auto & p : pool)
         {
-            info += " APD: " + std::to_string(p.initial_apd) + "\n";
+            info += " APD: " + std::to_string(p.initial_apd) + " Isotropic: " + std::to_string(p.isotropic_diffusion) + "\n";
         }
         return info;
     }
@@ -236,7 +236,27 @@ public:
         f.read( (char *) &pool[0], sizeof(NodeParameters) * n_params );
     }
 
-    const std::vector<NodeParameters>& get_pool() const { return pool; }
+    /**
+     * @brief Get the index of a NodeParameters in the pool.
+     * @param ptr Pointer to the NodeParameters in the pool.
+     * @return Index of the NodeParameters in the pool.
+     */
+    size_t GetIndex(const NodeParameters * ptr) const
+    {
+        assert(ptr != nullptr);
+        return ptr - &pool[0];
+    }
+
+    /**
+     * @brief Get a pointer to a NodeParameters in the pool.
+     * @param index Index of the NodeParameters in the pool.
+     * @return Pointer to the NodeParameters in the pool.
+     */
+    NodeParameters * GetParamPtr(size_t index)
+    {
+        assert(index < pool.size());
+        return &pool[index];
+    }
 
 private:
     std::vector<NodeParameters> pool;

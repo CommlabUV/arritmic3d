@@ -42,10 +42,11 @@ public:
      *
      * @param type Cell type.
      * @param corrfc_ Correction factor for restitution models.
+     * @param cv_ Initial conduction velocity.
      */
-    ConductionVelocity(CellType type, float corrfc_ = 1.0)
+    ConductionVelocity(CellType type, float corrfc_ = 1.0, float cv_ = INITIAL_CV)
     {
-        Init(type, corrfc_);
+        Init(type, corrfc_, cv_);
     };
 
 
@@ -59,12 +60,13 @@ public:
      *
      * @param type Cell type.
      * @param corrfc_ Correction factor for restitution models.
+     * @param cv_ Initial conduction velocity.
      */
-    void Init(CellType type, float corrfc_ = 1.0)
+    void Init(CellType type, float corrfc_ = 1.0, float cv_ = INITIAL_CV)
     {
         SetRestitutionModel(type);
         this->correction_factor = corrfc_;
-        this->cv = INITIAL_CV;
+        this->cv = cv_;
     };
 
     /**
@@ -112,6 +114,28 @@ public:
     {
         return this->cv;
     };
+
+    /**
+     * Save the state of the model to a file.
+     * The correct restitution model will be set when loading according to the cell type.
+     */
+    void SaveState(std::ofstream & f) const
+    {
+        f.write( (char *) &cv, sizeof(float) );
+        f.write( (char *) &correction_factor, sizeof(float) );
+    }
+
+    /**
+     * Load the state of the model from a file.
+     * The correct restitution model will be set according to the cell type.
+     */
+    void LoadState(std::ifstream & f, CellType type)
+    {
+        f.read( (char *) &cv, sizeof(float) );
+        f.read( (char *) &correction_factor, sizeof(float) );
+
+        SetRestitutionModel(type);
+    }
 
 private:
 

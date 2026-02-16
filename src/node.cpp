@@ -310,6 +310,14 @@ void NodeT<APD, CVM>::SaveState(std::ofstream & f, const class ParametersPool & 
 {
     f.write( (char *) &SAVE_VERSION, sizeof(int) );
 
+    // Save parameters index in the pool
+    size_t param_index = std::numeric_limits<size_t>::max();
+    if(parameters != nullptr)
+    {
+        param_index = parameters_pool.GetIndex(parameters);
+    }
+    f.write( (char *) &param_index, sizeof(size_t) );
+
     // Save id
     f.write( (char *) &id, sizeof(id) );
     // Save type
@@ -317,17 +325,11 @@ void NodeT<APD, CVM>::SaveState(std::ofstream & f, const class ParametersPool & 
     // Save external activation flag
     f.write( (char *) &external_activation, sizeof(external_activation) );
 
-    // Save parameters index in the pool
-    size_t param_index = std::numeric_limits<size_t>::max();
-    if(parameters != nullptr)
-    {
-        param_index = parameters - & (parameters_pool.get_pool()[0]);
-    }
-    f.write( (char *) &param_index, sizeof(size_t) );
-
     // Save activation data
+    f.write( (char *) &blocked, sizeof(blocked) );
     f.write( (char *) &beat, sizeof(beat) );
     f.write( (char *) &conduction_vel, sizeof(conduction_vel) );
+    f.write( (char *) &orientation, sizeof(orientation) );
 
     f.write( (char *) &local_activation_time, sizeof(local_activation_time) );
     f.write( (char *) &kapd_v, sizeof(kapd_v) );
@@ -341,18 +343,90 @@ void NodeT<APD, CVM>::SaveState(std::ofstream & f, const class ParametersPool & 
     // Save CV model state
     cv_model.SaveState(f);
 
-    // Save events. It is possible to know the index directly, but this way is safer and prepared for possible changes.
+    // Save events. It is possible to know the index directly from node position, but this way is safer and prepared for possible changes.
     // Save next activation event state
     size_t next_act_index = std::numeric_limits<size_t>::max();
     if(next_activation_event != nullptr)
-        next_act_index = next_activation_event - & (event_queue.events[0]);
-    f.write( (char *) &next_act_index, sizeof(size_t) );
+        next_act_index = event_queue.GetIndex(next_activation_event);
+    f.write( (char *) &next_act_index, sizeof(next_act_index) );
 
     // Save next deactivation event state
     size_t next_deact_index = std::numeric_limits<size_t>::max();
     if(next_deactivation_event != nullptr)
-        next_deact_index = next_deactivation_event - & (event_queue.events[0]);
-    f.write( (char *) &next_deact_index, sizeof(size_t) );
+        next_deact_index = event_queue.GetIndex(next_deactivation_event);
+    f.write( (char *) &next_deact_index, sizeof(next_deact_index) );
+
+    // Save activation parent
+    size_t act_parent_index = std::numeric_limits<size_t>::max();
+    if(activation_parent != nullptr)
+        act_parent_index = activation_parent->id;
+    f.write( (char *) &act_parent_index, sizeof(act_parent_index) );
+}
+
+template <typename APD, typename CVM>
+void NodeT<APD, CVM>::LoadState(std::ifstream & f, ParametersPool & parameters_pool, CellEventQueue<NodeT> & event_queue, BasicTissue<APD, CVM> & tissue)
+{
+    int version;
+    f.read( (char *) &version, sizeof(int) );
+    if(version != SAVE_VERSION)
+        throw std::runtime_error("NodeT::LoadState: Wrong file version.");
+
+    // Get the pointer to the parameters
+    size_t param_index;
+    f.read( (char *) &param_index, sizeof(size_t) );
+    if(param_index != std::numeric_limits<size_t>::max())
+        parameters = parameters_pool.GetParamPtr(param_index);
+    else
+        parameters = nullptr;
+
+    // Load id
+    f.read( (char *) &id, sizeof(id) );
+    // Load type
+    f.read( (char *) &type, sizeof(CellType) );
+    // Load external activation flag
+    f.read( (char *) &external_activation, sizeof(external_activation) );
+
+    // Load activation data
+    f.read( (char *) &blocked, sizeof(blocked) );
+    f.read( (char *) &beat, sizeof(beat) );
+    f.read( (char *) &conduction_vel, sizeof(conduction_vel) );
+    f.read( (char *) &orientation, sizeof(orientation) );
+
+    f.read( (char *) &local_activation_time, sizeof(local_activation_time) );
+    f.read( (char *) &kapd_v, sizeof(kapd_v) );
+    f.read( (char *) &received_potential, sizeof(received_potential) );
+    f.read( (char *) &next_activation_time, sizeof(next_activation_time) );
+    f.read( (char *) &next_deactivation_time, sizeof(next_deactivation_time) );
+
+    // Load APD model state
+    apd_model.LoadState(f, type);
+
+    // Load CV model state
+    cv_model.LoadState(f, type);
+
+    // Load next activation event state
+    size_t next_act_index;
+    f.read( (char *) &next_act_index, sizeof(next_act_index) );
+    if(next_act_index != std::numeric_limits<size_t>::max())
+        next_activation_event = event_queue.GetEventPtr(next_act_index);
+    else
+        next_activation_event = nullptr;
+
+    // Load next deactivation event state
+    size_t next_deact_index;
+    f.read( (char *) &next_deact_index, sizeof(next_deact_index) );
+    if(next_deact_index != std::numeric_limits<size_t>::max())
+        next_deactivation_event = event_queue.GetEventPtr(next_deact_index);
+    else
+        next_deactivation_event = nullptr;
+
+    // Load activation parent
+    size_t act_parent_index;
+    f.read( (char *) &act_parent_index, sizeof(act_parent_index) );
+    if(act_parent_index != std::numeric_limits<size_t>::max())
+        activation_parent = tissue.GetNodePtr(act_parent_index);
+    else
+        activation_parent = nullptr;
 }
 
 

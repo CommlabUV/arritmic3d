@@ -40,6 +40,7 @@ public:
     enum class FiberOrientation {ISOTROPIC, HOMOGENEOUS, HETEROGENEOUS};
     constexpr static int SAVE_VERSION = 1;  ///< Version of the BasicTissue class for state saving/loading.
     using Node = NodeT<APM,CVM>;
+    friend class NodeT<APM,CVM>;
 
     BasicTissue(int size_x_, int size_y_, int size_z_, float dx_, float dy_, float dz_) :
         tissue_geometry(size_x_, size_y_, size_z_, dx_, dy_, dz_),
@@ -59,7 +60,7 @@ public:
 
     void Init(const vector<CellType> & cell_types_, vector<NodeParameters> & parameters_, const vector<Eigen::Vector3f> & fiber_orientation_ = {Eigen::Vector3f::Zero()});
     void InitPy(const vector<CellType> & cell_types_ , std::map<std::string, std::vector<float> > & parameters_, const std::vector<vector<float>> & fiber_orientation_);
-    void Reset();
+    //void Reset();
     void ChangeParameters(vector<NodeParameters> & parameters_);
     vector<int> GetStates() const;
     vector<float> GetAPD() const;
@@ -97,9 +98,9 @@ public:
     void SaveState(const std::string & filename) const;
     void LoadState(const std::string & filename);
 
-    void ShowSensorData() const
+    void ShowSensorData(std::ostream& os = std::cout) const
     {
-        sensor_dict.Show();
+        sensor_dict.Show(os);
     }
 
     /**
@@ -149,6 +150,16 @@ protected:
     std::array<float, int(SystemEventType::SIZE)> timer; ///< Timer for each of the different system events. 0 unused.
 
     SensorDict<typename Node::NodeData> sensor_dict;  ///< Dictionary to store sensor data
+
+    /**
+     * @brief Get the position of a node in the tissue_nodes vector
+     * Now corresponds with the id, but it may change in the future
+     */
+    Node* GetNodePtr(size_t id)
+    {
+        assert(id >= 0 && id < tissue_nodes.size());
+        return &tissue_nodes[id];
+    }
 };
 
 /**
@@ -586,6 +597,50 @@ void BasicTissue<APM,CVM>::SaveState(const std::string & filename) const
     for(const auto & node : tissue_nodes)
     {
         node.SaveState(state_file, parameters_pool, event_queue);
+    }
+
+    state_file.close();
+}
+
+template <typename APM,typename CVM>
+void BasicTissue<APM,CVM>::LoadState(const std::string & filename)
+{
+    std::ifstream state_file;
+    state_file.open(filename, std::ios::binary);
+    if(!state_file)
+    {
+        LOG::Error(true, "Could not open file " + filename + " for reading.");
+        return;
+    }
+
+    // Load version
+    int version;
+    state_file.read( (char*) (&version), sizeof(version) );
+    if(version != SAVE_VERSION)
+    {
+        LOG::Error(true, "Save version (", version, ") does not match current version (", SAVE_VERSION, ").");
+        return;
+    }
+
+    // Load tissue time
+    state_file.read( (char*) (&tissue_time), sizeof(tissue_time) );
+    // Load timer
+    state_file.read( (char*) (timer.data()), sizeof(float) * int(SystemEventType::SIZE) );
+    // Load number of live nodes
+    state_file.read( (char*) (&n_live_nodes), sizeof(n_live_nodes) );
+
+    // Load geometry
+    tissue_geometry.LoadState(state_file);
+    // Load parameters pool
+    parameters_pool.LoadState(state_file);
+    LOG::Info(debug_level > 0, parameters_pool.Info());
+    // Load event queue
+    event_queue.LoadState(state_file, tissue_nodes);
+
+    // Load each node
+    for(auto & node : tissue_nodes)
+    {
+        node.LoadState(state_file, parameters_pool, event_queue, *this);
     }
 
     state_file.close();

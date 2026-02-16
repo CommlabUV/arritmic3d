@@ -4,6 +4,7 @@
 
 #include <array>
 #include <Eigen/Dense>
+#include "error.h"
 
 // Define the maximum distance to consider neighbours. Can be set during compilation with -DNEIGHBOURS_DISTANCE=X
 #ifndef NEIGHBOURS_DISTANCE
@@ -22,7 +23,6 @@ constexpr size_t calculate_neighbours(size_t distance)
 
 /**
  * @brief Class to model the geometry of the tissue
- * @todo The ideal is to put this class inside the CardiacTissue class, but it is necessary to change first the Node class.
  */
 
 class Geometry
@@ -34,10 +34,10 @@ public:
     static constexpr int distance = NEIGHBOURS_DISTANCE;           // Maximun distance of the neighbours
     static constexpr size_t num_neighbours = calculate_neighbours(distance);  // Number of neighbours.
     static constexpr size_t num_axis = 6 * distance;  // Number of axis neighbours.
-    std::array<int, num_neighbours> displacement = NeighboursDisplace<num_neighbours>(distance);
-    std::array<Vector3, num_neighbours> relative_position = NeighboursRelativePos<num_neighbours>(distance);
-    std::array<float, num_neighbours> distance_to_neighbour = NeighboursDistance<num_neighbours>();
-    std::array<int, num_axis> displ_axis = DisplacementAxis<num_axis>(distance);
+    std::array<int, num_neighbours> displacement;
+    std::array<Vector3, num_neighbours> relative_position;
+    std::array<float, num_neighbours> distance_to_neighbour;
+    std::array<int, num_axis> displ_axis;
 
     Geometry()=default;
 
@@ -45,6 +45,10 @@ public:
         size_x(size_x_), size_y(size_y_), size_z(size_z_), dx(dx_), dy(dy_), dz(dz_)
     {
         origin = Vector3::Zero();
+        displacement = NeighboursDisplace<num_neighbours>(distance);
+        relative_position = NeighboursRelativePos<num_neighbours>(distance);
+        distance_to_neighbour = NeighboursDistance<num_neighbours>();
+        displ_axis = DisplacementAxis<num_axis>(distance);
     }
 
     /**
@@ -200,12 +204,21 @@ public:
 
     void LoadState(std::ifstream & f)
     {
-        f.read( (char*) (&size_x), sizeof(size_x) );
-        f.read( (char*) (&size_y), sizeof(size_y) );
-        f.read( (char*) (&size_z), sizeof(size_z) );
-        f.read( (char*) (&dx), sizeof(dx) );
-        f.read( (char*) (&dy), sizeof(dy) );
-        f.read( (char*) (&dz), sizeof(dz) );
+        // Just check sizes
+        int size;
+        f.read( (char*) (&size), sizeof(size) );
+        LOG::Error(size != size_x, "Geometry::LoadState: Wrong size_x in file.");
+        f.read( (char*) (&size), sizeof(size) );
+        LOG::Error(size != size_y, "Geometry::LoadState: Wrong size_y in file.");
+        f.read( (char*) (&size), sizeof(size) );
+        LOG::Error(size != size_z, "Geometry::LoadState: Wrong size_z in file.");
+        float d;
+        f.read( (char*) (&d), sizeof(d) );
+        LOG::Error(d != dx, "Geometry::LoadState: Wrong dx in file.");
+        f.read( (char*) (&d), sizeof(d) );
+        LOG::Error(d != dy, "Geometry::LoadState: Wrong dy in file.");
+        f.read( (char*) (&d), sizeof(d) );
+        LOG::Error(d != dz, "Geometry::LoadState: Wrong dz in file.");
         f.read( (char*) (origin.data()), sizeof(float)*3 );
     }
 

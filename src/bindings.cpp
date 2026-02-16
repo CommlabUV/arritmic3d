@@ -62,7 +62,11 @@ PYBIND11_MODULE(_core, m) {
         .def("GetAPDMeanVariation", &CardiacTissue<T_AP, T_CV>::GetAPDMeanVariation,
              "Get the mean APD variation due to restitution curves (without electrotonic effect) since the last call to ResetVariations")
         .def("ResetVariations", &CardiacTissue<T_AP, T_CV>::ResetVariations,
-             "Reset the accumulated APD and CV variations to zero");
+             "Reset the accumulated APD and CV variations to zero")
+        .def("SaveState", &CardiacTissue<T_AP, T_CV>::SaveState,
+             "Save the current state of the tissue to a binary file")
+        .def("LoadState", &CardiacTissue<T_AP, T_CV>::LoadState,
+             "Load the state of the tissue from a binary file");
 
 }
 

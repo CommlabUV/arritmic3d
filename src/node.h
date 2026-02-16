@@ -54,7 +54,8 @@ public:
     unsigned int GetId() const { return id; }
     CellActivationState GetState(float current_time_) const;
     int GetBeat() const { return beat; }
-    void SaveState(std::ofstream & f, const class ParametersPool & parameters_pool, const CellEventQueue<NodeT> & event_queue) const;
+    void SaveState(std::ofstream & f, const ParametersPool & parameters_pool, const CellEventQueue<NodeT> & event_queue) const;
+    void LoadState(std::ifstream & f, ParametersPool & parameters_pool, CellEventQueue<NodeT> & event_queue, BasicTissue<ActionPotentialModel, ConductionVelocityModel> & tissue);
 
     // Data extraction ---
     using NodeData = std::tuple<float, int, int, int, float, int, float, float, float, float, float, float>;
