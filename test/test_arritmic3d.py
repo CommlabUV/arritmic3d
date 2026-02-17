@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import arritmic3d
+import imageio.v3 as iio
 import pyvista as pv
 import numpy as np
 import os
@@ -130,11 +131,21 @@ def visualize_case(case_dir, time_ms, field = "State"):
 
     return fig, axes
 
-def visualize_single_field(case_dir, time_ms, field="State"):
+def visualize_case(case_dir, time_ms, field="State", show=True, save_path=None):
     """
     Displays a single 2D image of the specified field for the given case and time.
-    Uses Matplotlib to show the result.
+    Uses Matplotlib to show the result, or saves to disk if save_path is provided or show=False.
+    Args:
+        case_dir: Directory of the simulation case.
+        time_ms: Time point to visualize.
+        field: Field to visualize.
+        show: If True, shows the window. If False, does not display.
+        save_path: If provided, saves the image to this path.
     """
+    import matplotlib.pyplot as plt
+    import pyvista as pv
+    import numpy as np
+    import os
     import matplotlib.pyplot as plt
     import pyvista as pv
     import numpy as np
@@ -180,13 +191,17 @@ def visualize_single_field(case_dir, time_ms, field="State"):
     # Apply mask: non-tissue areas to NaN
     masked_data = np.where(mask, field_data, np.nan)
 
-    plt.figure(figsize=(8, 6))
+    fig = plt.figure(figsize=(8, 6))
     im = plt.imshow(masked_data, origin='lower', cmap="coolwarm", interpolation='bilinear')
     plt.title(f"{field} - {time_ms} ms")
     plt.colorbar(im)
     plt.tight_layout()
-    plt.show()
-
+    if save_path is not None:
+        fig.savefig(save_path)
+    if show:
+        plt.show()
+    else:
+        plt.close(fig)
     return im
 
 
@@ -212,18 +227,19 @@ def render_anim():
     total_time = config.get("SIMULATION_DURATION")
     step = config.get("VTK_OUTPUT_PERIOD")
 
+    frames = []
     # Generate frames for each time point
     for time_ms in range(step, total_time + 1, step):  # Every step ms from step to total_time
-        fig, axes = visualize_case(case_dir, time_ms, field="AP")
         frame_path = os.path.join(frames_dir, f"frame_{time_ms:05d}.png")
-        fig.savefig(frame_path)
-        plt.close(fig)
+        # visualize_case now returns the image data directly
+        image_data = visualize_case(case_dir, time_ms, field="AP", show=False, save_path=frame_path)
+        frames.append(image_data) # Append the in-memory image data
         print(f"Saved frame: {frame_path}")
 
-    # Combine frames into a video using ffmpeg (make sure ffmpeg is installed)
-    video_path = "simulation_animation.mp4"
-    os.system(f"ffmpeg -framerate 10 -i {frames_dir}/frame_%05d.png -c:v libx264 -pix_fmt yuv420p {video_path}")
-    print(f"Animation saved as: {video_path}")
+    # Combine frames into a GIF using imageio
+    gif_path = "simulation_animation.gif"
+    iio.imwrite(gif_path, [f.get_array() for f in frames], fps=10) # Adjust fps as needed
+    print(f"Animation saved as: {gif_path}")
 
 
 # --- STEP 1: Case Directory Setup ---
@@ -247,9 +263,9 @@ print("Simulation completed successfully!")
 # --- STEP 3: Visualization of Results ---
 # We use our new Matplotlib-based function to visualize the result
 # This works in Google Colab without needing an interactive 3D window.
-visualize_case(case_dir, 120, field="AP")
-visualize_single_field(case_dir, 120, field="AP")  # Show just the AP field at 120 ms
-render_anim()  # This will create an animation of the simulation results over time
+# visualize_case(case_dir, 120, field="AP")
+# visualize_case(case_dir, 120, field="AP")  # Show just the AP field at 120 ms
+#render_anim()  # This will create an animation of the simulation results over time
 
 # --- STEP 4: Re-run Case ---
 # Arritmic3D is designed so that you can easily re-run a simulation
@@ -264,4 +280,12 @@ print(f"Loading existing configuration from: {case_dir}")
 config = load_case_config(case_dir)
 print("Configuration loaded successfully!")
 
+# Modify a parameter and save it back
+config["SIMULATION_DURATION"] = 500
+config["VTK_OUTPUT_PERIOD"] = 10
 
+# Re-run with the updated configuration
+print("\n--- STEP 6: Re-running with modified duration ---")
+arritmic3d.arritmic3d(case_dir,config=config)
+print(f"Simulation finished. Check {case_dir} for new VTK files.")
+render_anim()
