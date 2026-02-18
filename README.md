@@ -86,10 +86,13 @@ python -m pip install --upgrade pip setuptools wheel
 # An overview of Arritmic3D
 
 The solver is presented as a C++ library with a Python interface. The
-main script to run simulations is `arritmic3d`. Typically, you will need
+main Python script to run simulations is `arritmic3d`, although you can
+also create your own Python program. You can find the Arritmic3D API documentation
+[here](docs/Arritmic3D_API.md).
+
+Typically, you will need
 a VTK file with the definition of the tissue to simulate and a
 configuration file.
-
 The simulator expects a rectangular 3-dimensional domain, defined by a
 uniform grid. Each node in this grid is taken as a portion of cardiac
 tissue with its activation and conduction properties. These properties,
