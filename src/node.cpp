@@ -49,17 +49,17 @@ typename NodeT<APD, CVM>::CellActivationState NodeT<APD, CVM>::GetState(float cu
 }
 
 /**
- * @brief Reset the state of the Node to the initial state.
+ * @brief Initialize the Node to the initial state.
  * From Node.pde: reset
  */
 template <typename APD, typename CVM>
-void NodeT<APD, CVM>::Reset(float current_time_)
+void NodeT<APD, CVM>::Init(float current_time_, float initial_apd_)
 {
     this->beat = -1;
 
     // Activation data
     this->apd_model.Init(type,
-        this->parameters->initial_apd,
+        initial_apd_,
         current_time_,
         0.0,
         this->parameters->correction_factor_apd

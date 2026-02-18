@@ -235,8 +235,8 @@ void BasicTissue<APM,CVM>::Init(const vector<CellType> & cell_types_, vector<Nod
         tissue_nodes[i].next_activation_event = event_queue.GetEvent(i,CellEventType::ACTIVATION);
         tissue_nodes[i].next_deactivation_event = event_queue.GetEvent(i,CellEventType::DEACTIVATION);
 
-        // Reset should only be called after the Node parameters are set.
-        tissue_nodes[i].Reset(tissue_time);
+        // Init should only be called after the Node parameters are set.
+        tissue_nodes[i].Init(tissue_time, parameters_[i].initial_apd);
     }
 }
 

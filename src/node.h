@@ -45,7 +45,7 @@ public:
     enum class CellActivationState : char { INACTIVE = 0, WAITING_FOR_ACTIVATION, ACTIVE };
 
     NodeT();
-    void Reset(float current_time_);
+    void Init(float current_time_, float initial_apd_);
     void ReApplyParam(float current_time_);
     float ComputeDirectionalConductionVelocity(const NodeT::Vector3 &direction_);
     CellEvent* ActivateAtTime( NodeT *origin_, float current_time_, float activation_time_);
