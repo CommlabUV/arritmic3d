@@ -22,14 +22,15 @@ def plot_vtk(file_path, field="AP",plt_show=False):
     grid = grid.threshold(0.5, scalars="restitution_model", all_scalars=True)
     plot_grid(grid,field=field,plt_show=plt_show)
 
-def clean_case_dir(case_dir):
+def delete_case_dir(case_dir):
+    """Delete the case directory if it exists."""
     if os.path.exists(case_dir):
         print(f"Cleaning existing directory: {case_dir}")
         shutil.rmtree(case_dir)
 
 # --- STEP 1: Configure the case directory ---
 case_dir = "out_test"
-clean_case_dir(case_dir)
+delete_case_dir(case_dir)
 
 # --- STEP 2: Running initial test case ---
 print("\n--- Running initial test case ---")
@@ -63,7 +64,7 @@ config["VTK_OUTPUT_PERIOD"] = 10
 
 # Re-run with the updated configuration
 # First, clean the case directory, because the file numbering will be different
-clean_case_dir(case_dir)
+delete_case_dir(case_dir)
 a3d.arritmic3d(case_dir,config=config)
 print("Simulation finished.")
 
