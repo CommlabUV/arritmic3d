@@ -2,6 +2,8 @@ import os
 import shutil
 import pyvista as pv
 import matplotlib.pyplot as plt
+from IPython.display import clear_output
+import time
 import arritmic3d as a3d
 
 def plot_grid(grid,field="AP",plt_show=False) :
@@ -21,6 +23,19 @@ def plot_vtk(file_path, field="AP",plt_show=False):
     grid = pv.read(file_path)
     grid = grid.threshold(0.5, scalars="restitution_model", all_scalars=True)
     plot_grid(grid,field=field,plt_show=plt_show)
+
+def plot_animation(case_dir, field="AP"):
+    config = a3d.load_case_config(case_dir)
+    total_time = config.get("SIMULATION_DURATION")
+    step = config.get("VTK_OUTPUT_PERIOD")
+
+    for time_ms in range(step, total_time + 1, step):
+        file_path = f"{case_dir}/slab_{time_ms:05d}.vtk"
+        if os.path.exists(file_path):
+            clear_output(wait=True)
+            plot_vtk(file_path, field=field, plt_show=True)
+            # Small pause to allow the UI to update
+            time.sleep(0.01)
 
 def delete_case_dir(case_dir):
     """Delete the case directory if it exists."""
@@ -77,3 +92,7 @@ a3d.arritmic3d(case_dir,config=config)
 print("Simulation finished.")
 
 plot_vtk(case_dir+"/slab_00720.vtk",plt_show=True)
+
+# --- STEP 6: Show an animation of the simulation
+print("\n--- Showing an animation of the simulation ---")
+plot_animation(case_dir, field="AP")
