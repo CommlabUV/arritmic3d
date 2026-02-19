@@ -28,6 +28,14 @@ def delete_case_dir(case_dir):
         print(f"Cleaning existing directory: {case_dir}")
         shutil.rmtree(case_dir)
 
+def clean_case_dir(case_dir):
+    """Clean the case directory by removing only the vtk output files."""
+    if os.path.exists(case_dir):
+        for file in os.listdir(case_dir):
+            if file.endswith(".vtk"):
+                os.remove(os.path.join(case_dir, file))
+
+
 # --- STEP 1: Configure the case directory ---
 case_dir = "out_test"
 delete_case_dir(case_dir)
@@ -64,7 +72,7 @@ config["VTK_OUTPUT_PERIOD"] = 10
 
 # Re-run with the updated configuration
 # First, clean the case directory, because the file numbering will be different
-delete_case_dir(case_dir)
+clean_case_dir(case_dir)
 a3d.arritmic3d(case_dir,config=config)
 print("Simulation finished.")
 
