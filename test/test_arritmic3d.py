@@ -17,10 +17,10 @@ def plot_grid(grid,field="AP",plt_show=False) :
         plt.show()
     return img
 
-def plot_vtk(case_dir,frame):
-    grid = pv.read(f"{case_dir}/slab_{frame:05d}.vtk")
+def plot_vtk(file_path, field="AP",plt_show=False):
+    grid = pv.read(file_path)
     grid = grid.threshold(0.5, scalars="restitution_model", all_scalars=True)
-    plot_grid(grid,"AP",plt_show=True)
+    plot_grid(grid,field=field,plt_show=plt_show)
 
 def clean_case_dir(case_dir):
     if os.path.exists(case_dir):
@@ -62,7 +62,9 @@ config["SIMULATION_DURATION"] = 1000
 config["VTK_OUTPUT_PERIOD"] = 10
 
 # Re-run with the updated configuration
+# First, clean the case directory, because the file numbering will be different
+clean_case_dir(case_dir)
 a3d.arritmic3d(case_dir,config=config)
 print("Simulation finished.")
 
-plot_vtk(case_dir,720)
+plot_vtk(case_dir+"/slab_00720.vtk",plt_show=True)
