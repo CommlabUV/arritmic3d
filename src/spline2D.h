@@ -106,7 +106,7 @@ public:
 
         int index = FindIndex(dim, value);
         // Find the value in the other dimension for which the result of getValue is the same.
-        // We assume that the value inceases monotonically.
+        // We assume that the value inceases monotonically. @todo Generalizes or check it doesn't matter.
         int i = 0;
         if(dim == 0)
             while(i < x[other_dim].size() - 1 && value > y(index,i) )

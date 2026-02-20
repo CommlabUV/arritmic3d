@@ -77,6 +77,7 @@ public:
         os << "Node id: " << node.id << " Type: " << (int)node.type << " Beat: " << node.beat;
         os << " conduction velocity: " << node.conduction_vel;
         os << " APD: " << node.apd_model.getAPD();
+        os << " Last DI: " << node.apd_model.getLastDI();
         os << " CV: " << node.cv_model.getConductionVelocity();
         os << " LAT: " << node.local_activation_time;
         os << " Next activation time: " << node.next_activation_time;
