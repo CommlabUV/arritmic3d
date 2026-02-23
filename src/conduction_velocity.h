@@ -69,6 +69,16 @@ public:
         this->cv = cv_;
     };
 
+    void Init(CellType type, float corrfc_, float di_, float apd_)
+    {
+        SetRestitutionModel(type);
+        this->correction_factor = corrfc_;
+        if(di_ < 0.0 || apd_ < 0.0 || type == CELL_TYPE_VOID)
+            this->cv = INITIAL_CV;
+        else
+            this->cv = this->restitution_model->getValue(di_, apd_)*this->correction_factor;
+    };
+
     /**
      * @brief Set the restitution model.
      *
