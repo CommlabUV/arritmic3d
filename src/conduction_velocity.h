@@ -76,7 +76,7 @@ public:
         if(di_ < 0.0 || apd_ < 0.0 || type == CELL_TYPE_VOID)
             this->cv = INITIAL_CV;
         else
-            this->cv = this->restitution_model->getValue(di_, apd_)*this->correction_factor;
+            this->cv = this->restitution_model->getValue(apd_, di_)*this->correction_factor;
     };
 
     /**
@@ -98,7 +98,7 @@ public:
      */
     void Activate(float di,float apd)
     {
-        this->cv = this->restitution_model->getValue(di,apd)*this->correction_factor;
+        this->cv = this->restitution_model->getValue(apd, di)*this->correction_factor;
     };
 
    /**

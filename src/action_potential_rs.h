@@ -79,7 +79,7 @@ public:
         {
             this->last_di = di_;
             // The next call can return -1, meaning no activation
-            float new_apd = restitution_model->getValue(this->last_di,apd_)*this->correction_factor;
+            float new_apd = restitution_model->getValue(apd_, this->last_di)*this->correction_factor;
             // Check invalid value
             if(! restitution_model->is_novalue(new_apd) )
                 this->apd = new_apd;
