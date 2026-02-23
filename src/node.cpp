@@ -65,7 +65,7 @@ void NodeT<APD, CVM>::Init(float current_time_, float initial_apd_)
         this->parameters->correction_factor_apd
     );
     this->cv_model.Init(this->type, this->parameters->correction_factor_cv, this->apd_model.getLastDI(), this->apd_model.getAPD() );
-    this->local_activation_time = MAX_TIME;
+    this->local_activation_time = current_time_;
     this->next_activation_time = MAX_TIME;
     this->next_deactivation_time = MAX_TIME;
     this->received_potential = 0.0;

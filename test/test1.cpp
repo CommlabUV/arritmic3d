@@ -14,7 +14,8 @@
 #include "../src/conduction_velocity.h"
 #include "../src/conduction_velocity_simple.h"
 
-enum CellTypeVentricle { HEALTHY_ENDO = 1, HEALTHY_MID, HEALTHY_EPI, BZ_ENDO, BZ_MID, BZ_EPI };
+enum CellTypeVentricle { HEALTHY_ENDO = 1, HEALTHY_MID, HEALTHY_EPI, BZ_ENDO, BZ_MID, BZ_EPI }; // TenTuscher
+//enum CellTypeVentricle { ENDO_CONTROL = 1, EPI_CONTROL, ENDO_MODERATE, EPI_MODERATE, ENDO_SEVERE, EPI_SEVERE, ENDO_EXTREME, EPI_EXTREME}; // TorOrd
 
 int main(int argc, char **argv)
 {
@@ -25,20 +26,21 @@ int main(int argc, char **argv)
     std::vector<CellType> v_type(10*6*4, HEALTHY_ENDO);
 
     NodeParameters np;
-    np.initial_apd = 100.0;
+    np.initial_apd = 200.0;
     np.correction_factor_apd = 1.0;
     vector<NodeParameters> v_np(tissue.size(), np);
     v_np.at(tissue.GetIndex(5, 3, 1)).sensor = 1;  // Set a sensor
 
     Eigen::VectorXf fiber_dir = Eigen::Vector3f(1.0, 0.0, 0.0);
     tissue.InitModels("restitutionModels/config_TenTuscher_APD.csv","restitutionModels/config_TenTuscher_CV.csv");
+    //tissue.InitModels("restitutionModels/config_TorOrd_APD.csv","restitutionModels/config_TorOrd_CV.csv");
     tissue.Init(v_type, v_np, {fiber_dir});
     std::cout << "Tissue size: " << tissue.size() << std::endl;
     std::cout << "Tissue live nodes: " << tissue.GetNumLiveNodes() << std::endl;
 
     size_t initial_node = tissue.GetIndex(2,2,1);  // 1*6*6 + 2*6 + 2
     int beat = 0;
-    tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, 200);
+    tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, 1);
 
     tissue.SaveVTK("output/test0.vtk");
     std::cout << "--- Begin simulation ---" << std::endl;
@@ -68,7 +70,7 @@ int main(int argc, char **argv)
     }
 
     std::ofstream sensor_file("sensor_0.txt");
-    tissue.ShowSensorData(sensor_file);
+    tissue.ShowSensorData(std::cout);
     sensor_file.close();
 
     return 0;
