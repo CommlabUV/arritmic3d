@@ -26,7 +26,7 @@ int main(int argc, char **argv)
     std::vector<CellType> v_type(10*6*4, HEALTHY_ENDO);
 
     NodeParameters np;
-    np.initial_apd = 200.0;
+    //np.initial_apd = 200.0;
     np.correction_factor_apd = 1.0;
     vector<NodeParameters> v_np(tissue.size(), np);
     v_np.at(tissue.GetIndex(5, 3, 1)).sensor = 1;  // Set a sensor
@@ -34,6 +34,7 @@ int main(int argc, char **argv)
     Eigen::VectorXf fiber_dir = Eigen::Vector3f(1.0, 0.0, 0.0);
     tissue.InitModels("restitutionModels/config_TenTuscher_APD.csv","restitutionModels/config_TenTuscher_CV.csv");
     //tissue.InitModels("restitutionModels/config_TorOrd_APD.csv","restitutionModels/config_TorOrd_CV.csv");
+    tissue.SetInitialAPD(200.0f);
     tissue.Init(v_type, v_np, {fiber_dir});
     std::cout << "Tissue size: " << tissue.size() << std::endl;
     std::cout << "Tissue live nodes: " << tissue.GetNumLiveNodes() << std::endl;

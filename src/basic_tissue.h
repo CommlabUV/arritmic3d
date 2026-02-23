@@ -132,6 +132,16 @@ public:
         return n.GetParameters();
     }
 
+    /**
+     * @brief Set the initial APD for all nodes.
+     * It should be called before Init.
+     * @param apd Initial APD to set.
+     */
+    void SetInitialAPD(float apd)
+    {
+        initial_apd = apd;
+    }
+
 protected:
 
     // Geometry
@@ -147,6 +157,7 @@ protected:
     // Simulation
     float           tissue_time;
     int             debug_level = 0;
+    float           initial_apd = 100.0f;
     std::array<float, int(SystemEventType::SIZE)> timer; ///< Timer for each of the different system events. 0 unused.
 
     SensorDict<typename Node::NodeData> sensor_dict;  ///< Dictionary to store sensor data
@@ -236,7 +247,7 @@ void BasicTissue<APM,CVM>::Init(const vector<CellType> & cell_types_, vector<Nod
         tissue_nodes[i].next_deactivation_event = event_queue.GetEvent(i,CellEventType::DEACTIVATION);
 
         // Init should only be called after the Node parameters are set.
-        tissue_nodes[i].Init(tissue_time, parameters_[i].initial_apd);
+        tissue_nodes[i].Init(tissue_time, initial_apd);
     }
 }
 
