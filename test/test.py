@@ -1,6 +1,8 @@
 import arritmic3d
 import numpy as np
 
+from sensor_util import ShowAllSensorData, WriteAllSensorData
+
 HEALTHY_ENDO = 1
 
 def main():
@@ -44,8 +46,11 @@ def main():
         if tick == arritmic3d.SystemEventType.FILE_WRITE:
             tissue.SaveVTK(f"output/test{i}.vtk")
 
-    Sensors = tissue.GetSensorInfo()
-    print("\n", Sensors)
+    sensors = tissue.GetSensorInfo()
+    sensor_names = tissue.GetSensorDataNames()
+    #print("\n", sensors)
+    #ShowAllSensorData(sensors, sensor_names)
+    WriteAllSensorData("output", sensors, sensor_names)
 
 
 if __name__ == "__main__":
