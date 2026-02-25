@@ -6,9 +6,13 @@
 #include "../src/action_potential_rs.h"
 #include "../src/conduction_velocity.h"
 
+#ifndef MODULE_NAME
+#define MODULE_NAME _core
+#endif
+
 namespace py = pybind11;
 
-PYBIND11_MODULE(_core, m) {
+PYBIND11_MODULE(MODULE_NAME, m) {
     // Define aliases for the template parameters
     using T_AP = ActionPotentialRestSurface;
     using T_CV = ConductionVelocity;
@@ -66,7 +70,8 @@ PYBIND11_MODULE(_core, m) {
         .def("SaveState", &CardiacTissue<T_AP, T_CV>::SaveState,
              "Save the current state of the tissue to a binary file")
         .def("LoadState", &CardiacTissue<T_AP, T_CV>::LoadState,
-             "Load the state of the tissue from a binary file");
+             "Load the state of the tissue from a binary file")
+        .def("SetInitialAPD", &CardiacTissue<T_AP, T_CV>::SetInitialAPD);
 
 }
 

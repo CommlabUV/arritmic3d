@@ -43,6 +43,10 @@ Initialize the models for the APD and CV update. ** Should be called before Init
 
 > fileCV : CSV file definition for CV models
 
+## `SetInitialAPD(APD_)`
+
+Set the initial APD for the nodes. The DI is automatically set based on the APD. The first activation should be near time 0.
+
 ## `ChangeParameters(parameters_)`
 Change the parameters of the tissue nodes. Simulation can continue normally.
 
