@@ -54,6 +54,7 @@ PYBIND11_MODULE(MODULE_NAME, m) {
         .def("SetTimer", &CardiacTissue<T_AP, T_CV>::SetTimer)
         .def("SetSystemEvent", &CardiacTissue<T_AP, T_CV>::SetSystemEvent)
         .def("size", &CardiacTissue<T_AP, T_CV>::size)
+        .def("GetNumLiveNodes", &CardiacTissue<T_AP, T_CV>::GetNumLiveNodes)
         .def("GetSizeX", &CardiacTissue<T_AP, T_CV>::GetSizeX)
         .def("GetSizeY", &CardiacTissue<T_AP, T_CV>::GetSizeY)
         .def("GetSizeZ", &CardiacTissue<T_AP, T_CV>::GetSizeZ)

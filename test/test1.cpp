@@ -41,6 +41,7 @@ int main(int argc, char **argv)
 
     size_t initial_node = tissue.GetIndex(2,2,1);  // 1*6*6 + 2*6 + 2
     int beat = 0;
+    float CL = 300.0f;  // cycle length in ms
     tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, 1);
 
     tissue.SaveVTK("output/test0.vtk");
@@ -58,7 +59,7 @@ int main(int argc, char **argv)
 
             std::cout << "External activation for beat " << beat << " at time " << tissue.GetTime() << std::endl;
             tissue.ExternalActivation({initial_node}, tissue.GetTime(), beat);
-            tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, tissue.GetTime() + 300);
+            tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, tissue.GetTime() + CL);
             // Write VTK file after activation
             //tissue.SetSystemEvent(SystemEventType::FILE_WRITE, tissue.GetTime() + 20);
         }
