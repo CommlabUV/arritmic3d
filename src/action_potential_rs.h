@@ -71,12 +71,15 @@ public:
     void Init(CellType type, float apd_, float t0_, float di_ = 0.0, float corrfc_ = 1.0)
     {
         SetRestitutionModel(type);
+        if(type == CELL_TYPE_VOID)
+            return;
+
         this->correction_factor = corrfc_;
         if (di_ > 0.0)
         {
             this->last_di = di_;
             // The next call can return -1, meaning no activation
-            float new_apd = restitution_model->getValue(this->last_di,apd_)*this->correction_factor;
+            float new_apd = restitution_model->getValue(apd_, this->last_di)*this->correction_factor;
             // Check invalid value
             if(! restitution_model->is_novalue(new_apd) )
                 this->apd = new_apd;
@@ -85,7 +88,12 @@ public:
         }
         else
         {
-            this->last_di = 100.0; /// @todo Should be a reverse mapping from apd_ to di_
+            // Calculate proper di for the given apd
+            float new_di = restitution_model->getEquilibrium(0, apd_);
+            if(new_di < 0.0)
+                this->last_di = 100.0; /// @todo Should be a simulation constant ?
+            else
+                this->last_di = new_di;
             this->apd = apd_;
         }
         this->ta = t0_ - (this->apd + this->last_di); // We assume that the previous apd is the same as the current one
@@ -100,7 +108,7 @@ public:
     {
         this->restitution_model = splines.getSpline(type);
         if(this->restitution_model == nullptr && type != CELL_TYPE_VOID)
-            throw std::runtime_error("action_potential_rc.h: : no APD restitution model found for cell type " + std::to_string(static_cast<int>(type)));
+            throw std::runtime_error("action_potential_rs.h: : no APD restitution model found for cell type " + std::to_string(static_cast<int>(type)));
     };
 
     /**

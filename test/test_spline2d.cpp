@@ -17,7 +17,7 @@ int main(int argc, char **argv)
     //SplineContainer2D splines;
     const std::string path = "restitutionModels/";
 
-    SplineContainer2D splines({{HEALTHY_ENDO, path + "TenTuscher_APD_HE_Endo.csv"},
+    SplineContainer2D splines({{HEALTHY_ENDO, path + "TorOrd_APD_Endo_Control.csv"},  //"TenTuscher_APD_HE_Endo.csv"},
                                 {HEALTHY_MID, path + "TenTuscher_APD_HE_Mid.csv"},
                                 {HEALTHY_EPI, path + "TenTuscher_APD_HE_Epi.csv"},    // Test of 2D spline
                                     });
@@ -49,6 +49,12 @@ int main(int argc, char **argv)
 
     std::cout << "-- Get Value epi: " << std::endl;
     std::cout << "(5.0) -> " << s2->getValue(5.0, 2) << std::endl;
+
+    std::cout << "-- Get Equilibrium endo: " << std::endl;
+    float di_eqilibrium = s1->getEquilibrium(0, 200.0);
+    std::cout << "APD 200.0 -> " << di_eqilibrium << std::endl;
+
+    std::cout << "(200.0, " << di_eqilibrium << ") -> " << s1->getValue(200.0, di_eqilibrium) << std::endl;
 
     std::cout << "End" << std::endl;
     return 0;

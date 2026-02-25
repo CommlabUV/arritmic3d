@@ -45,7 +45,7 @@ public:
     enum class CellActivationState : char { INACTIVE = 0, WAITING_FOR_ACTIVATION, ACTIVE };
 
     NodeT();
-    void Reset(float current_time_);
+    void Init(float current_time_, float initial_apd_);
     void ReApplyParam(float current_time_);
     float ComputeDirectionalConductionVelocity(const NodeT::Vector3 &direction_);
     CellEvent* ActivateAtTime( NodeT *origin_, float current_time_, float activation_time_);
@@ -77,6 +77,7 @@ public:
         os << "Node id: " << node.id << " Type: " << (int)node.type << " Beat: " << node.beat;
         os << " conduction velocity: " << node.conduction_vel;
         os << " APD: " << node.apd_model.getAPD();
+        os << " Last DI: " << node.apd_model.getLastDI();
         os << " CV: " << node.cv_model.getConductionVelocity();
         os << " LAT: " << node.local_activation_time;
         os << " Next activation time: " << node.next_activation_time;

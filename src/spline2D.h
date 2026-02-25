@@ -99,6 +99,24 @@ public:
 
     }
 
+    float getEquilibrium(int dim, float value) const
+    {
+        assert(dim == 0 || dim == 1);
+        int other_dim = 1 - dim;
+
+        int index = FindIndex(dim, value);
+        // Find the value in the other dimension for which the result of getValue is the same.
+        // We assume that the value inceases monotonically. @todo Generalizes or check it doesn't matter.
+        int i = 0;
+        if(dim == 0)
+            while(i < x[other_dim].size() - 1 && value > y(index,i) )
+                i++;
+        else
+            while(i < x[other_dim].size() - 1 && value > y(i,index) )
+                i++;
+        return x[other_dim][i];
+    }
+
     /**
      * @brief Get the position of the first no-value in the given row or column beginning from the end.
      * @param row_or_col 0 for rows, 1 for columns
