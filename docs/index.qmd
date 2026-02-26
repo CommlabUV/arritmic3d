@@ -8,12 +8,6 @@ toc-depth: 2
 format:
     html:
         output-file: "index.html"
-    pdf:
-        output-file: "Arritmic3D.pdf"
-    gfm:
-        output-file: "README.md"
-        variant: +gfm_auto_identifiers
-format-links: [pdf]
 bibliography: references.bib
 citation:
     type: article-journal
