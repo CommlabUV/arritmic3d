@@ -49,8 +49,8 @@ def create_tissue(grid, params):
     x_spacing = x_coords[1] - x_coords[0]
     y_spacing = y_coords[1] - y_coords[0]
     z_spacing = z_coords[1] - z_coords[0]
-    print("CA-Dimensions:", dims)
-    print("CA-Spacing:", x_spacing, y_spacing, z_spacing)
+    print("Grid Dimensions:", dims)
+    print("Grid Spacing:", x_spacing, y_spacing, z_spacing)
     print("VTK-Scalars:", grid.point_data.keys())
 
     v_type = list(np.array(grid.point_data['restitution_model']))
