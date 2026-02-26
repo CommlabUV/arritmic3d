@@ -46,11 +46,21 @@ The original version of the solver was developed in the Java environment [Proces
 
 # Installation
 
-Right now, you need to compile the wheel yourself. To compile it you need a standard C++17 compiler, Eigen and Pybind11 installed in your system.
+From a python environment, you can install the package using pip:
+
+``` bash
+pip install arritmic3d
+```
+
+# Compilation from source
+
+You can also compile the wheel yourself. To compile it, you
+need a standard C++17 compiler, Eigen and Pybind11 installed in your
+system.
 
 As a reference, in an ubuntu machine it should be enough to run:
 
-```bash
+``` bash
 sudo apt-get install \
     build-essential \
     pkg-config \
@@ -62,17 +72,11 @@ sudo apt-get install \
     python3-pybind11
 ```
 
+Then, clone the repository from [GitHub](https://github.com/CoMMLabuv/Arritmic3D) and compile the wheel by running:
 
-Then, clone the repository and compile the wheel by running:
-
-```bash
-python -m pip install .
-```
-
-This command assumes that you have the build prerequisites installed in your python distribution. Namely, you need `setuptools` and `wheel`. You can install them using pip:
-
-```bash
+``` bash
 python -m pip install --upgrade pip setuptools wheel
+python -m pip install .
 ```
 
 # An overview of Arritmic3D

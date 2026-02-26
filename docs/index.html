@@ -136,6 +136,7 @@ window.Quarto = {
    
   <ul class="collapse">
   <li><a href="#installation" id="toc-installation" class="nav-link active" data-scroll-target="#installation">Installation</a></li>
+  <li><a href="#compilation-from-source" id="toc-compilation-from-source" class="nav-link" data-scroll-target="#compilation-from-source">Compilation from source</a></li>
   <li><a href="#an-overview-of-arritmic3d" id="toc-an-overview-of-arritmic3d" class="nav-link" data-scroll-target="#an-overview-of-arritmic3d">An overview of Arritmic3D</a></li>
   <li><a href="#quick-start-example" id="toc-quick-start-example" class="nav-link" data-scroll-target="#quick-start-example">Quick start example</a>
   <ul class="collapse">
@@ -220,21 +221,25 @@ Warning
 <p>The original version of the solver was developed in the Java environment <a href="https://processing.org/">Processing</a>. Now it is being migrated to C++ and provided with a Python interface.</p>
 <section id="installation" class="level1">
 <h1>Installation</h1>
-<p>Right now, you need to compile the wheel yourself. To compile it you need a standard C++17 compiler, Eigen and Pybind11 installed in your system.</p>
+<p>From a python environment, you can install the package using pip:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install arritmic3d</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="compilation-from-source" class="level1">
+<h1>Compilation from source</h1>
+<p>You can also compile the wheel yourself. To compile it, you need a standard C++17 compiler, Eigen and Pybind11 installed in your system.</p>
 <p>As a reference, in an ubuntu machine it should be enough to run:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt-get install <span class="dt">\</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    build-essential <span class="dt">\</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    pkg-config <span class="dt">\</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    cmake <span class="dt">\</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    python3-dev <span class="dt">\</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    gcc <span class="dt">\</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    g++ <span class="dt">\</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    libeigen3-dev <span class="dt">\</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    python3-pybind11</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Then, clone the repository and compile the wheel by running:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> pip install .</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>This command assumes that you have the build prerequisites installed in your python distribution. Namely, you need <code>setuptools</code> and <code>wheel</code>. You can install them using pip:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> pip install <span class="at">--upgrade</span> pip setuptools wheel</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt-get install <span class="dt">\</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    build-essential <span class="dt">\</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    pkg-config <span class="dt">\</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    cmake <span class="dt">\</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    python3-dev <span class="dt">\</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    gcc <span class="dt">\</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    g++ <span class="dt">\</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    libeigen3-dev <span class="dt">\</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    python3-pybind11</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Then, clone the repository from <a href="https://github.com/CoMMLabuv/Arritmic3D">GitHub</a> and compile the wheel by running:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> pip install <span class="at">--upgrade</span> pip setuptools wheel</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> pip install .</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="an-overview-of-arritmic3d" class="level1">
 <h1>An overview of Arritmic3D</h1>
@@ -448,12 +453,12 @@ Warning
 <h2 class="anchored" data-anchor-id="definition-of-the-simulation-domain">Definition of the simulation domain</h2>
 <p>For the Python interface, this domain definition is done using an input VTK file. The input VTK file has to store a <code>RectilinearGrid</code> that includes, at least, the following point data field:</p>
 <ul>
-<li><strong>restitution_model</strong>: An integer field indicating the restitution model to be used for each cell. This field is used to define the cells that belong to tissue and to select the restitution model for each cell. Nodes with <code>restitution_model</code> equal to 0 are considered non-tissue (void). The value for tissue regions starts from 1 upwards. The mapping between <code>restitution_model</code> values and the corresponding restitution model files is defined in a separate CSV file specified in the configuration, as described in <a href="#sec-config-file" class="quarto-xref">Section&nbsp;6</a>.</li>
+<li><strong>restitution_model</strong>: An integer field indicating the restitution model to be used for each cell. This field is used to define the cells that belong to tissue and to select the restitution model for each cell. Nodes with <code>restitution_model</code> equal to 0 are considered non-tissue (void). The value for tissue regions starts from 1 upwards. The mapping between <code>restitution_model</code> values and the corresponding restitution model files is defined in a separate CSV file specified in the configuration, as described in <a href="#sec-config-file" class="quarto-xref">Section&nbsp;7</a>.</li>
 </ul>
 <p>Additionally the following optional point data fields can be defined:</p>
 <ul>
 <li><strong>fibers_orientation</strong>: A 3-component vector field representing the orientation of the fibers in each cell. To define isotropic conduction, set all components to zero. If this field is not present, isotropic conduction is assumed for all cells.</li>
-<li><strong>activation_region</strong>: An integer field that defines different regions on the tissue where activation is wanted. This field is used to define activation regions, such as the pacing sites for a pacing protocol or the PMJs. The activation times are defined in the configuration file and can refer to these regions by ID. Activations can be explicitly prescribed at certain node IDs when defining the activation in the configuration file as described in <a href="#sec-stimulation-protocols" class="quarto-xref">Section&nbsp;6.1</a>.</li>
+<li><strong>activation_region</strong>: An integer field that defines different regions on the tissue where activation is wanted. This field is used to define activation regions, such as the pacing sites for a pacing protocol or the PMJs. The activation times are defined in the configuration file and can refer to these regions by ID. Activations can be explicitly prescribed at certain node IDs when defining the activation in the configuration file as described in <a href="#sec-stimulation-protocols" class="quarto-xref">Section&nbsp;7.1</a>.</li>
 </ul>
 </section>
 <section id="setting-configuration-parameters" class="level2">
