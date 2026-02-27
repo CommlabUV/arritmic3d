@@ -1,23 +1,33 @@
 # Changelog
 
-## Unreleased
-- Added getter for AP in the C++ tissue class and exposed it in the Python bindings and examples.
-- Example case made more meaningful.
-- Changed module name to arritmic3d and imported as a3d.
-
-## [3.0b6.dev1] - 2026-02-04
-
-### Changed
-- Build infrastructure improvements to set up CI/CD pipelines with github actions.
-- Improved management of library restitution models.
-- Changed versioning scheme to use semantic versioning with beta indicators.
+## [3.0b6] - 2026-02-27
 
 ### Added
-- Restitution models are now distributed with the main package.
-- Restitution models are saved with the case files after a simulation run for reproducibility.
+- New `GetAP()` method to retrieve the action potential using an analytic expression.
+- Support for using library restitution models by name (e.g., "TorOrd_APD") instead of requiring full file paths.
+- Implementation of `SaveState` and `LoadState` for `Node` and `CardiacTissue` for full simulation persistence.
+- Automatic fetching of Eigen3 during build if not present on the system.
+- New visualization functions for slabs and simulation results using PyVista.
+- Comprehensive documentation for the Python API and library models usage.
+- Lazy loading of submodules in the package namespace to improve import performance.
+
+### Changed
+- Refactored build infrastructure using GitHub Actions for multi-platform distribution.
+- Restitution models are now bundled and distributed within the Python package.
+- Improved `build_slab` interface to handle file saving and region definitions internally.
+- Module renamed to `arritmic3d` for consistency with Python naming conventions.
+
+### Fixed
+- Corrected missing attributes in `SaveState`/`LoadState` serialization.
+- Fixed model name resolution when paths were not absolute.
+- Resolved various issues in the CI/CD pipeline for PyPI publication.
+- Improved geometry validation when loading simulation states.
 
 ### Contributors
 - Ignacio García-Fernández
+- Fernando Barber
+- Giada Romitti
+
 
 ## [3.0b5] - 2026-01-30
 
