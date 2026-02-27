@@ -195,3 +195,50 @@ Return a dictionary with the default parameters for the nodes. int values are co
 **Returns:**
 
 > Dictionary with the parameters.
+
+## `arritmic3d(case_dir, config={}, save_run_config=True)`
+
+Run the Arritmic3D simulation in the given case directory with the provided configuration dictionary.
+
+**Parameters:**
+
+> case_dir : Output directory where results will be saved.
+
+> config : Configuration dictionary with simulation parameters. Fields provided here override those in any configuration file found in case_dir.
+
+> save_run_config : If True (default), saves the actual run configuration to `arr3D_config_run.json`.
+
+## `test_case(output_dir)`
+
+Generate and run a built-in S1-S2 test case in the given output directory.
+
+**Parameters:**
+
+> output_dir : Output directory where results will be saved. Must not exist or be empty.
+
+## `build_slab(args, save=True)`
+
+Build the slab grid based on parsed arguments and optionally save to file.
+
+**Parameters:**
+
+> args : Parsed arguments for grid generation.
+
+> save : If True, saves the generated slab to the specified output file.
+
+**Returns:**
+
+> The generated rectilinear grid.
+
+## `load_case_config(case_dir)`
+
+Check for a config file in the case directory and load it if present.
+
+**Parameters:**
+
+> case_dir : Directory to check for a configuration file.
+
+**Returns:**
+
+> Dictionary with the parameters if a config file is found, `None` otherwise.
+
