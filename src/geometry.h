@@ -56,6 +56,8 @@ public:
         relative_position = NeighboursRelativePos<num_neighbours>(distance);
         distance_to_neighbour = NeighboursDistance<num_neighbours>();
         displ_axis = DisplacementAxis<num_axis>(distance);
+
+        CreateIndex();
     }
 
     /**
@@ -198,6 +200,37 @@ public:
         return origin + Vector3(0.5*dx, 0.5*dy, 0.5*dz) + Vector3(coords[0]*dx, coords[1]*dy, coords[2]*dz);
     }
 
+    /**
+     * @brief Create the index vector.
+     * It takes into account the distance to the neighbours. It creates a larger virtual grid that includes the CORE nodes,
+     * and fills the index vector with the index of the nodes in the tissue array. The CORE nodes are filled with NO_INDEX.
+     */
+    void CreateIndex()
+    {
+        size_t pos = 0;
+        pos += distance*(size_x + 2*distance) * (size_y + 2*distance); // Skip the first layers in z
+        for(int i_z = 0; i_z < size_z; i_z++)
+        {
+            pos += distance*(size_x + 2*distance); // Skip the first layers in y
+            for(int i_y = 0; i_y < size_y; i_y++)
+            {
+                pos += distance; // Skip the first layers in x
+                for(int i_x = 0; i_x < size_x; i_x++)
+                {
+                    index[pos] = GetIndex(i_x, i_y, i_z);
+                    pos++;
+                }
+                pos += distance; // Skip the last layers in x
+            }
+            pos += distance*(size_x + 2*distance); // Skip the last layers in y
+        }
+    }
+
+
+    /**
+     * @brief Save the geometry state to a binary file
+     * @param f Output file stream
+     */
     void SaveState(std::ofstream & f) const
     {
         f.write( (const char*) (&size_x), sizeof(size_x) );
@@ -209,6 +242,10 @@ public:
         f.write( (const char*) (origin.data()), sizeof(float)*3 );
     }
 
+    /**
+    * @brief Load the geometry state from a binary file
+    * @param f Input file stream
+    */
     void LoadState(std::ifstream & f)
     {
         // Just check sizes
