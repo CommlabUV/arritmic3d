@@ -3,6 +3,7 @@
 #define GEOMETRY_H
 
 #include <array>
+#include <cstdint>
 #include <Eigen/Dense>
 #include "error.h"
 
@@ -12,6 +13,9 @@
 #endif
 
 using Vector3 = Eigen::Vector3f;
+
+using Index_t = int64_t;
+constexpr Index_t NO_INDEX = -1;  ///< Constant to represent an invalid index (or CORE Node).
 
 /**
  * @brief Calculate the number of neighbours given the maximun distance from the central node
@@ -39,10 +43,13 @@ public:
     std::array<float, num_neighbours> distance_to_neighbour;
     std::array<int, num_axis> displ_axis;
 
+    std::vector<Index_t> index; // Index of nodes in the tissue array given the index in a rectilinear grid
+
     Geometry()=default;
 
     Geometry(int size_x_, int size_y_, int size_z_, float dx_, float dy_, float dz_) :
-        size_x(size_x_), size_y(size_y_), size_z(size_z_), dx(dx_), dy(dy_), dz(dz_)
+        size_x(size_x_), size_y(size_y_), size_z(size_z_), dx(dx_), dy(dy_), dz(dz_),
+        index((size_x_ + 2*distance) * (size_y_ + 2*distance) * (size_z_ + 2*distance), NO_INDEX)
     {
         origin = Vector3::Zero();
         displacement = NeighboursDisplace<num_neighbours>(distance);
