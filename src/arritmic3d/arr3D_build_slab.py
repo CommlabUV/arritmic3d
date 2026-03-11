@@ -208,17 +208,22 @@ Examples:
     return parser
 
 
-def build_slab(args,save=True):
+def build_slab(args = None, args_list = [], save=True):
     """
     Build the slab grid based on parsed arguments and optionally save to file.
 
     Parameters:
         args: Parsed arguments from argparse (see documentation).
+        args_list: List of arguments to pass to the parser. If args is not None, this argument is ignored.
         save (bool): If True, saves the generated slab to the specified output file.
 
     Returns:
         pv.RectilinearGrid: The generated rectilinear grid.
     """
+
+    if args is None:
+        parser = get_argument_parser()
+        args = parser.parse_args(args_list)
 
     # Parse field data from CLI
     field_data = {}
