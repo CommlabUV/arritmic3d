@@ -13,10 +13,9 @@ delete_case_dir(case_dir)
 os.makedirs(os.path.join(case_dir, "input_data"), exist_ok=True)
 
 # --- STEP 2: Build the slab ---
-# We configure a slab similar to the default test_case, but with nested regions:
-# 1. Background field set to Border Zone (model 2)
-# 2. Outer square region set to Core (model 5)
-# 3. Inner square region set back to Border Zone (model 2)
+# We configure a slab similar to the default test_case, but with two regions:
+# 1. Background field set to Healthy (model 2)
+# 2. Square region set to Border Zone (model 5)
 print("\n--- Building the slab with nested regions ---")
 slab_path = os.path.join(case_dir, "input_data", "slab.vtk")
 slab_args = [
@@ -73,6 +72,10 @@ delete_case_dir(case_dir)
 os.makedirs(os.path.join(case_dir, "input_data"), exist_ok=True)
 
 # --- STEP 7: Set a slab with CORE region (model = 7) ---
+# We configure a slab similar to the default test_case, but with three regions:
+# 1. Background field set to Healthy (model 2)
+# 2. Square region set to Border Zone (model 5)
+# 3. Inner square region set to Core (model 7)
 print("\n--- Building the slab with CORE region ---")
 slab_args = [
     slab_path,
