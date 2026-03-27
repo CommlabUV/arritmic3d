@@ -27,10 +27,17 @@ def main():
 
     convert_to_surface = not args.surface_input
 
-    if convert_to_surface and df.shape[1] > 2:
-        ans = input(f"Input data has {df.shape[1]} columns. Is conversion from curve to surface necessary? (y/N): ")
-        if ans.lower() not in ['y', 'yes']:
-            convert_to_surface = False
+    if convert_to_surface:
+        is_2x2_zero = (df.shape == (2, 2) and df.iloc[0, 0] == 0)
+        if df.shape[1] > 2 or is_2x2_zero:
+            if df.shape[1] > 2:
+                msg = f"Input data has {df.shape[1]} columns."
+            else:
+                msg = "Input data is 2x2 and starts with 0."
+                
+            ans = input(f"{msg} Is conversion from curve to surface necessary? (y/N): ")
+            if ans.lower() not in ['y', 'yes']:
+                convert_to_surface = False
 
     if convert_to_surface:
         # Ensure at least two columns; take first two if more
