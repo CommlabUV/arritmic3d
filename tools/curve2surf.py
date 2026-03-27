@@ -1,6 +1,7 @@
 import pandas as pd
 import sys
 import os
+import argparse
 
 # Simple script:
 # - read a CSV with 2 columns
@@ -9,12 +10,13 @@ import os
 # - save to output CSV
 
 def main():
-    if len(sys.argv) != 3:
-        print("Usage: python curve2surf.py input.csv output.csv")
-        sys.exit(1)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("input_file", help="Input CSV file")
+    parser.add_argument("output_file", help="Output CSV file")
+    args = parser.parse_args()
 
-    input_file = sys.argv[1]
-    output_file = sys.argv[2]
+    input_file = args.input_file
+    output_file = args.output_file
 
     # Read CSV (no header expected)
     df = pd.read_csv(input_file, header=None)
