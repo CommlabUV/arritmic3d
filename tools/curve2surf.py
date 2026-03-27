@@ -13,6 +13,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("input_file", help="Input CSV file")
     parser.add_argument("output_file", help="Output CSV file")
+    parser.add_argument("--surface-input", action="store_true", help="Input is already a surface, only replace NaNs with -1")
     args = parser.parse_args()
 
     input_file = args.input_file
@@ -21,20 +22,31 @@ def main():
     # Read CSV (no header expected)
     df = pd.read_csv(input_file, header=None)
 
-    # Ensure at least two columns; take first two if more
-    if df.shape[1] < 2:
-        print("Error: input CSV must have at least 2 columns.")
-        sys.exit(1)
-    df = df.iloc[:, :2]
-
     # Replace NaN values with -1
     df = df.fillna(-1)
 
-    # Prepend the row [0.0, 400.0]
-    prepended = pd.concat([pd.DataFrame([[0.0, 400.0]]), df], ignore_index=True)
+    convert_to_surface = not args.surface_input
 
-    # Transpose so result has two rows
-    result = prepended.transpose()
+    if convert_to_surface and df.shape[1] > 2:
+        ans = input(f"Input data has {df.shape[1]} columns. Is conversion from curve to surface necessary? (y/N): ")
+        if ans.lower() not in ['y', 'yes']:
+            convert_to_surface = False
+
+    if convert_to_surface:
+        # Ensure at least two columns; take first two if more
+        if df.shape[1] < 2:
+            print("Error: input CSV must have at least 2 columns.")
+            sys.exit(1)
+        df = df.iloc[:, :2]
+
+        # Prepend the row [0.0, 400.0]
+        prepended = pd.concat([pd.DataFrame([[0.0, 400.0]]), df], ignore_index=True)
+
+        # Transpose so result has two rows
+        result = prepended.transpose()
+    else:
+        # It's already a surface, and NaNs are replaced
+        result = df
 
     # Ensure output directory exists
     outdir = os.path.dirname(output_file)
