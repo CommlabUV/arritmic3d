@@ -6,7 +6,7 @@ from plot_functions import (plot_vtk, plot_animation, delete_case_dir)
 import arritmic3d.arr3D_build_slab as arr_build
 
 # --- STEP 1: Configure the case directory ---
-case_dir = "out_test_models"
+case_dir = "out_test/3.reentry"
 delete_case_dir(case_dir)
 
 # Ensure the subfolder for the slab exists

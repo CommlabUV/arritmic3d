@@ -2,7 +2,7 @@ import arritmic3d as a3d
 from plot_functions import (plot_grid, plot_vtk, plot_animation, delete_case_dir, clean_case_dir)
 
 # --- STEP 1: Configure the case directory ---
-case_dir = "out_test"
+case_dir = "out_test/1.arritmic3d"
 delete_case_dir(case_dir)
 
 # --- STEP 2: Running initial test case ---
