@@ -420,7 +420,7 @@ The activation time of the first stimulus can be set using the `FIRST_ACTIVATION
 
 Note that using this option will not change the numer of activations, only the time at which the first activation occurs. In this case, the first activation will occur 50 ms after the simulation starts. This can generate an apparent mismatch between the first activation time and the BCL schedule.
 This option is an advanced setup, and is only meant to add flexibility to the protocol definition if the starting state of the tissue considers a certain activation state. That is, the previous example could be useful with a tissue that was activated 550ms before the simulation started, so that the first activation must occur at 50 ms (600ms after the last activation).
-If this field is not provided (which is the recommended option), the first activation time is set to the value of the first BCL (which would be 600 ms after the simulation start in the previous example).
+If this field is not provided (which is the recommended option), the first activation time is set to 0.
 This option also admits as input a list of first activation times (one for each activation region).
 
 External files can be used to reduce the size of the configuration file when the activation must be defined for each node separately. The first example can be rewritten as follows:

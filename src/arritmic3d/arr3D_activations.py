@@ -111,9 +111,9 @@ def parse_protocol_entry(protocol, grid):
     elif len(bcl_sn) < len(n_stims_sn):
         bcl_sn = bcl_sn + [bcl_sn[-1]] * (len(n_stims_sn) - len(bcl_sn))
 
-    # If no explicit first_activation_time, default to first BCL
+    # If no explicit first_activation_time, default to 0
     if first_times is None:
-        first_times = [float(bcl_sn[0])] * len(nodes)
+        first_times = [0] * len(nodes)
 
     node_first_time_pairs = list(zip(nodes, first_times))
 
