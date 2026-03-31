@@ -125,7 +125,6 @@ def load_case_config(case_dir):
 def get_vectorial_parameters(tissue, dims, prms):
 
     ncells_x, ncells_y , ncells_z = dims
-    initial_apd                 = prms['INITIAL_APD']
     initial_cvr                 = prms['COND_VELOC_TRANSVERSAL_REDUCTION']
     initial_cfapd               = prms['CORRECTION_FACTOR_APD']
     initial_cfcvbz              = prms['CORRECTION_FACTOR_CV']
@@ -134,7 +133,6 @@ def get_vectorial_parameters(tissue, dims, prms):
     initial_safety_factor       = prms['SAFETY_FACTOR']
 
     # vectorial parameters
-    v_apd                       = [initial_apd] * (ncells_x * ncells_y * ncells_z)
     v_cvr                       = [initial_cvr] * (ncells_x * ncells_y * ncells_z)
     v_cfapd                     = [initial_cfapd] * (ncells_x * ncells_y * ncells_z)
     v_cfcvbz                    = [initial_cfcvbz] * (ncells_x * ncells_y * ncells_z)
@@ -143,7 +141,6 @@ def get_vectorial_parameters(tissue, dims, prms):
     v_safety_factor             = [initial_safety_factor] * (ncells_x * ncells_y * ncells_z)
 
     vparameters = {}
-    vparameters['INITIAL_APD']   = v_apd
     vparameters['COND_VELOC_TRANSVERSAL_REDUCTION'] = v_cvr
     vparameters['CORRECTION_FACTOR_APD'] = v_cfapd
     vparameters['CORRECTION_FACTOR_CV'] = v_cfcvbz

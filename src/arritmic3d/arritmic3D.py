@@ -82,6 +82,7 @@ def create_tissue(grid, params):
     cv_cfg = params['CV_MODEL_CONFIG_PATH']
     # Initialize restitution and CV models using the provided file paths
     tissue.InitModels(apd_cfg, cv_cfg)
+    tissue.SetInitialAPD(params['INITIAL_APD'])
     print("Types of arguments passed to InitPy():", type(v_type), type(vparams), type(fiber_or), flush=True)
     tissue.InitPy(v_type, vparams, fiber_or)
     print("tissue initialized", flush=True)
