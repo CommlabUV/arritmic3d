@@ -29,18 +29,21 @@ NodeT<APD, CVM>::NodeT() :
 }
 
 /**
- * Obtain the activation state at current time
+ * @brief Obtain the activation state at the given time
+ *
+ * @param test_time_ Time to test the state
+ * @return CellActivationState Activation state at the given time
 */
 template <typename APD, typename CVM>
-typename NodeT<APD, CVM>::CellActivationState NodeT<APD, CVM>::GetState(float current_time_) const
+typename NodeT<APD, CVM>::CellActivationState NodeT<APD, CVM>::GetState(float test_time_) const
 {
-    assert(current_time_ >= local_activation_time || local_activation_time == MAX_TIME);  // In the current beat
+    assert(test_time_ >= local_activation_time || local_activation_time == MAX_TIME);  // In the current beat
 
     CellActivationState state = CellActivationState::INACTIVE;
-    if(this->type != CELL_TYPE_VOID && this->apd_model.IsActive(current_time_))
+    if(this->type != CELL_TYPE_VOID && this->apd_model.IsActive(test_time_))
         state = CellActivationState::ACTIVE;
     else if( this->type != CELL_TYPE_VOID &&
-            this->next_activation_time > current_time_ &&
+            this->next_activation_time > test_time_ &&
             this->next_activation_time < MAX_TIME )
         state = CellActivationState::WAITING_FOR_ACTIVATION;
     else
@@ -58,7 +61,7 @@ void NodeT<APD, CVM>::Init(float current_time_, float initial_apd_)
     this->beat = -1;
 
     // Activation data
-    this->apd_model.Init(type,
+    this->apd_model.Init(this->type,
         initial_apd_,
         current_time_,
         0.0,
@@ -83,8 +86,8 @@ void NodeT<APD, CVM>::Init(float current_time_, float initial_apd_)
 template <typename APD, typename CVM>
 void NodeT<APD, CVM>::ReApplyParam(float current_time_)
 {
-    // @todo Check if correct !
-    this->apd_model.Init(type,
+    // @todo Fix: This is changing the state, not only the parameters.
+    this->apd_model.Init(this->type,
         this->apd_model.getAPD(),
         current_time_,
         this->apd_model.getLastDI(),
@@ -94,19 +97,6 @@ void NodeT<APD, CVM>::ReApplyParam(float current_time_)
         this->parameters->correction_factor_cv
     );
 }
-
-/**
- * From Node.pde: desactivar
-*/
-/*
-template <typename APD, typename CVM>
-void NodeT<APD, CVM>::Deactivate(float current_time_)
-{
-    this->local_activation_time = MAX_TIME;
-    this->received_potential = 0.0;
-    //this->path_length = 0.0; // @todo Check if this is correct
-}
-*/
 
 /**
  * Calculates the action potential duration and the conduction velocity after the activation of the node.
@@ -195,14 +185,14 @@ bool NodeT<APD, CVM>::Activate(float current_time_, const Geometry &geometry)
 
 
 /**
- * Prepare the node for activation at a given time.
+ * @brief Prepare the node for activation at a given time.
  *
  * @param parent_ Node that activates this one.
+ * @param current_time_ Current time of the simulation.
  * @param activation_time_ Time of activation.
- * @param path_length_ Length of the path from the origin of propagation to the node.
 */
 template <typename APD, typename CVM>
-typename NodeT<APD, CVM>::CellEvent* NodeT<APD, CVM>::ActivateAtTime(NodeT<APD, CVM>* parent_, float current_time_, float activation_time_)
+typename NodeT<APD, CVM>::CellEvent* NodeT<APD, CVM>::ScheduleActivation(NodeT<APD, CVM>* parent_, float activation_time_)
 {
     CellEvent *ev = nullptr;
     if( parent_->parameters->safety_factor < this->parameters->safety_factor)  // @todo Why? Also managed in Tissue
@@ -211,7 +201,7 @@ typename NodeT<APD, CVM>::CellEvent* NodeT<APD, CVM>::ActivateAtTime(NodeT<APD, 
     // If the cell is active, only activation attempts that are
     // by final 95% of the ERP are considered.
     // @todo Convert to a parameter
-    LOG::Info(false, "APD: ", this->apd_model.getAPD(), " ERP: ", this->apd_model.getERP() );
+    // @todo Check meaning. If it is active, why consider activation? To allow negative DIs? Add an else with a print to debug.    LOG::Info(false, "APD: ", this->apd_model.getAPD(), " ERP: ", this->apd_model.getERP() );
     if (this->GetState(activation_time_) == CellActivationState::ACTIVE)
         if (activation_time_ < this->local_activation_time + 0.95 * this->apd_model.getERP())
             return ev;
@@ -233,15 +223,15 @@ typename NodeT<APD, CVM>::CellEvent* NodeT<APD, CVM>::ActivateAtTime(NodeT<APD, 
 }
 
 /**
- * Prepare the node for external activation at a given time.
+ * @brief Prepare the node for external activation at a given time.
  *
- * @todo Integrate, if possible, with ActivateAtTime
+ * @todo Integrate, if possible, with ScheduleActivation
  *
  * @param activation_time_ Time of activation.
  * @param beat_n_ Beat number of the activation.
 */
 template <typename APD, typename CVM>
-typename NodeT<APD, CVM>::CellEvent* NodeT<APD, CVM>::ActivateAtTimeExternal(float activation_time_, int beat_n_)
+typename NodeT<APD, CVM>::CellEvent* NodeT<APD, CVM>::ScheduleExternalActivation(float activation_time_, int beat_n_)
 {
     CellEvent *ev = nullptr;
 

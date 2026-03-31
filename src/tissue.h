@@ -138,7 +138,7 @@ void CardiacTissue<APM,CVM>::ExternalActivation(const vector<size_t> & nodes, fl
             LOG::Warning(true, "ExternalActivation(): Node ", nodes[i], " is a CORE node. Activation ignored.");
             continue;
         }
-        CellEvent * e = this->tissue_nodes.at(nodes[i]).ActivateAtTimeExternal(activation_time, beat_n);
+        CellEvent * e = this->tissue_nodes.at(nodes[i]).ScheduleExternalActivation(activation_time, beat_n);
         if(e != nullptr)
             this->event_queue.InsertCellEvent(e);
     }
@@ -177,6 +177,7 @@ void CardiacTissue<APM,CVM>::TriggerEvent(CellEvent* ev)
             // The Node is activated.
             if (node_->Activate(this->tissue_time, this->tissue_geometry))
             {
+                // Once activated and computed the APD, we set the next deactivation event
                 node_->next_deactivation_event->ChangeEvent(node_->next_deactivation_time);
                 this->event_queue.InsertCellEvent(node_->next_deactivation_event); // @todo Check
 
@@ -199,7 +200,7 @@ void CardiacTissue<APM,CVM>::TriggerEvent(CellEvent* ev)
                         // We compute the direct diffusion, through the graph.
                         float direct_vel = node_->ComputeDirectionalConductionVelocity(activation_dir);
                         float direct_activation_time = node_->local_activation_time + distance/direct_vel;
-                        CellEvent * ev_neigh = neigh->ActivateAtTime(node_, this->tissue_time, direct_activation_time);
+                        CellEvent * ev_neigh = neigh->ScheduleActivation(node_, direct_activation_time);
 
                         // if ev_neigh is nullptr means it is active and rejected activation or it has an earlier activation time
                         if (ev_neigh != nullptr)
@@ -214,7 +215,7 @@ void CardiacTissue<APM,CVM>::TriggerEvent(CellEvent* ev)
                 {
                     float potential_to_send = node_->received_potential/inactive_neighs.size()*node_->parameters->safety_factor;
                     for (auto neigh : inactive_neighs)
-                    neigh->received_potential += potential_to_send;
+                        neigh->received_potential += potential_to_send;
                 }
 
             }
@@ -270,7 +271,7 @@ void CardiacTissue<APM,CVM>::TriggerEvent(CellEvent* ev)
             if(node_->received_potential >= 3) // @todo Convert to parameter
             {
                 // Reactivation
-                CellEvent * ev_react = node_->ActivateAtTime(parent_node_, this->tissue_time, node_excitable_at_time);
+                CellEvent * ev_react = node_->ScheduleActivation(parent_node_, node_excitable_at_time);
                 if(ev_react != nullptr)
                     this->event_queue.InsertCellEvent(ev_react);
                 else // We reset potential
