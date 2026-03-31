@@ -20,11 +20,11 @@ print("\n--- Building the slab with two regions ---")
 slab_path = os.path.join(case_dir, "input_data", "slab.vtk")
 slab_args = [
     slab_path,
-    "--nnodes", "45", "45", "5",
+    "--nnodes", "60", "60", "2",
     "--spacing", "0.1", "0.1", "0.1",
     "--region-by-side", "south", "1",
     "--field", "restitution_model", "2",
-    "--region", '{"shape" : "square", "cx" : 2.25, "cy" : 2.25, "r1" : 1.0, "r2" : 1.0, "restitution_model" : 5}'
+    "--region", '{"shape" : "square", "cx" : 3.0, "cy" : 3.0, "r1" : 1.5, "r2" : 1.5, "restitution_model" : 5}'
 ]
 
 # Build and save the slab
@@ -103,7 +103,6 @@ config = {
     "PROTOCOL": [
         {
             "ACTIVATION_REGION": 1,
-            "FIRST_ACTIVATION_TIME": 0,
             "N_STIMS_PACING": [3],
             "BCL": [400]
         }
