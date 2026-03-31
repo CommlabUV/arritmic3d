@@ -90,7 +90,7 @@ def create_tissue(grid, params):
     return tissue
 
 
-def run_simulation(case_dir, cfg):
+def run_simulation(case_dir, cfg, debug_level=0):
 
     vtk_file = cfg['VTK_INPUT_FILE']
 
@@ -112,7 +112,7 @@ def run_simulation(case_dir, cfg):
     time = tissue.GetTime()
 
     while time < cfg['SIMULATION_DURATION']:
-        tick = tissue.update(0)
+        tick = tissue.update(debug_level)
         time = tissue.GetTime()
 
         if tick == arritmic3d.SystemEventType.EXT_ACTIVATION:
@@ -413,7 +413,7 @@ def generate_slab_to_output(case_dir, slab_args):
     return slab_path
 
 
-def run_arritmic3D(case_dir, config : dict = {}, save_run_config=True):
+def run_arritmic3D(case_dir, config : dict = {}, save_run_config=True, debug_level = 0):
     """
     Run the Arritmic3D simulation in the given case directory with the provided configuration dict
 
@@ -450,7 +450,7 @@ def run_arritmic3D(case_dir, config : dict = {}, save_run_config=True):
         save_run_configuration(config, case_dir)
 
     # Run simulation with runtime config (absolute paths)
-    run_simulation(case_dir, config)
+    run_simulation(case_dir, config, debug_level)
     print("Simulation finished", flush=True)
 
 def run_test_case(output_dir):
