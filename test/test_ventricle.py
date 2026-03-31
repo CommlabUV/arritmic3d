@@ -2,23 +2,15 @@ import arritmic3d
 import numpy as np
 import pyvista as pv
 
-# Conversion of int to CellType
-def convert_to_cell_type(cell_type):
-    if cell_type == 0:
-        return arritmic3d.CellType.HEALTHY
-    elif cell_type == 1:
-        return arritmic3d.CellType.BORDER_ZONE
+# Conversion of CellType and TissueRegion from the VTK file to Ten Tusscher model id.
+# Cell types: 0 = Healthy, 1 = Border Zone
+# Tissue regions: 0 = Endo, 1 = Mid, 2 = Epi
+def convert_to_cell_type(cell_type, region):
+    if cell_type < 0 or cell_type > 1:
+        type = 7  # Core
     else:
-        return arritmic3d.CellType.CORE
-
-# Conversion to tissue region
-def convert_to_tissue_region(region):
-    if region == 0:
-        return arritmic3d.TissueRegion.ENDO
-    elif region == 1:
-        return arritmic3d.TissueRegion.MID
-    else:
-        return arritmic3d.TissueRegion.EPI
+        type = 1 + 3 * int(cell_type) + int(region)  # Combine cell type and region to get a unique identifier
+    return type
 
 def main():
     vtk_file = "casos/ventricle_Tagged_2.vtk"
@@ -37,8 +29,7 @@ def main():
     print("Spacing:", x_spacing, y_spacing, z_spacing)
 
     print("Campos disponibles en point_data:", grid.point_data.keys())
-    v_type = list(map(convert_to_cell_type, np.array(grid.point_data['Cell_type'])))
-    v_region = list(map(convert_to_tissue_region, np.array(grid.point_data['EndoToEpi'])))
+    v_type = list(map(convert_to_cell_type, np.array(grid.point_data['Cell_type']), np.array(grid.point_data['EndoToEpi'])))
 
     # Number of cells in each dimension
     ncells_x = dims[0]
@@ -47,16 +38,17 @@ def main():
     tissue = arritmic3d.CardiacTissue(ncells_x, ncells_y, ncells_z, x_spacing, y_spacing, z_spacing)
 
     sensor_point = 60382
-    initial_apd = 300.0
-    v_apd = [initial_apd] * tissue.size()
     v_sensor = [0] * tissue.size()
     v_sensor[sensor_point] = 1  # Set the sensor point
-    parameters = {"INITIAL_APD" : v_apd, "SENSOR" : v_sensor}
+    parameters = {"SENSOR" : v_sensor}
     #v_region = [arritmic3d.TissueRegion.ENDO] * (ncells_x * ncells_y * ncells_z)
     fiber_or = np.array(grid.point_data['fibers_OR'])
     print("Fibers OR:", fiber_or.shape)
 
-    tissue.InitPy(v_type, v_region, parameters, fiber_or)
+    initial_apd = 300.0
+    tissue.InitModels("restitutionModels/config_TenTuscher_APD.csv","restitutionModels/config_TenTuscher_CV.csv")
+    tissue.SetInitialAPD(initial_apd)
+    tissue.InitPy(v_type, parameters, fiber_or)
     print("tissue initialized", flush=True)
 
     # Remove innecessary data
@@ -70,8 +62,8 @@ def main():
     # First activation
     initial_node = 12051 #tissue.GetIndex(2, 2, 1)
     beat = 0
-    tissue.SetSystemEvent(arritmic3d.SystemEventType.EXT_ACTIVATION, 100)  # 100 ms for the first activation
-    tissue.SetSystemEvent(arritmic3d.SystemEventType.EXT_ACTIVATION, 800)  # 800 ms for the second activation
+    tissue.SetSystemEvent(arritmic3d.SystemEventType.EXT_ACTIVATION, 0)  # 0 ms for the first activation
+    tissue.SetSystemEvent(arritmic3d.SystemEventType.EXT_ACTIVATION, 700)  # 700 ms for the second activation
     print(0)
 
     i = 1
@@ -80,8 +72,8 @@ def main():
 
         if tick == arritmic3d.SystemEventType.EXT_ACTIVATION:
             beat += 1
-            print("APD error: ", tissue.GetAPDMeanError())
-            tissue.ResetErrors()
+            print("Mean APD variation: ", tissue.GetAPDMeanVariation())
+            tissue.ResetVariations()
 
             tissue.ExternalActivation([initial_node], tissue.GetTime(), beat)
             print("Beat at time:", tissue.GetTime())
@@ -92,14 +84,14 @@ def main():
             grid.point_data['APD'] = tissue.GetAPD()
             grid.point_data['CV'] = tissue.GetCV()
 
-            #grid.save(f"output/vent{int(tissue.GetTime())}.vtk")
+            grid.save(f"output/vent{int(tissue.GetTime())}.vtk")
 
         if i % 1000 == 0:
             print(i, tissue.GetTime())
 
         i += 1
 
-    print("APD error: ", tissue.GetAPDMeanError())
+    print("Mean APD variation: ", tissue.GetAPDMeanVariation())
 
     sensor_names = tissue.GetSensorDataNames()
     sensor_data = tissue.GetSensorInfo()
