@@ -46,7 +46,7 @@ public:
     void SetLongAPDReactivation(bool val) { long_apd_reactivation = val; }
 
 private:
-    bool long_apd_reactivation = true;
+    bool long_apd_reactivation = false;
     float apd_plateau_duration = 0.8; // Percentage of APD considered as plateau for reactivation
     float apd_variation = 0.0;
     float cv_variation = 0.0;
