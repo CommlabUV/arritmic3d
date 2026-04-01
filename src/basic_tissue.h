@@ -168,8 +168,18 @@ protected:
      */
     Node* GetNodePtr(size_t id)
     {
-        assert(id >= 0 && id < tissue_nodes.size());
+        assert(id < tissue_nodes.size());
         return &tissue_nodes[id];
+    }
+
+    /**
+     * Obtain position of Node in the tissue_nodes vector
+     *
+     */
+    Index_t NodeIndex(size_t id) const
+    {
+        assert(id < tissue_nodes.size());
+        return tissue_geometry.index[id];
     }
 };
 
@@ -214,22 +224,26 @@ void BasicTissue<APM,CVM>::Init(const vector<CellType> & cell_types_, vector<Nod
     assert(parameters_.size() == n_nodes || parameters_.size() == 1);
     for(size_t i = 0; i < n_nodes; i++)
     {
-        tissue_nodes[i] = Node();  // Totally reset the node
-
-        tissue_nodes[i].id = i;
-        tissue_nodes[i].type = cell_types2[i];
-        // Set the fiber orientation, default is isotropic
-        if(this->tissue_fiber_orientation == FiberOrientation::HOMOGENEOUS)
+        CellType type = cell_types2[i];
+        if(true)   //(type != CELL_TYPE_VOID)
         {
-            tissue_nodes[i].orientation = fiber_orientation_.at(0);
-        }
-        else if(this->tissue_fiber_orientation == FiberOrientation::HETEROGENEOUS)
-        {
-            tissue_nodes[i].orientation = fiber_orientation_.at(i);
-        }
+            tissue_nodes[i] = Node();  // Totally reset the node
 
-        if(tissue_nodes[i].type != CELL_TYPE_VOID)
-            n_live_nodes++;
+            tissue_nodes[i].id = i;
+            tissue_nodes[i].type = type;
+            // Set the fiber orientation, default is isotropic
+            if(this->tissue_fiber_orientation == FiberOrientation::HOMOGENEOUS)
+            {
+                tissue_nodes[i].orientation = fiber_orientation_.at(0);
+            }
+            else if(this->tissue_fiber_orientation == FiberOrientation::HETEROGENEOUS)
+            {
+                tissue_nodes[i].orientation = fiber_orientation_.at(i);
+            }
+
+            if(tissue_nodes[i].type != CELL_TYPE_VOID)
+                n_live_nodes++;
+        }
     }
 
     LOG::Warning(n_live_nodes == 0, "Tissue has no live cells (all cells are VOID).");
