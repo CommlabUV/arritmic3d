@@ -262,16 +262,17 @@ float NodeT<APD, CVM>::ComputeDirectionalConductionVelocity(const NodeT::Vector3
 {
     float cond_vel;
 
-    if(this->parameters->isotropic_diffusion || direction_.norm() < ALMOST_ZERO)
+    // If isotropic, orientation==0 or direction==0
+    if(this->parameters->isotropic_diffusion ||
+        this->orientation.norm() < ALMOST_ZERO ||
+        direction_.norm() < ALMOST_ZERO)
     {
-        // BORDER_ZONE: isotropic conduction
-        // The same if direction is not interpretable or
-        // there is no fiber orientation
+        // Isotropic conduction
         cond_vel = this->conduction_vel;
     }
     else if(this->type != CELL_TYPE_VOID)
     {
-        // HEALTHY: anisotropic conduction
+        // Anisotropic conduction
         float cond_vel_long = abs(this->orientation.dot(direction_))/direction_.norm();
         float cond_vel_transv = sqrt(1.0 - cond_vel_long*cond_vel_long);
 
@@ -286,7 +287,7 @@ float NodeT<APD, CVM>::ComputeDirectionalConductionVelocity(const NodeT::Vector3
     }
     else
     {
-        // otherwise, CORE -> no conduction at all.
+        // otherwise, VOID -> no conduction at all.
         cond_vel = 0.0;
     }
 
