@@ -188,26 +188,31 @@ void CardiacTissue<APM,CVM>::TriggerEvent(CellEvent* ev)
                 vector<Node*> inactive_neighs;
                 for (unsigned int i = 0; i < this->tissue_geometry.num_neighbours; ++i )
                 {
+                    // We get the neighbour node
                     // Danger! May go out of the array of Node
                     Node* neigh = node_ + this->tissue_geometry.displacement[i];  // @todo Look for a better way to do this
                     assert(neigh >= this->tissue_nodes.data() && neigh < this->tissue_nodes.data() + this->tissue_nodes.size());
+
                     // We skip core nodes
-                    if ( neigh->type != CELL_TYPE_VOID )
+                    if ( neigh->type == CELL_TYPE_VOID )
                     {
-                        float distance = this->tissue_geometry.distance_to_neighbour[i];
-                        Vector3 activation_dir = - this->tissue_geometry.relative_position[i]; // @todo Maybe we should define the opposite direction in geometry
+                        continue;
+                    }
 
-                        // We compute the direct diffusion, through the graph.
-                        float direct_vel = node_->ComputeDirectionalConductionVelocity(activation_dir);
-                        float direct_activation_time = node_->local_activation_time + distance/direct_vel;
-                        CellEvent * ev_neigh = neigh->ScheduleActivation(node_, direct_activation_time);
+                    float distance = this->tissue_geometry.distance_to_neighbour[i];
+                    Vector3 activation_dir = - this->tissue_geometry.relative_position[i]; // @todo Maybe we should define the opposite direction in geometry
 
-                        // if ev_neigh is nullptr means it is active and rejected activation or it has an earlier activation time
-                        if (ev_neigh != nullptr)
-                        {
-                            this->event_queue.InsertCellEvent(ev_neigh);
-                            inactive_neighs.push_back(neigh); // @todo Maybe it should include nodes with earlier activation time
-                        }
+                    // We compute the direct diffusion, through the graph.
+                    float direct_vel = node_->ComputeDirectionalConductionVelocity(activation_dir);
+                    float direct_activation_time = node_->local_activation_time + distance/direct_vel;
+
+                    CellEvent * ev_neigh = neigh->ScheduleActivation(node_, direct_activation_time);
+
+                    // if ev_neigh is nullptr means it is active and rejected activation or it has an earlier activation time
+                    if (ev_neigh != nullptr)
+                    {
+                        this->event_queue.InsertCellEvent(ev_neigh);
+                        inactive_neighs.push_back(neigh); // @todo Maybe it should include nodes with earlier activation time
                     }
                 }
 
