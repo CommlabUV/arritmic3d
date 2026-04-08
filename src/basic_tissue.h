@@ -225,9 +225,8 @@ void BasicTissue<APM,CVM>::Init(const vector<CellType> & cell_types_, vector<Nod
         }
         else if(this->tissue_fiber_orientation == FiberOrientation::HETEROGENEOUS)
         {
+            // @todo If fiber_orientation is locally 0, it is not set to isotropic. Check if it can be done in ChangeParameters()
             tissue_nodes[i].orientation = fiber_orientation_.at(i);
-            if(tissue_nodes[i].orientation.norm() < ALMOST_ZERO)
-                tissue_nodes[i].isotropic_diffusion = true;
         }
 
         if(tissue_nodes[i].type != CELL_TYPE_VOID)
@@ -265,6 +264,7 @@ void BasicTissue<APM,CVM>::ChangeParameters(vector<NodeParameters> & parameters_
     assert(parameters_.size() == n_nodes || parameters_.size() == 1);
 
     // Set isotropic diffusion, default is true
+    // @todo if heterogeneous and locally isotropic, it is not set in parameters.
     bool isotropic = true;
     if(this->tissue_fiber_orientation == FiberOrientation::HOMOGENEOUS || this->tissue_fiber_orientation == FiberOrientation::HETEROGENEOUS)
         isotropic = false;
