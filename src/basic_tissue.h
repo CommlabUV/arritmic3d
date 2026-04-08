@@ -226,6 +226,8 @@ void BasicTissue<APM,CVM>::Init(const vector<CellType> & cell_types_, vector<Nod
         else if(this->tissue_fiber_orientation == FiberOrientation::HETEROGENEOUS)
         {
             tissue_nodes[i].orientation = fiber_orientation_.at(i);
+            if(tissue_nodes[i].orientation.norm() < ALMOST_ZERO)
+                tissue_nodes[i].isotropic_diffusion = true;
         }
 
         if(tissue_nodes[i].type != CELL_TYPE_VOID)
