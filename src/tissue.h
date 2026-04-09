@@ -206,6 +206,28 @@ void CardiacTissue<APM,CVM>::TriggerEvent(CellEvent* ev)
                     float direct_vel = node_->ComputeDirectionalConductionVelocity(activation_dir);
                     float direct_activation_time = node_->local_activation_time + distance/direct_vel;
 
+                    if (neigh->GetState(this->tissue_time) == Node::CellActivationState::ACTIVE) // direct_activation_time
+                    { // AQUI: lanzar y depurar las ecuaciones // Nodos 137-> 249
+                        // We validate the activation times with the conduction velocities
+                        // If the neighbour is active, perhaps it activated us
+                        // If it activated us, its activation time cannot be earlier than
+                        // our activation time less the longest travel time.
+                        // 1. We compute the max travel time from neigh towards us.
+                        float neigh_min_vel = neigh->parameters->cond_veloc_transversal_reduction*neigh->conduction_vel;
+                        float max_travel_time = distance/neigh_min_vel;
+                        // 2. We compute the earliest activation time if neigh activated us.
+                        float neigh_earliest_possible_activation = node_->local_activation_time - max_travel_time;
+                        // 3. If the neighbour activated before this threshold, it could not have activate us.
+                        // Otherwise, we assume it could have activated us and skip this neigh.
+                        if(neigh->local_activation_time > neigh_earliest_possible_activation)
+                        {
+                            // LOG::Info(true, "From ", node_->id, " to ", neigh->id, " ->·<- neigh: ", neigh->local_activation_time, " newer than ", neigh_earliest_possible_activation);
+                            // LOG::Info(true, "    Target node ", neigh->id, " could have activated node ", node_->id, ". We skip it to prevent turnover.");
+                            continue;
+                        }
+
+                    }
+
                     CellEvent * ev_neigh = neigh->ScheduleActivation(node_, direct_activation_time);
 
                     // if ev_neigh is nullptr means it is active and rejected activation or it has an earlier activation time

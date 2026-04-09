@@ -198,14 +198,6 @@ typename NodeT<APD, CVM>::CellEvent* NodeT<APD, CVM>::ScheduleActivation(NodeT<A
     if( parent_->parameters->safety_factor < this->parameters->safety_factor)  // @todo Why? Also managed in Tissue
         return ev;
 
-    // If the cell is active, only activation attempts that are
-    // by final 95% of the ERP are considered.
-    // @todo Convert to a parameter
-    // @todo Check meaning. If it is active, why consider activation? To allow negative DIs? Add an else with a print to debug.    LOG::Info(false, "APD: ", this->apd_model.getAPD(), " ERP: ", this->apd_model.getERP() );
-    if (this->GetState(activation_time_) == CellActivationState::ACTIVE)
-        if (activation_time_ < this->local_activation_time + 0.95 * this->apd_model.getERP())
-            return ev;
-
     // Only if activation is earlier we modify anything
     if (activation_time_ < this->next_activation_time)
     {
