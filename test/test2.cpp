@@ -56,6 +56,7 @@ int main(int argc, char **argv)
     std::vector<NodeParameters> v_np(1);
     Eigen::VectorXf fiber_dir = Eigen::Vector3f(0.7, 0.7, 0.0);
     tissue.InitModels("restitutionModels/config_TenTuscher_APD.csv","restitutionModels/config_TenTuscher_CV.csv");
+    tissue.SetInitialAPD(200.0f);
     tissue.Init(v_type, v_np, {fiber_dir});
 
     std::cout << "Tissue size: " << tissue.size() << std::endl;
@@ -69,8 +70,9 @@ int main(int argc, char **argv)
     tissue.SetTimer(SystemEventType::EXT_ACTIVATION, s1);
     */
     int beat = 0;
+    float CL = 300.0f;  // cycle length in ms
 
-    tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, 100);
+    tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, 0);
 
     tissue.SaveVTK("output/testb0.vtk");
     std::cout << "--- Begin simulation ---" << std::endl;
@@ -96,7 +98,7 @@ int main(int argc, char **argv)
 
             std::cout << "External activation scheduled for beat " << beat << " at time " << tissue.GetTime() << std::endl;
             tissue.ExternalActivation({initial_node}, tissue.GetTime(), beat);
-            tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, tissue.GetTime() + 300);
+            tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, tissue.GetTime() + CL);
         }
 
     }
