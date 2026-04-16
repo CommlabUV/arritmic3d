@@ -89,7 +89,7 @@ public:
     }
 
 private:
-    constexpr static int SAVE_VERSION = 1;  ///< Version of the NodeT class for state saving/loading.
+    constexpr static int SAVE_VERSION = 2;  ///< Version of the NodeT class for state saving/loading.
     NodeParameters*  parameters;         ///< @brief Parameters of the Node
     unsigned int    id;                 ///< @brief Unique Node id
 

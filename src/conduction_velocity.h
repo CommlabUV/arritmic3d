@@ -34,6 +34,7 @@ public:
     {
         this->cv = INITIAL_CV;
         this->correction_factor = 1.0;
+        this->cv_memory_coeff = 0.0;
     };
 
 
@@ -44,9 +45,9 @@ public:
      * @param corrfc_ Correction factor for restitution models.
      * @param cv_ Initial conduction velocity.
      */
-    ConductionVelocity(CellType type, float corrfc_ = 1.0, float cv_ = INITIAL_CV)
+    ConductionVelocity(CellType type, float corrfc_ = 1.0, float cv_ = INITIAL_CV, float cv_memory_coeff_ = 0.0)
     {
-        Init(type, corrfc_, cv_);
+        Init(type, corrfc_, cv_, cv_memory_coeff_);
     };
 
 
@@ -61,18 +62,21 @@ public:
      * @param type Cell type.
      * @param corrfc_ Correction factor for restitution models.
      * @param cv_ Initial conduction velocity.
+     * @param cv_memory_coeff_ Inertia coefficient for CV.
      */
-    void Init(CellType type, float corrfc_ = 1.0, float cv_ = INITIAL_CV)
+    void Init(CellType type, float corrfc_ = 1.0, float cv_ = INITIAL_CV, float cv_memory_coeff_ = 0.0)
     {
         SetRestitutionModel(type);
         this->correction_factor = corrfc_;
         this->cv = cv_;
+        this->cv_memory_coeff = cv_memory_coeff_;
     };
 
-    void Init(CellType type, float corrfc_, float di_, float apd_)
+    void InitWithAPD(CellType type, float corrfc_, float di_, float apd_, float cv_memory_coeff_ = 0.0)
     {
         SetRestitutionModel(type);
         this->correction_factor = corrfc_;
+        this->cv_memory_coeff = cv_memory_coeff_;
         if(di_ < 0.0 || apd_ < 0.0 || type == CELL_TYPE_VOID)
             this->cv = INITIAL_CV;
         else
@@ -98,7 +102,12 @@ public:
      */
     void Activate(float di,float apd)
     {
-        this->cv = this->restitution_model->getValue(apd, di)*this->correction_factor;
+        float new_cv = this->restitution_model->getValue(apd, di);
+        if(! restitution_model->is_novalue(new_cv) )
+        {
+            new_cv *= this->correction_factor;
+            this->cv = this->cv_memory_coeff*this->cv + (1.0 - this->cv_memory_coeff)*new_cv;  // Inertia
+        }
     };
 
    /**
@@ -133,6 +142,7 @@ public:
     {
         f.write( (char *) &cv, sizeof(float) );
         f.write( (char *) &correction_factor, sizeof(float) );
+        f.write( (char *) &cv_memory_coeff, sizeof(float) );
     }
 
     /**
@@ -143,6 +153,7 @@ public:
     {
         f.read( (char *) &cv, sizeof(float) );
         f.read( (char *) &correction_factor, sizeof(float) );
+        f.read( (char *) &cv_memory_coeff, sizeof(float) );
 
         SetRestitutionModel(type);
     }
@@ -152,6 +163,7 @@ private:
     float cv; ///< Conduction velocity.
     static constexpr float INITIAL_CV = 1.0; ///< Initial conduction velocity.
     float correction_factor; /**< Correction factor for restitution model. */
+    float cv_memory_coeff; /**<  Inertia coefficient. */
 
     Spline2D * restitution_model; ///< APD restitution model.
     static SplineContainer2D splines; ///< Container of APD restitution models.

@@ -38,6 +38,7 @@ public:
         this->ta = 0.0;
         this->correction_factor = 1.0;
         this->apd = 0.0;
+        this->apd_memory_coeff = 0.0;
     };
 
     /**
@@ -48,10 +49,11 @@ public:
      * @param t0_ Time of the activation.
      * @param di_ Diastolic interval.
      * @param corrfc_ Correction factor for restitution models.
+     * @param apd_memory_coeff_ Inertia coefficient for APD.
      */
-    ActionPotentialRestSurface(CellType type, float apd_, float t0_, float di_ = 0.0, float corrfc_ = 1.0)
+    ActionPotentialRestSurface(CellType type, float apd_, float t0_, float di_ = 0.0, float corrfc_ = 1.0, float apd_memory_coeff_ = 0.0)
     {
-        Init(type, apd_, t0_, di_, corrfc_);
+        Init(type, apd_, t0_, di_, corrfc_, apd_memory_coeff_);
     };
 
     static void InitModel(const std::string &path)
@@ -67,14 +69,16 @@ public:
      * @param t0_ Time of the activation.
      * @param di_ Diastolic interval.
      * @param corrfc_ Correction factor for restitution models.
+     * @param apd_memory_coeff_ Inertia coefficient for APD.
      */
-    void Init(CellType type, float apd_, float t0_, float di_ = 0.0, float corrfc_ = 1.0)
+    void Init(CellType type, float apd_, float t0_, float di_ = 0.0, float corrfc_ = 1.0, float apd_memory_coeff_ = 0.0)
     {
         SetRestitutionModel(type);
         if(type == CELL_TYPE_VOID)
             return;
 
         this->correction_factor = corrfc_;
+        this->apd_memory_coeff = apd_memory_coeff_;
         if (di_ > 0.0)
         {
             this->last_di = di_;
@@ -121,9 +125,11 @@ public:
         bool activated = false;
         float di = new_ta -(this->ta + this->apd);
 
-        float new_apd = restitution_model->getValue(this->apd, di)*this->correction_factor;
+        float new_apd = restitution_model->getValue(this->apd, di);
         if (! restitution_model->is_novalue(new_apd) )
         {
+            new_apd *= this->correction_factor;
+            new_apd = this->apd_memory_coeff*this->apd + (1.0 - this->apd_memory_coeff)*new_apd;  // Inertia
             this->last_di = di;
             this->delta_apd = std::fabs(new_apd - this->apd);    // Calculated without electrotonic effect !!
             this->apd = new_apd;
@@ -308,6 +314,7 @@ public:
         f.write( (char *) &last_di, sizeof(float) );
         f.write( (char *) &delta_apd, sizeof(float) );
         f.write( (char *) &correction_factor, sizeof(float) );
+        f.write( (char *) &apd_memory_coeff, sizeof(float) );
     }
 
     /**
@@ -321,6 +328,7 @@ public:
         f.read( (char *) &last_di, sizeof(float) );
         f.read( (char *) &delta_apd, sizeof(float) );
         f.read( (char *) &correction_factor, sizeof(float) );
+        f.read( (char *) &apd_memory_coeff, sizeof(float) );
 
         SetRestitutionModel(type);
     }
@@ -331,6 +339,7 @@ private:
     float last_di; /**< Last diastolic interval. */
     float delta_apd; ///< Change in APD due to restitution models (without electrotonic effect).
     float correction_factor; /**< Correction factor for restitution models. */
+    float apd_memory_coeff; /**<  Inertia coefficient. */
 
     Spline2D * restitution_model; /**< APD restitution model. */
     static SplineContainer2D splines; /**< Container of APD restitution models. */
