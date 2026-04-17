@@ -43,7 +43,7 @@ PY_MOD_NAME = arritmic3d
 SRC_PY = src/bindings.cpp
 
 # Use python3-config (or <python>-config) to obtain compiler/linker flags for Python
-PYTHON_CONFIG := $(shell command -v $(PY)-config 2>/dev/null || command -v $(PY)-config 2>/dev/null)
+PYTHON_CONFIG := $(shell command -v $(PY)-config 2>/dev/null || command -v python3-config 2>/dev/null)
 ifeq ($(PYTHON_CONFIG),)
 $(error "python3-config not found. Install python3-dev or provide a python-config tool in PATH.")
 endif
