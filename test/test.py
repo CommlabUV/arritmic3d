@@ -25,7 +25,7 @@ def main():
     initial_node = tissue.GetIndex(2, 2, 1)
     beat = 0
     CL = 300.0  # cycle length in ms
-    tissue.SetSystemEvent(arritmic3d.SystemEventType.EXT_ACTIVATION, 1)
+    tissue.SetTimer(arritmic3d.SystemEventType.EXT_ACTIVATION, CL)
     #tissue.SaveVTK("output/test0.vtk")
 
     print("-- Begin Simulation --", flush=True)
@@ -41,7 +41,7 @@ def main():
 
             print("External activation for beat ", beat, " at time ", tissue.GetTime())
             tissue.ExternalActivation([initial_node], tissue.GetTime(), beat)
-            tissue.SetSystemEvent(arritmic3d.SystemEventType.EXT_ACTIVATION, tissue.GetTime() + CL)
+            #tissue.SetSystemEvent(arritmic3d.SystemEventType.EXT_ACTIVATION, tissue.GetTime() + CL)
 
         if tick == arritmic3d.SystemEventType.FILE_WRITE:
             tissue.SaveVTK(f"output/test{i}.vtk")
