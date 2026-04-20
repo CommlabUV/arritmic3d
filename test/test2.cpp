@@ -11,8 +11,7 @@
 #include "../src/action_potential_rs.h"
 #include "../src/conduction_velocity.h"
 
-const int N_NODES = 30;
-const int TOTAL_NODES = N_NODES*N_NODES*N_NODES;
+const int N_NODES = 10;
 
 enum CellTypeVentricle { HEALTHY_ENDO = 1, HEALTHY_MID, HEALTHY_EPI, BZ_ENDO, BZ_MID, BZ_EPI };
 
@@ -49,7 +48,7 @@ int main(int argc, char **argv)
 
     // Test of the CardiacTissue class
     CardiacTissue<ActionPotentialRestSurface,ConductionVelocity> tissue(N_NODES, N_NODES, N_NODES, 0.1, 0.1, 0.1);
-    std::vector<CellType> v_type(TOTAL_NODES, HEALTHY_ENDO);
+    std::vector<CellType> v_type(tissue.size(), HEALTHY_ENDO);
     //tissue.SetBorder(v_type, CELL_TYPE_VOID);
     SetCore(tissue, v_type, N_NODES-8, N_NODES-8, N_NODES-8, CELL_TYPE_VOID);
 
@@ -62,24 +61,22 @@ int main(int argc, char **argv)
     std::cout << "Tissue size: " << tissue.size() << std::endl;
     std::cout << "Tissue live nodes: " << tissue.GetNumLiveNodes() << std::endl;
 
-    //tissue.SetTimer(SystemEventType::FILE_WRITE, 1);
-
     size_t initial_node = tissue.GetIndex(2,2,2);   //(1,2,2);
-    /*
+
     int s1 = 300;
     tissue.SetTimer(SystemEventType::EXT_ACTIVATION, s1);
-    */
+    tissue.SetTimer(SystemEventType::FILE_WRITE, s1, 400.0f);  // Write every s1 ms starting at t=400 ms
+
     int beat = 0;
-    float CL = 300.0f;  // cycle length in ms
 
-    tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, 0);
+    //tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, 0);
+    //tissue.SaveVTK("output/testb0.vtk");
 
-    tissue.SaveVTK("output/testb0.vtk");
     std::cout << "--- Begin simulation ---" << std::endl;
 
     float t = tissue.GetTime();
     int i = 0;
-    while( t < 4000.0)
+    while( t < 2000.0)
     {
         auto tick = tissue.update();
         t = tissue.GetTime();
@@ -98,7 +95,7 @@ int main(int argc, char **argv)
 
             std::cout << "External activation scheduled for beat " << beat << " at time " << tissue.GetTime() << std::endl;
             tissue.ExternalActivation({initial_node}, tissue.GetTime(), beat);
-            tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, tissue.GetTime() + CL);
+            //tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, tissue.GetTime() + CL);
         }
 
     }
