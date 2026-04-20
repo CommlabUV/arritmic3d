@@ -211,7 +211,7 @@ Each VTK contains the following point data fields:
 |   `LAT`    |                   Local activation time.                    |
 |   `Beat`   |                    Beat counter per cell                    |
 
-The output frequency is controlled by `VTK_OUTPUT_PERIOD`, and it can be enabled/disabled via `VTK_OUTPUT_SAVE`.
+The output frequency is controlled by `VTK_OUTPUT_PERIOD`, and it can be enabled/disabled via `VTK_OUTPUT_SAVE`. The start time of the output is controlled by `VTK_OUTPUT_INITIAL_TIME`.
 
 
 # Running simulations
@@ -320,11 +320,12 @@ The configuration file is a JSON file with the following parameters:
 
 : Electrophysiollogy and conduction parameters
 
-| Field               | Description                        |
-|:--------------------|:-----------------------------------|
-| `VTK_OUTPUT_SAVE`   | If `true`, saves VTK output files. |
-| `VTK_OUTPUT_PERIOD` | Time interval between VTK outputs. |
-| `VTK_INPUT_FILE`    | Path to the input VTK file.        |
+| Field                       | Description                        |
+|:----------------------------|:-----------------------------------|
+| `VTK_OUTPUT_SAVE`           | If `true`, saves VTK output files. |
+| `VTK_OUTPUT_PERIOD`         | Time interval between VTK outputs. |
+| `VTK_OUTPUT_INITIAL_TIME`   | Time for the first VTK output.     |
+| `VTK_INPUT_FILE`            | Path to the input VTK file.        |
 
 : I/O and file management.
 

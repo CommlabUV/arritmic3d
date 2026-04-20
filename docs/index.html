@@ -421,7 +421,7 @@ Warning
 </tr>
 </tbody>
 </table>
-<p>The output frequency is controlled by <code>VTK_OUTPUT_PERIOD</code>, and it can be enabled/disabled via <code>VTK_OUTPUT_SAVE</code>.</p>
+<p>The output frequency is controlled by <code>VTK_OUTPUT_PERIOD</code>, and it can be enabled/disabled via <code>VTK_OUTPUT_SAVE</code>. The start time of the output is controlled by <code>VTK_OUTPUT_INITIAL_TIME</code>.</p>
 </section>
 <section id="running-simulations" class="level1">
 <h1>Running simulations</h1>
@@ -511,11 +511,11 @@ Warning
 <tbody>
 <tr class="odd">
 <td style="text-align: left;"><code>CV_MODEL_CONFIG_PATH</code></td>
-<td style="text-align: left;">Path to the <code>csv</code> configuration file of the conduction velocities models.</td>
+<td style="text-align: left;">Path to the <code>csv</code> configuration file of the conduction velocities models. The path must be relative to the path of the JSON file.</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;"><code>APD_MODEL_CONFIG_PATH</code></td>
-<td style="text-align: left;">Path to the <code>csv</code> configuration file of the action potential duration models.</td>
+<td style="text-align: left;">Path to the <code>csv</code> configuration file of the action potential duration models. The path must be relative to the path of the JSON file.</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;"><code>CV_MODEL</code></td>
@@ -580,6 +580,10 @@ Warning
 <td style="text-align: left;">Time interval between VTK outputs.</td>
 </tr>
 <tr class="odd">
+<td style="text-align: left;"><code>VTK_OUTPUT_INITIAL_TIME</code></td>
+<td style="text-align: left;">Time for the first VTK output.</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;"><code>VTK_INPUT_FILE</code></td>
 <td style="text-align: left;">Path to the input VTK file.</td>
 </tr>

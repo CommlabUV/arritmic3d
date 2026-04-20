@@ -103,8 +103,11 @@ def run_simulation(case_dir, cfg, debug_level=0):
     # Create the tissue from the grid, passing the loaded configuration dict
     tissue = create_tissue(grid, cfg)
 
-    # Set the timer for saving the VTK files
-    tissue.SetTimer(arritmic3d.SystemEventType.FILE_WRITE, cfg['VTK_OUTPUT_PERIOD'])  # time in ms
+    # Set the timer for saving the VTK files (times in ms)
+    tissue.SetTimer(
+        arritmic3d.SystemEventType.FILE_WRITE,
+        cfg['VTK_OUTPUT_PERIOD'],
+        initial_time=cfg['VTK_OUTPUT_INITIAL_TIME'])
 
     # Schedule the activation protocol
     activations = schedule_activation(cfg, grid, tissue)
@@ -163,7 +166,8 @@ Examples:
   python arritmic3D.py /path/to/case_dir \\
     --input-file /path/to/tissue.vtk \\
     --config-param SIMULATION_DURATION=8000 \\
-    --config-param VTK_OUTPUT_PERIOD=50
+    --config-param VTK_OUTPUT_PERIOD=50 \\
+    --config-param VTK_OUTPUT_INITIAL_TIME=4000
         """
     )
 

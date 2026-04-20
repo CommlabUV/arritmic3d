@@ -167,6 +167,7 @@ def make_default_config():
         "SAFETY_FACTOR": 1.0,
         "VTK_OUTPUT_SAVE": True,
         "VTK_OUTPUT_PERIOD": 20.0,
+        "VTK_OUTPUT_INITIAL_TIME": 0.0,
         "SENSORS_OUTPUT_SAVE": True,
         "SIMULATION_DURATION": 6000.0,
         # PROTOCOL / ACTIVATE_NODES intentionally omitted; can be provided via --config-param

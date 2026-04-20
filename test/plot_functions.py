@@ -37,7 +37,7 @@ def plot_vtk(file_path, field="AP",plt_show=False,title = ""):
 def plot_animation(case_dir, field="AP", init_time=None, end_time=None, step=None):
     config = a3d.load_case_config(case_dir)
     if init_time is None:
-        init_time = config.get("VTK_OUTPUT_PERIOD")
+        init_time = config.get("VTK_OUTPUT_INITIAL_TIME")
     if step is None:
         step = config.get("VTK_OUTPUT_PERIOD")
     if end_time is None:

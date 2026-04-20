@@ -41,7 +41,8 @@ config = {
     "APD_MODEL": "TenTuscher",
     "CV_MODEL": "TenTuscher",
     "SIMULATION_DURATION": 5000,
-    "VTK_OUTPUT_PERIOD": 10,
+    "VTK_OUTPUT_PERIOD": 1,
+    "VTK_OUTPUT_INITIAL_TIME": 2800,
     "PROTOCOL": [
         {
             "ACTIVATION_REGION": 1,
