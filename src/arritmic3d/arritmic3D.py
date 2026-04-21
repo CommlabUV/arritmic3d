@@ -13,6 +13,7 @@ from . import arr3D_build_slab
 
 from .arr3D_config import check_directory, get_vectorial_parameters, load_config_file, load_case_config, make_default_config, resolve_models_in_parameters
 from .arr3D_activations import schedule_activation
+from .arr3D_sensor import WriteAllSensorData
 
 
 def load_grid(vtk_file):
@@ -144,6 +145,15 @@ def run_simulation(case_dir, cfg, debug_level=0):
 
 
             grid.save(f"{os.path.join(case_dir, out_file_name)}_{int(time):05d}.vtk")
+
+    # Save sensor data to CSV files in <case_dir>/sensors/
+    sensors_dir = os.path.join(case_dir, "sensors")
+    os.makedirs(sensors_dir, exist_ok=True)
+    sensor_data = tissue.GetSensorInfo()
+    if sensor_data:
+        sensor_names = tissue.GetSensorDataNames()
+        WriteAllSensorData(sensors_dir, sensor_data, sensor_names)
+        print(f"Sensor data saved to {sensors_dir}", flush=True)
 
 
 def get_arg_parser():
