@@ -149,6 +149,12 @@ def run_simulation(case_dir, cfg, debug_level=0):
 
             grid.save(f"{os.path.join(case_dir, out_file_name)}_{int(time):05d}.vtk")
 
+            # Incremental sensor data saving
+            sensor_data = tissue.GetSensorInfo()
+            if sensor_data:
+                sensor_names = tissue.GetSensorDataNames()
+                WriteAllSensorData(sensors_dir, sensor_data, sensor_names)
+
     # Save sensor data to CSV files in <case_dir>/sensors/
     sensor_data = tissue.GetSensorInfo()
     if sensor_data:
