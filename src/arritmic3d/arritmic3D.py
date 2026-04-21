@@ -100,6 +100,9 @@ def create_tissue(grid, params):
 
 def run_simulation(case_dir, cfg, debug_level=0):
 
+    # Sensors output directory
+    sensors_dir = os.path.join(case_dir, "sensors")
+
     vtk_file = cfg['VTK_INPUT_FILE']
 
     # keep the original file name for saving the output
@@ -147,8 +150,6 @@ def run_simulation(case_dir, cfg, debug_level=0):
             grid.save(f"{os.path.join(case_dir, out_file_name)}_{int(time):05d}.vtk")
 
     # Save sensor data to CSV files in <case_dir>/sensors/
-    sensors_dir = os.path.join(case_dir, "sensors")
-    os.makedirs(sensors_dir, exist_ok=True)
     sensor_data = tissue.GetSensorInfo()
     if sensor_data:
         sensor_names = tissue.GetSensorDataNames()
@@ -469,6 +470,10 @@ def run_arritmic3D(case_dir, config : dict = {}, save_run_config=True, debug_lev
     # Save simulation configuration (relative paths) if requested
     if save_run_config:
         save_run_configuration(config, case_dir)
+
+    # Create the sensors output directory alongside the case directory
+    sensors_dir = os.path.join(case_dir, "sensors")
+    os.makedirs(sensors_dir, exist_ok=True)
 
     # Run simulation with runtime config (absolute paths)
     run_simulation(case_dir, config, debug_level)
