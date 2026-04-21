@@ -38,7 +38,7 @@ slab_args = [
     "--spacing", "0.35", "0.35", "0.35",
     "--region-by-side", "south", "1",
     "--field", "restitution_model", "1",
-    "--region", '{"shape" : "circle", "cx" : 37.65, "cy" : 37.65, "r1" : 25.0, "r2" : 25.0, "restitution_model" : 2}',
+    "--region", '{"shape" : "circle", "cx" : 37.65, "cy" : 37.65, "r1" : 31.0, "r2" : 31.0, "restitution_model" : 2}',
     "--region", '{"shape" : "circle", "cx" : 37.65, "cy" : 4.0,  "r1" : 0.4,   "r2" : 0.4, "activation_region" : 2}'
 ]
 
@@ -55,11 +55,13 @@ config = {
     "VTK_INPUT_FILE": slab_path,
     "APD_MODEL_CONFIG_PATH": "restitution/configDisc_APD.csv",
     "CV_MODEL_CONFIG_PATH": "restitution/configDisc_CV.csv",
-    "CORRECTION_FACTOR_CV": 0.95,
-    "CORRECTION_FACTOR_APD": 1.1,
+    "CORRECTION_FACTOR_CV": 1.0,
+    "CORRECTION_FACTOR_APD": 1.0,
+    "ELECTROTONIC_EFFECT": 0.0,
     "INITIAL_APD": 430,
     "SIMULATION_DURATION": 3500,
     "VTK_OUTPUT_PERIOD": 10,
+    "VTK_OUTPUT_INITIAL_TIME": 2000,
     "PROTOCOL": [
         {
             "ACTIVATION_REGION": 1,
@@ -70,11 +72,7 @@ config = {
     "ACTIVATE_NODES": [
         {
             "ACTIVATION_REGION": 2,
-            "ACTIVATION_TIMES": [[2389,4]]
-        },
-        {
-            "ACTIVATION_REGION": 2,
-            "ACTIVATION_TIMES": [[2800,5]]
+            "ACTIVATION_TIMES": [[2358,4]]
         }
     ]
 }
@@ -85,5 +83,5 @@ a3d.arritmic3d(case_dir, config=config)
 print("Simulation completed!")
 
 # --- STEP 5: Visualize a single result ---
-print("\n--- Visualizing a frame at 2550ms ---")
-plot_vtk(os.path.join(case_dir, f"slab_02550.vtk"), plt_show=True, title="t=2550ms")
+print("\n--- Visualizing a frame at 2850ms ---")
+plot_vtk(os.path.join(case_dir, f"slab_02850.vtk"), plt_show=True, title="t=2850ms")
