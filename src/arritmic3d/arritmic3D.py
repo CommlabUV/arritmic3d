@@ -24,7 +24,7 @@ def load_grid(vtk_file):
 
     # Remove innecessary data
     for key in grid.point_data.keys():
-        if key not in ['restitution_model', 'fibers_orientation', 'activation_region']:
+        if key not in ['restitution_model', 'fibers_orientation', 'activation_region', 'sensor']:
             grid.point_data.remove(key)
 
     return grid
@@ -64,6 +64,13 @@ def create_tissue(grid, params):
 
     vparams = get_vectorial_parameters(tissue, dims, params)
     print("Parameters:", params, flush=True)
+
+    # If a 'sensor' field is present in the grid, register those nodes as sensors
+    if 'sensor' in grid.point_data:
+        v_sensor = [float(v) for v in grid.point_data['sensor']]
+        vparams['SENSOR'] = v_sensor
+        n_sensors = sum(1 for v in v_sensor if v == 1.0)
+        print(f"Sensor field loaded: {n_sensors} sensor node(s)", flush=True)
     # Ensure fibers_orientation exists (default to [0,0,0] if missing)
     if 'fibers_orientation' in grid.point_data:
         fiber_or = list(map(list, grid.point_data['fibers_orientation']))
