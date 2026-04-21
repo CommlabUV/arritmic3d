@@ -146,7 +146,7 @@ window.Quarto = {
   <li><a href="#simulation-output" id="toc-simulation-output" class="nav-link" data-scroll-target="#simulation-output">Simulation output</a></li>
   <li><a href="#running-simulations" id="toc-running-simulations" class="nav-link" data-scroll-target="#running-simulations">Running simulations</a>
   <ul class="collapse">
-  <li><a href="#definition-of-the-simulation-domain" id="toc-definition-of-the-simulation-domain" class="nav-link" data-scroll-target="#definition-of-the-simulation-domain">Definition of the simulation domain</a></li>
+  <li><a href="#sec-sim-domain" id="toc-sec-sim-domain" class="nav-link" data-scroll-target="#sec-sim-domain">Definition of the simulation domain</a></li>
   <li><a href="#setting-configuration-parameters" id="toc-setting-configuration-parameters" class="nav-link" data-scroll-target="#setting-configuration-parameters">Setting configuration parameters</a></li>
   <li><a href="#backup-of-the-run-configuration" id="toc-backup-of-the-run-configuration" class="nav-link" data-scroll-target="#backup-of-the-run-configuration">Backup of the run configuration</a></li>
   </ul></li>
@@ -422,6 +422,69 @@ Warning
 </tbody>
 </table>
 <p>The output frequency is controlled by <code>VTK_OUTPUT_PERIOD</code>, and it can be enabled/disabled via <code>VTK_OUTPUT_SAVE</code>. The start time of the output is controlled by <code>VTK_OUTPUT_INITIAL_TIME</code>.</p>
+<p>If any sensor nodes are defined in the input VTK file (see <a href="#sec-sim-domain" class="quarto-xref">Section&nbsp;6.1</a>), the simulation will save sensor data to CSV files in <code>&lt;case_dir&gt;/sensors/</code>. A CSV file will be saved for each sensor node including the information of the whole simulation. Each row of the file corresponds to the state of that node at each ativation/deactivation event. The columns will be the following:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 31%">
+<col style="width: 68%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Field</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>Time</code></td>
+<td style="text-align: left;">Time in milliseconds.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>event_type</code></td>
+<td style="text-align: left;">Type of event (0=activation, 1=deactivation).</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>type</code></td>
+<td style="text-align: left;">Cell type (restitution model id).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>beat</code></td>
+<td style="text-align: left;">Beat counter.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>local_activation_time</code></td>
+<td style="text-align: left;">Local activation time.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>activated</code></td>
+<td style="text-align: left;">Whether the cell was actually activated or not.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>APD</code></td>
+<td style="text-align: left;">Action potential duration.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>LastDI</code></td>
+<td style="text-align: left;">Last diastolic interval used in the computation of the APD.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>conduction_velocity</code></td>
+<td style="text-align: left;">Conduction velocity.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>next_activation_time</code></td>
+<td style="text-align: left;">Next activation time.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>next_deactivation_time</code></td>
+<td style="text-align: left;">Next deactivation time.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>received_potential</code></td>
+<td style="text-align: left;">Received potential.</td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="running-simulations" class="level1">
 <h1>Running simulations</h1>
@@ -449,8 +512,8 @@ Warning
 <p>However, note that the default configuration <strong>and restitution</strong> models for APD and CV are defined in milliseconds and in millimeters per millisecond. Therefore if you want to change the units you will need to adapt the restitution models accordingly.</p>
 </div>
 </div>
-<section id="definition-of-the-simulation-domain" class="level2">
-<h2 class="anchored" data-anchor-id="definition-of-the-simulation-domain">Definition of the simulation domain</h2>
+<section id="sec-sim-domain" class="level2">
+<h2 class="anchored" data-anchor-id="sec-sim-domain">Definition of the simulation domain</h2>
 <p>For the Python interface, this domain definition is done using an input VTK file. The input VTK file has to store a <code>RectilinearGrid</code> that includes, at least, the following point data field:</p>
 <ul>
 <li><strong>restitution_model</strong>: An integer field indicating the restitution model to be used for each cell. This field is used to define the cells that belong to tissue and to select the restitution model for each cell. Nodes with <code>restitution_model</code> equal to 0 are considered non-tissue (void). The value for tissue regions starts from 1 upwards. The mapping between <code>restitution_model</code> values and the corresponding restitution model files is defined in a separate CSV file specified in the configuration, as described in <a href="#sec-config-file" class="quarto-xref">Section&nbsp;7</a>.</li>
@@ -459,6 +522,7 @@ Warning
 <ul>
 <li><strong>fibers_orientation</strong>: A 3-component vector field representing the orientation of the fibers in each cell. To define isotropic conduction, set all components to zero. If this field is not present, isotropic conduction is assumed for all cells.</li>
 <li><strong>activation_region</strong>: An integer field that defines different regions on the tissue where activation is wanted. This field is used to define activation regions, such as the pacing sites for a pacing protocol or the PMJs. The activation times are defined in the configuration file and can refer to these regions by ID. Activations can be explicitly prescribed at certain node IDs when defining the activation in the configuration file as described in <a href="#sec-stimulation-protocols" class="quarto-xref">Section&nbsp;7.1</a>.</li>
+<li><strong>sensor</strong>: A binary field indicating whether a node is a sensor node. If this field is present, the simulation will save sensor data for these nodes.</li>
 </ul>
 </section>
 <section id="setting-configuration-parameters" class="level2">

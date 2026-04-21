@@ -213,6 +213,23 @@ Each VTK contains the following point data fields:
 
 The output frequency is controlled by `VTK_OUTPUT_PERIOD`, and it can be enabled/disabled via `VTK_OUTPUT_SAVE`. The start time of the output is controlled by `VTK_OUTPUT_INITIAL_TIME`.
 
+If any sensor nodes are defined in the input VTK file (see @sec-sim-domain), the simulation will save sensor data to CSV files in `<case_dir>/sensors/`. A CSV file will be saved for each sensor node including the information of the whole simulation. Each row of the file corresponds to the state of that node at each ativation/deactivation event. The columns will be the following:
+
+|   Field                    |                         Description                         |
+|:---------------------------|:------------------------------------------------------------|
+|  `Time`                    | Time in milliseconds.                                       |
+| `event_type`               | Type of event (0=activation, 1=deactivation).               |
+| `type`                     | Cell type (restitution model id).                           |
+| `beat`                     | Beat counter.                                               |
+| `local_activation_time`    | Local activation time.                                      |
+| `activated`                | Whether the cell was actually activated or not.             |
+| `APD`                      | Action potential duration.                                  |
+| `LastDI`                   | Last diastolic interval used in the computation of the APD. |
+| `conduction_velocity`      | Conduction velocity.                                        |
+| `next_activation_time`     | Next activation time.                                       |
+| `next_deactivation_time`   | Next deactivation time.                                     |
+| `received_potential`       | Received potential.                                         |
+
 
 # Running simulations
 
@@ -241,7 +258,7 @@ However, note that the default configuration **and restitution** models for APD 
 
 :::
 
-## Definition of the simulation domain
+## Definition of the simulation domain {#sec-sim-domain}
 
 For the Python interface, this domain definition is done using an input VTK file. The input VTK file has to store a `RectilinearGrid` that includes, at least, the following point data field:
 
@@ -251,6 +268,7 @@ Additionally the following optional point data fields can be defined:
 
 - **fibers_orientation**: A 3-component vector field representing the orientation of the fibers in each cell. To define isotropic conduction, set all components to zero. If this field is not present, isotropic conduction is assumed for all cells.
 - **activation_region**: An integer field that defines different regions on the tissue where activation is wanted. This field is used to define activation regions, such as the pacing sites for a pacing protocol or the PMJs. The activation times are defined in the configuration file and can refer to these regions by ID. Activations can be explicitly prescribed at certain node IDs when defining the activation in the configuration file as described in @sec-stimulation-protocols.
+- **sensor**: A binary field indicating whether a node is a sensor node. If this field is present, the simulation will save sensor data for these nodes.
 
 ## Setting configuration parameters
 
