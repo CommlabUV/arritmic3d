@@ -146,8 +146,8 @@ def run_simulation(case_dir, cfg, debug_level=0):
             grid.point_data['LAT'] = tissue.GetLAT()
             grid.point_data['Beat'] = tissue.GetBeat()
 
-
-            grid.save(f"{os.path.join(case_dir, out_file_name)}_{int(time):05d}.vtk")
+            clean_grid = grid.threshold(0.5, scalars="restitution_model", all_scalars=True)
+            clean_grid.save(f"{os.path.join(case_dir, out_file_name)}_{int(time):05d}.vtk")
 
             # Incremental sensor data saving
             sensor_data = tissue.GetSensorInfo()
