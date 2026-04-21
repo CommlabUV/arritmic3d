@@ -24,7 +24,8 @@ slab_args = [
     "--spacing", "0.1", "0.1", "0.1",
     "--region-by-side", "south", "1",
     "--field", "restitution_model", "2",
-    "--region", '{"shape" : "square", "cx" : 3.0, "cy" : 3.0, "r1" : 1.5, "r2" : 1.5, "restitution_model" : 5}'
+    "--region", '{"shape" : "square", "cx" : 7.5, "cy" : 7.5, "r1" : 4, "r2" : 4.0, "restitution_model" : 5}',
+    "--region", '{"shape" : "square", "cx" : 7.5, "cy" : 3.5, "r1" : 0.1, "r2" : 0.1, "sensor" : 1}'
 ]
 
 # Build and save the slab
