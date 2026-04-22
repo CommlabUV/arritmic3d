@@ -335,6 +335,8 @@ The configuration file is a JSON file with the following parameters:
 | `CORRECTION_FACTOR_APD`            | Correction factor for action potential duration (APD). |
 | `CORRECTION_FACTOR_CV`             | Correction factor for conduction velocity.             |
 | `ELECTROTONIC_EFFECT`              | Factor accounting for electrotonic effects in tissue.  |
+| `CV_MEMORY_COEFF`                  | Coefficient for memory effect in CV.                   |
+| `APD_MEMORY_COEFF`                 | Coefficient for memory effect in APD.                  |
 | `INITIAL_APD`                      | Initial action potential duration.                     |
 
 : Electrophysiollogy and conduction parameters

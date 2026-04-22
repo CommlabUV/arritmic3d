@@ -131,6 +131,9 @@ def get_vectorial_parameters(tissue, dims, prms):
     initial_electrotonic_effect = prms['ELECTROTONIC_EFFECT']
     initial_min_potential       = prms['MIN_POTENTIAL']
     initial_safety_factor       = prms['SAFETY_FACTOR']
+    initial_cv_memory_coeff     = prms['CV_MEMORY_COEFF']
+    initial_apd_memory_coeff    = prms['APD_MEMORY_COEFF']
+    print(f"Initial CV memory coefficient: {initial_cv_memory_coeff}", flush=True)
 
     # vectorial parameters
     v_cvr                       = [initial_cvr] * (ncells_x * ncells_y * ncells_z)
@@ -139,6 +142,8 @@ def get_vectorial_parameters(tissue, dims, prms):
     v_electrotonic_effect       = [initial_electrotonic_effect] * (ncells_x * ncells_y * ncells_z)
     v_min_potential             = [initial_min_potential] * (ncells_x * ncells_y * ncells_z)
     v_safety_factor             = [initial_safety_factor] * (ncells_x * ncells_y * ncells_z)
+    v_cv_memory_coeff           = [initial_cv_memory_coeff] * (ncells_x * ncells_y * ncells_z)
+    v_apd_memory_coeff          = [initial_apd_memory_coeff] * (ncells_x * ncells_y * ncells_z)
 
     vparameters = {}
     vparameters['COND_VELOC_TRANSVERSAL_REDUCTION'] = v_cvr
@@ -147,6 +152,9 @@ def get_vectorial_parameters(tissue, dims, prms):
     vparameters['ELECTROTONIC_EFFECT'] = v_electrotonic_effect
     vparameters['MIN_POTENTIAL'] = v_min_potential
     vparameters['SAFETY_FACTOR'] = v_safety_factor
+    vparameters['CV_MEMORY_COEFF'] = v_cv_memory_coeff
+    vparameters['APD_MEMORY_COEFF'] = v_apd_memory_coeff
+    print(f"CV memory coefficient: {vparameters['CV_MEMORY_COEFF'][:10]}", flush=True)
 
     return vparameters
 
@@ -172,6 +180,8 @@ def make_default_config():
         "VTK_OUTPUT_INITIAL_TIME": 0.0,
         "SENSORS_OUTPUT_SAVE": True,
         "SIMULATION_DURATION": 6000.0,
+        "CV_MEMORY_COEFF": 0.0,
+        "APD_MEMORY_COEFF": 0.0,
         # PROTOCOL / ACTIVATE_NODES intentionally omitted; can be provided via --config-param
     }
 
