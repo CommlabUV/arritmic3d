@@ -138,14 +138,21 @@ def run_simulation(case_dir, cfg, debug_level=0):
                 print("Beat at time:", time, flush=True)
 
         elif tick == arritmic3d.SystemEventType.FILE_WRITE:
-            # Update the cell states
-            grid.point_data['State'] = tissue.GetStates()
-            grid.point_data['APD'] = tissue.GetAPD()
-            grid.point_data['DI'] = tissue.GetLastDI()
-            grid.point_data['CV'] = tissue.GetCV()
-            grid.point_data['AP'] = tissue.GetAP()
-            grid.point_data['LAT'] = tissue.GetLAT()
-            grid.point_data['Beat'] = tissue.GetBeat()
+            fields = cfg['VTK_OUTPUT_FIELDS']
+            if 'State' in fields:
+                grid.point_data['State'] = tissue.GetStates()
+            if 'APD' in fields:
+                grid.point_data['APD'] = tissue.GetAPD()
+            if 'DI' in fields:
+                grid.point_data['DI'] = tissue.GetLastDI()
+            if 'CV' in fields:
+                grid.point_data['CV'] = tissue.GetCV()
+            if 'AP' in fields:
+                grid.point_data['AP'] = tissue.GetAP()
+            if 'LAT' in fields:
+                grid.point_data['LAT'] = tissue.GetLAT()
+            if 'Beat' in fields:
+                grid.point_data['Beat'] = tissue.GetBeat()
             grid.field_data['Time'] = time
 
             clean_grid = grid.threshold(0.5, scalars="restitution_model", all_scalars=True)

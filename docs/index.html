@@ -143,7 +143,7 @@ window.Quarto = {
   <li><a href="#inspection-of-the-test-case" id="toc-inspection-of-the-test-case" class="nav-link" data-scroll-target="#inspection-of-the-test-case">Inspection of the test case</a></li>
   <li><a href="#running-existing-cases" id="toc-running-existing-cases" class="nav-link" data-scroll-target="#running-existing-cases">Running existing cases</a></li>
   </ul></li>
-  <li><a href="#simulation-output" id="toc-simulation-output" class="nav-link" data-scroll-target="#simulation-output">Simulation output</a></li>
+  <li><a href="#sec-sim-output" id="toc-sec-sim-output" class="nav-link" data-scroll-target="#sec-sim-output">Simulation output</a></li>
   <li><a href="#running-simulations" id="toc-running-simulations" class="nav-link" data-scroll-target="#running-simulations">Running simulations</a>
   <ul class="collapse">
   <li><a href="#sec-sim-domain" id="toc-sec-sim-domain" class="nav-link" data-scroll-target="#sec-sim-domain">Definition of the simulation domain</a></li>
@@ -368,7 +368,7 @@ Warning
 </div>
 </section>
 </section>
-<section id="simulation-output" class="level1">
+<section id="sec-sim-output" class="level1">
 <h1>Simulation output</h1>
 <p>During the simulation, VTK files are written to the case directory with the pattern:</p>
 <ul>
@@ -421,7 +421,7 @@ Warning
 </tr>
 </tbody>
 </table>
-<p>The output frequency is controlled by <code>VTK_OUTPUT_PERIOD</code>, and it can be enabled/disabled via <code>VTK_OUTPUT_SAVE</code>. The start time of the output is controlled by <code>VTK_OUTPUT_INITIAL_TIME</code>.</p>
+<p>The output can be controlled in the configuration file (see <a href="#sec-config-file" class="quarto-xref">Section&nbsp;7</a>). The output frequency is controlled by <code>VTK_OUTPUT_PERIOD</code>, and it can be enabled/disabled via <code>VTK_OUTPUT_SAVE</code>. The start time of the output is controlled by <code>VTK_OUTPUT_INITIAL_TIME</code>. The format of the output VTK files can be <code>vtu</code>(the default) or <code>vtk</code>, and it is controlled via <code>VTK_OUTPUT_FORMAT</code>. The list of fields saved to output can be controlled via <code>VTK_FIELDS</code>. If the parameter is present (a list of strings), only the fields in the list will be saved. If it is not present, all fields will be saved.</p>
 <p>If any sensor nodes are defined in the input VTK file (see <a href="#sec-sim-domain" class="quarto-xref">Section&nbsp;6.1</a>), the simulation will save sensor data to CSV files in <code>&lt;case_dir&gt;/sensors/</code>. A CSV file will be saved for each sensor node including the information of the whole simulation. Each row of the file corresponds to the state of that node at each ativation/deactivation event. The columns will be the following:</p>
 <table class="caption-top table">
 <colgroup>
@@ -648,14 +648,18 @@ Warning
 <td style="text-align: left;">Format of the output VTK files (<code>vtu</code> or <code>vtk</code>). Default: <code>vtu</code>.</td>
 </tr>
 <tr class="odd">
+<td style="text-align: left;"><code>VTK_OUTPUT_FIELDS</code></td>
+<td style="text-align: left;">List of fields to save (see <a href="#sec-sim-output" class="quarto-xref">Section&nbsp;5</a>).</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;"><code>VTK_OUTPUT_PERIOD</code></td>
 <td style="text-align: left;">Time interval between VTK outputs.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;"><code>VTK_OUTPUT_INITIAL_TIME</code></td>
 <td style="text-align: left;">Time for the first VTK output.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;"><code>VTK_INPUT_FILE</code></td>
 <td style="text-align: left;">Path to the input VTK file.</td>
 </tr>

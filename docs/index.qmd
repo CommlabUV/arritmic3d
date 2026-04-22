@@ -192,7 +192,7 @@ VTK files from the previous run may be present inside the case directory.
 Make sure to delete them before running the new simulation
 :::
 
-# Simulation output
+# Simulation output {#sec-sim-output}
 
 During the simulation, VTK files are written to the case directory with the pattern:
 
@@ -211,7 +211,8 @@ Each VTK contains the following point data fields:
 |   `LAT`    |                   Local activation time.                    |
 |   `Beat`   |                    Beat counter per cell                    |
 
-The output frequency is controlled by `VTK_OUTPUT_PERIOD`, and it can be enabled/disabled via `VTK_OUTPUT_SAVE`. The start time of the output is controlled by `VTK_OUTPUT_INITIAL_TIME`.
+The output can be controlled in the configuration file (see @sec-config-file).
+The output frequency is controlled by `VTK_OUTPUT_PERIOD`, and it can be enabled/disabled via `VTK_OUTPUT_SAVE`. The start time of the output is controlled by `VTK_OUTPUT_INITIAL_TIME`. The format of the output VTK files can be  `vtu`(the default) or `vtk`, and it is controlled via `VTK_OUTPUT_FORMAT`. The list of fields saved to output can be controlled via `VTK_FIELDS`. If the parameter is present (a list of strings), only the fields in the list will be saved. If it is not present, all fields will be saved.
 
 If any sensor nodes are defined in the input VTK file (see @sec-sim-domain), the simulation will save sensor data to CSV files in `<case_dir>/sensors/`. A CSV file will be saved for each sensor node including the information of the whole simulation. Each row of the file corresponds to the state of that node at each ativation/deactivation event. The columns will be the following:
 
@@ -342,6 +343,7 @@ The configuration file is a JSON file with the following parameters:
 |:----------------------------|:-----------------------------------|
 | `VTK_OUTPUT_SAVE`           | If `true`, saves VTK output files. |
 | `VTK_OUTPUT_FORMAT`         | Format of the output VTK files (`vtu` or `vtk`). Default: `vtu`. |
+| `VTK_OUTPUT_FIELDS`                | List of fields to save (see @sec-sim-output).            |
 | `VTK_OUTPUT_PERIOD`         | Time interval between VTK outputs. |
 | `VTK_OUTPUT_INITIAL_TIME`   | Time for the first VTK output.     |
 | `VTK_INPUT_FILE`            | Path to the input VTK file.        |
