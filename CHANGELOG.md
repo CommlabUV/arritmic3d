@@ -1,5 +1,33 @@
 # Changelog
 
+## [3.0b7] - 2026-04-22
+
+### Added
+- **Sensor Support**: Load sensor points from input VTK, automatically collect data during simulation, and save results to a dedicated directory (`sensors/`).
+- **APD/CV Memory Effects**: Implementation of memory coefficients for Action Potential Duration (APD) and Conduction Velocity (CV).
+- **Back reactivation checks**: During activation, check if a neighbour node could have been our source of activation, preventing espureous reentries.
+- **Tissue Models**: Added the `CORE` tissue restitution model.
+- **Output Configuration**: Option to configure specific fields in the output VTK and define an initial time for timers (`SetTimer`). Possibility to save to `.vtu` for lighter output.
+- **CLI Tools**: New tools for converting legacy restitution curves to surfaces and surface processing (e.g., NaN removal).
+- **Test Cases**: Added tests for reentry, rotors, heterogeneous slab configurations, and wire blockage.
+
+### Changed
+- **Class Refactoring**: `ConductionVelocity` and `ActionPotential` classes now interact directly with `node_parameters` for better code consistency.
+- **I/O Improvements**: Optimized VTK saving and automatic thresholding for easier visualization.
+- **build_slab Flexibility**: The function now accepts a list of arguments, improving scriptability.
+- **Documentation**: Added usage documentation for sensors, relative model path management, and other new features.
+
+### Fixed
+- **LAT Synchronization**: Fixed Local Activation Time (LAT) synchronization between nodes and APD models.
+- **Isotropy Checks**: Improved robustness in local isotropy detection for heterogeneous fiber orientations.
+- **Initialization**: Corrected APD initialization and handling of constant surfaces.
+- **Paths and Timing**: Fixed test output paths and set the default first activation time to 0.
+- **Long APD reactivation default disabled**: By default, long APD reactivation is disabled (experimental feature).
+
+### Contributors
+- Ignacio García-Fernández
+- Fernando Barber
+
 ## [3.0b6] - 2026-02-27
 
 ### Added
