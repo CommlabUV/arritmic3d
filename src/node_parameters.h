@@ -44,6 +44,7 @@ struct NodeParameters
     float       electrotonic_effect = 0.85;              ///< @brief Electrotonic effect factor.
     float       min_potential = 0.0;                    ///< @brief Used with safety factor.
     float       apd_memory_coeff = 0.0;                 ///< @brief Inertia coefficient for APD.
+    float       cv_memory_coeff = 0.0;                  ///< @brief Inertia coefficient for CV.
 
     static const std::vector<std::string> names;        ///< @brief Names of the parameters.
 

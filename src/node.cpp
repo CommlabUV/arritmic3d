@@ -66,7 +66,7 @@ void NodeT<APD, CVM>::Init(float current_time_, float initial_apd_)
         current_time_,
         0.0
     );
-    this->cv_model.InitWithAPD(this->type, this->parameters->correction_factor_cv, this->apd_model.getLastDI(), this->apd_model.getAPD() );
+    this->cv_model.InitWithAPD(this->parameters, this->type, this->apd_model.getLastDI(), this->apd_model.getAPD() );
     this->local_activation_time = this->apd_model.getActivationTime();
     this->next_activation_time = MAX_TIME;
     this->next_deactivation_time = MAX_TIME;
@@ -91,9 +91,7 @@ void NodeT<APD, CVM>::ReApplyParam(float current_time_)
         current_time_,
         this->apd_model.getLastDI()
     );
-    this->cv_model.Init(this->type,
-        this->parameters->correction_factor_cv
-    );
+    this->cv_model.Init(this->parameters, this->type);
 }
 
 /**
