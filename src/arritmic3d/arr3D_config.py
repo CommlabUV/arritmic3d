@@ -166,6 +166,7 @@ def make_default_config():
         "MIN_POTENTIAL": 0.0,
         "SAFETY_FACTOR": 1.0,
         "VTK_OUTPUT_SAVE": True,
+        "VTK_OUTPUT_FORMAT": "vtu",
         "VTK_OUTPUT_PERIOD": 20.0,
         "VTK_OUTPUT_INITIAL_TIME": 0.0,
         "SENSORS_OUTPUT_SAVE": True,
