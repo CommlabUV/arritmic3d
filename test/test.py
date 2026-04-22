@@ -11,10 +11,12 @@ def main():
     v_type = [HEALTHY_ENDO] * tissue.size()
     initial_apd = 200.0
     apd_correction_factor = 1.0
+    apd_memory_coeff = 0.3
     v_cf = [apd_correction_factor] * tissue.size()
+    v_memory = [apd_memory_coeff] * tissue.size()
     v_sensor = [0.0] * tissue.size()
     v_sensor[tissue.GetIndex(5, 3, 1)] = 1.0
-    parameters = {"CORRECTION_FACTOR_APD" : v_cf, "SENSOR" : v_sensor}
+    parameters = {"CORRECTION_FACTOR_APD" : v_cf, "SENSOR" : v_sensor, "APD_MEMORY_COEFF" : v_memory}
     tissue.InitModels("restitutionModels/config_TenTuscher_APD.csv","restitutionModels/config_TenTuscher_CV.csv")
     #tissue.InitModels("restitutionModels/config_TorOrd_APD.csv","restitutionModels/config_TorOrd_CV.csv")
     tissue.SetInitialAPD(initial_apd)
