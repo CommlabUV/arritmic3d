@@ -42,22 +42,6 @@ public:
         this->delta_apd = 0.0;
     };
 
-    /**
-     * @brief Constructor.
-     *
-     * @param type Cell type.
-     * @param apd_ Action potential duration.
-     * @param t0_ Time of the activation.
-     * @param di_ Diastolic interval.
-     * @param corrfc_ Correction factor for restitution models.
-     * @param apd_memory_coeff_ Inertia coefficient for APD.
-     */
-    /*
-    ActionPotentialRestSurface(CellType type, float apd_, float t0_, float di_ = 0.0, float corrfc_ = 1.0, float apd_memory_coeff_ = 0.0)
-    {
-        Init(type, apd_, t0_, di_, corrfc_, apd_memory_coeff_);
-    };
-    */
     static void InitModel(const std::string &path)
     {
         splines.Init(path);
@@ -66,12 +50,11 @@ public:
     /**
      * @brief Initialize the action potential.
      *
+     * @param parameters Pointer to the node parameters.
      * @param type Cell type.
      * @param apd_ Action potential duration.
      * @param t0_ Time of the activation.
      * @param di_ Diastolic interval.
-     * @param corrfc_ Correction factor for restitution models.
-     * @param apd_memory_coeff_ Inertia coefficient for APD.
      */
     void Init(NodeParameters* params, CellType type, float apd_, float t0_, float di_ = 0.0)
     {
@@ -314,8 +297,6 @@ public:
         f.write( (char *) &ta, sizeof(float) );
         f.write( (char *) &last_di, sizeof(float) );
         f.write( (char *) &delta_apd, sizeof(float) );
-        //f.write( (char *) &correction_factor, sizeof(float) );
-        //f.write( (char *) &apd_memory_coeff, sizeof(float) );
     }
 
     /**
@@ -328,8 +309,6 @@ public:
         f.read( (char *) &ta, sizeof(float) );
         f.read( (char *) &last_di, sizeof(float) );
         f.read( (char *) &delta_apd, sizeof(float) );
-        //f.read( (char *) &correction_factor, sizeof(float) );
-        //f.read( (char *) &apd_memory_coeff, sizeof(float) );
 
         SetRestitutionModel(type);
     }
@@ -341,8 +320,6 @@ private:
     float ta; /**< Time of the activation. */
     float last_di; /**< Last diastolic interval. */
     float delta_apd; ///< Change in APD due to restitution models (without electrotonic effect).
-    //float correction_factor; /**< Correction factor for restitution models. */
-    //float apd_memory_coeff; /**<  Inertia coefficient. */
 
     Spline2D * restitution_model; /**< APD restitution model. */
     static SplineContainer2D splines; /**< Container of APD restitution models. */

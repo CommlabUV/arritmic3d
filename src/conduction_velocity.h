@@ -17,6 +17,7 @@
 
 #include "spline2D.h"
 #include "node.h"
+#include "node_parameters.h"
 
 /**
  * @brief Conduction velocity model based on step function.
@@ -37,21 +38,6 @@ public:
     };
 
 
-    /**
-     * @brief Constructor.
-     *
-     * @param type Cell type.
-     * @param corrfc_ Correction factor for restitution models.
-     * @param cv_ Initial conduction velocity.
-     */
-    /*
-    ConductionVelocity(CellType type, float corrfc_ = 1.0, float cv_ = INITIAL_CV, float cv_memory_coeff_ = 0.0)
-    {
-        Init(type, corrfc_, cv_, cv_memory_coeff_);
-    };
-    */
-
-
     static void InitModel(const std::string &path)
     {
         splines.Init(path);
@@ -60,10 +46,9 @@ public:
     /**
      * @brief Initialize the conduction velocity.
      *
+     * @param parameters Pointer to the node parameters.
      * @param type Cell type.
-     * @param corrfc_ Correction factor for restitution models.
      * @param cv_ Initial conduction velocity.
-     * @param cv_memory_coeff_ Inertia coefficient for CV.
      */
     void Init(NodeParameters* parameters, CellType type, float cv_ = INITIAL_CV)
     {
@@ -140,8 +125,6 @@ public:
     void SaveState(std::ofstream & f) const
     {
         f.write( (char *) &cv, sizeof(float) );
-        //f.write( (char *) &correction_factor, sizeof(float) );
-        //f.write( (char *) &cv_memory_coeff, sizeof(float) );
     }
 
     /**
@@ -151,8 +134,6 @@ public:
     void LoadState(std::ifstream & f, CellType type)
     {
         f.read( (char *) &cv, sizeof(float) );
-        //f.read( (char *) &correction_factor, sizeof(float) );
-        //f.read( (char *) &cv_memory_coeff, sizeof(float) );
 
         SetRestitutionModel(type);
     }
@@ -162,8 +143,6 @@ private:
 
     float cv; ///< Conduction velocity.
     static constexpr float INITIAL_CV = 1.0; ///< Initial conduction velocity.
-    //float correction_factor; /**< Correction factor for restitution model. */
-    //float cv_memory_coeff; /**<  Inertia coefficient. */
 
     Spline2D * restitution_model; ///< APD restitution model.
     static SplineContainer2D splines; ///< Container of APD restitution models.
