@@ -43,6 +43,7 @@ struct NodeParameters
     float       correction_factor_apd = 1.0;            ///< @brief Correction factor to apply to APD in BZ Nodes
     float       electrotonic_effect = 0.85;              ///< @brief Electrotonic effect factor.
     float       min_potential = 0.0;                    ///< @brief Used with safety factor.
+    float       apd_memory_coeff = 0.0;                 ///< @brief Inertia coefficient for APD.
 
     static const std::vector<std::string> names;        ///< @brief Names of the parameters.
 
