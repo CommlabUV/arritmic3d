@@ -23,8 +23,8 @@ slab_args = [
     "--nnodes", "2", "25", "2",
     "--spacing", "0.2", "0.2", "0.2",
     "--region-by-side", "south", "1",
-    "--field", "restitution_model", "1",
-    "--region", '{"shape" : "square", "cx" : 0.0, "cy" : 5.0, "r1" : 2.0, "r2" : 2.0, "restitution_model" : 4}'
+    "--field", "restitution_model", "2",
+    "--region", '{"shape" : "square", "cx" : 0.0, "cy" : 5.0, "r1" : 2.0, "r2" : 2.0, "restitution_model" : 5}'
 ]
 
 # Build and save the slab
@@ -40,15 +40,18 @@ config = {
     "VTK_INPUT_FILE": slab_path,
     "APD_MODEL": "TenTuscher",
     "CV_MODEL": "TenTuscher",
-    "CORRECTION_FACTOR_APD": 1.1,
+    "CORRECTION_FACTOR_CV": 1.0,
+    "CORRECTION_FACTOR_APD": 1.0,
+    "ELECTROTONIC_EFFECT": 0.0,
+    "INITIAL_APD" : 360,
     "SIMULATION_DURATION": 7000,
     "VTK_OUTPUT_PERIOD": 1,
-    "INITIAL_APD" : 360,
+    "VTK_OUTPUT_INITIAL_TIME": 5400,
     "PROTOCOL": [
         {
             "ACTIVATION_REGION": 1,
             "N_STIMS_PACING": [10,3],
-            "BCL": [600,315]
+            "BCL": [600,375]
         }
     ]
 }
