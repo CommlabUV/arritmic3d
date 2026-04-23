@@ -51,7 +51,7 @@ config = {
             "ACTIVATION_REGION": 1,
             "FIRST_ACTIVATION_TIME": 0,
             "N_STIMS_PACING": [7,1],
-            "BCL": [500,350] # spill:376-381. Block: 350
+            "BCL": [500,350] # BZ activates backwards: 375-380. Block: <375
         }
     ]
 }
