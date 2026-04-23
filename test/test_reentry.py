@@ -20,12 +20,11 @@ print("\n--- Building the slab with two regions ---")
 slab_path = os.path.join(case_dir, "input_data", "slab.vtk")
 slab_args = [
     slab_path,
-    "--nnodes", "60", "60", "2",
+    "--nnodes", "70", "70", "2",
     "--spacing", "0.1", "0.1", "0.1",
     "--region-by-side", "south", "1",
     "--field", "restitution_model", "2",
-    "--region", '{"shape" : "square", "cx" : 7.5, "cy" : 7.5, "r1" : 4, "r2" : 4.0, "restitution_model" : 5}',
-    "--region", '{"shape" : "square", "cx" : 7.5, "cy" : 3.5, "r1" : 0.1, "r2" : 0.1, "sensor" : 1}'
+    "--region", '{"shape" : "square", "cx" : 3.5, "cy" : 3.5, "r1" : 2.0, "r2" : 2.0, "restitution_model" : 5}'
 ]
 
 # Build and save the slab
@@ -42,17 +41,17 @@ config = {
     "APD_MODEL": "TenTuscher",
     "CV_MODEL": "TenTuscher",
     "ELECTROTONIC_EFFECT": 0.0,
-    "CV_MEMORY_COEFF": 0.0,
+    "CV_MEMORY_COEFF": 0.05,
     "APD_MEMORY_COEFF": 0.0,
-    "SIMULATION_DURATION": 5000,
+    "SIMULATION_DURATION": 3700,
     "VTK_OUTPUT_PERIOD": 1,
-    "VTK_OUTPUT_INITIAL_TIME": 2800,
+    "VTK_OUTPUT_INITIAL_TIME": 3000,
     "PROTOCOL": [
         {
             "ACTIVATION_REGION": 1,
             "FIRST_ACTIVATION_TIME": 0,
-            "N_STIMS_PACING": [7],
-            "BCL": [500,350]
+            "N_STIMS_PACING": [7,1],
+            "BCL": [500,350] # spill:376-381. Block: 350
         }
     ]
 }
@@ -62,17 +61,10 @@ print("\n--- Running simulation ---")
 a3d.arritmic3d(case_dir, config=config)
 print("Simulation completed!")
 
-exit(0)
-
-# --- STEP 5: Visualize a single result ---
-print("\n--- Visualizing a frame at 500ms ---")
-plot_vtk(os.path.join(case_dir, f"slab_00040.vtk"), plt_show=True, title="t=40ms")
-
-# --- STEP 6: Show an animation of the simulation ---
-print("\n--- Showing an animation of the simulation ---")
-#plot_animation(case_dir, field="AP")
-
-# Clean the case dir
+plot_vtk(os.path.join(case_dir,"slab_03355.vtu"), title = "3355ms", plt_show=True)
+plot_vtk(os.path.join(case_dir,"slab_03365.vtu"), title = "3365ms", plt_show=True)
+plot_vtk(os.path.join(case_dir,"slab_03375.vtu"), title = "3375ms", plt_show=True)
+plot_vtk(os.path.join(case_dir,"slab_03385.vtu"), title = "3385ms", plt_show=True)
 delete_case_dir(case_dir)
 
 # Ensure the subfolder for the slab exists
