@@ -65,21 +65,24 @@ plot_vtk(os.path.join(case_dir,"slab_03355.vtu"), title = "3355ms", plt_show=Tru
 plot_vtk(os.path.join(case_dir,"slab_03365.vtu"), title = "3365ms", plt_show=True)
 plot_vtk(os.path.join(case_dir,"slab_03375.vtu"), title = "3375ms", plt_show=True)
 plot_vtk(os.path.join(case_dir,"slab_03385.vtu"), title = "3385ms", plt_show=True)
+
+
+# --- STEP 5: Build a larger slab ---
+
+case_dir = "/home/ignacio/tmp/out_test/3.reentry_2"
 delete_case_dir(case_dir)
 
 # Ensure the subfolder for the slab exists
 os.makedirs(os.path.join(case_dir, "input_data"), exist_ok=True)
 
-# --- STEP 7: Set a slab with CORE region (model = 7) ---
-print("\n--- Building the slab with CORE region ---")
+slab_path = os.path.join(case_dir, "input_data", "slab.vtk")
 slab_args = [
     slab_path,
-    "--nnodes", "45", "45", "5",
-    "--spacing", "0.1", "0.1", "0.1",
+    "--nnodes", "60", "60", "2",
+    "--spacing", "0.3", "0.3", "0.3",
     "--region-by-side", "south", "1",
     "--field", "restitution_model", "2",
-    "--region", '{"shape" : "square", "cx" : 2.25, "cy" : 2.25, "r1" : 1.0, "r2" : 1.0, "restitution_model" : 5}',
-    "--region", '{"shape" : "square", "cx" : 2.25, "cy" : 2.25, "r1" : 0.5, "r2" : 0.5, "restitution_model" : 7}'
+    "--region", '{"shape" : "square", "cx" : 9.0, "cy" : 9.0, "r1" : 6.0, "r2" : 6.0, "restitution_model" : 5}'
 ]
 
 # Build and save the slab
@@ -89,33 +92,37 @@ print("Slab generated successfully!")
 # Visualize the slab
 plot_vtk(slab_path, field="restitution_model", plt_show=True, title="Slab")
 
-# --- STEP 8: Configure the simulation ---
+# --- Configure the simulation ---
 print("\n--- Configuring simulation ---")
 config = {
     "VTK_INPUT_FILE": slab_path,
     "APD_MODEL": "TenTuscher",
     "CV_MODEL": "TenTuscher",
-    "SIMULATION_DURATION": 1000,
-    "VTK_OUTPUT_PERIOD": 10,
+    "ELECTROTONIC_EFFECT": 0.0,
+    "CV_MEMORY_COEFF": 0.05,
+    "CORRECTION_FACTOR_CV": 0.9,
+    "APD_MEMORY_COEFF": 0.0,
+    "SIMULATION_DURATION": 4800,
+    "VTK_OUTPUT_PERIOD": 1,
+    "VTK_OUTPUT_INITIAL_TIME": 3000,
     "PROTOCOL": [
         {
             "ACTIVATION_REGION": 1,
-            "N_STIMS_PACING": [3],
-            "BCL": [400]
+            "FIRST_ACTIVATION_TIME": 0,
+            "N_STIMS_PACING": [8,2],
+            "BCL": [420,320] # 319, block before reentry. 322 late for reentry
         }
     ]
 }
 
-# --- STEP 9: Run the simulation ---
+
+# --- STEP 4: Run the simulation ---
 print("\n--- Running simulation ---")
 a3d.arritmic3d(case_dir, config=config)
 print("Simulation completed!")
 
-# --- STEP 10: Visualize the results ---
-print("\n--- Visualizing a frame at 500ms ---")
-plot_vtk(os.path.join(case_dir, f"slab_00040.vtk"), plt_show=True, title="t=40ms")
-plot_vtk(os.path.join(case_dir, f"slab_00060.vtk"), plt_show=True, title="t=60ms")
+plot_vtk(os.path.join(case_dir,"slab_03355.vtu"), title = "3355ms", plt_show=True)
+plot_vtk(os.path.join(case_dir,"slab_03365.vtu"), title = "3365ms", plt_show=True)
+plot_vtk(os.path.join(case_dir,"slab_03375.vtu"), title = "3375ms", plt_show=True)
+plot_vtk(os.path.join(case_dir,"slab_03385.vtu"), title = "3385ms", plt_show=True)
 
-# Show an animation of the simulation
-print("\n--- Showing an animation of the simulation ---")
-plot_animation(case_dir, field="AP")
