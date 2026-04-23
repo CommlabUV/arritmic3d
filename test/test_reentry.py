@@ -121,8 +121,8 @@ print("\n--- Running simulation ---")
 a3d.arritmic3d(case_dir, config=config)
 print("Simulation completed!")
 
-plot_vtk(os.path.join(case_dir,"slab_03355.vtu"), title = "3355ms", plt_show=True)
-plot_vtk(os.path.join(case_dir,"slab_03365.vtu"), title = "3365ms", plt_show=True)
-plot_vtk(os.path.join(case_dir,"slab_03375.vtu"), title = "3375ms", plt_show=True)
-plot_vtk(os.path.join(case_dir,"slab_03385.vtu"), title = "3385ms", plt_show=True)
+plot_vtk(os.path.join(case_dir,"slab_03800.vtu"), title = "03800ms", plt_show=True)
+plot_vtk(os.path.join(case_dir,"slab_03900.vtu"), title = "03900ms", plt_show=True)
+plot_vtk(os.path.join(case_dir,"slab_04000.vtu"), title = "04000ms", plt_show=True)
+plot_vtk(os.path.join(case_dir,"slab_04100.vtu"), title = "04100ms", plt_show=True)
 
