@@ -48,8 +48,8 @@ public:
     void Init(float current_time_, float initial_apd_);
     void ReApplyParam(float current_time_);
     float ComputeDirectionalConductionVelocity(const NodeT::Vector3 &direction_);
-    CellEvent* ActivateAtTime( NodeT *origin_, float current_time_, float activation_time_);
-    CellEvent* ActivateAtTimeExternal(float activation_time_, int beat_n_);
+    CellEvent* ScheduleActivation( NodeT *origin_, float activation_time_);
+    CellEvent* ScheduleExternalActivation(float activation_time_, int beat_n_);
 
     unsigned int GetId() const { return id; }
     CellActivationState GetState(float current_time_) const;
@@ -89,7 +89,7 @@ public:
     }
 
 private:
-    constexpr static int SAVE_VERSION = 1;  ///< Version of the NodeT class for state saving/loading.
+    constexpr static int SAVE_VERSION = 2;  ///< Version of the NodeT class for state saving/loading.
     NodeParameters*  parameters;         ///< @brief Parameters of the Node
     unsigned int    id;                 ///< @brief Unique Node id
 

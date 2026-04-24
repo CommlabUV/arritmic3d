@@ -13,6 +13,7 @@ from . import arr3D_build_slab
 
 from .arr3D_config import check_directory, get_vectorial_parameters, load_config_file, load_case_config, make_default_config, resolve_models_in_parameters
 from .arr3D_activations import schedule_activation
+from .arr3D_sensor import WriteAllSensorData
 
 
 def load_grid(vtk_file):
@@ -24,7 +25,7 @@ def load_grid(vtk_file):
 
     # Remove innecessary data
     for key in grid.point_data.keys():
-        if key not in ['restitution_model', 'fibers_orientation', 'activation_region']:
+        if key not in ['restitution_model', 'fibers_orientation', 'activation_region', 'sensor']:
             grid.point_data.remove(key)
 
     return grid
@@ -64,6 +65,13 @@ def create_tissue(grid, params):
 
     vparams = get_vectorial_parameters(tissue, dims, params)
     print("Parameters:", params, flush=True)
+
+    # If a 'sensor' field is present in the grid, register those nodes as sensors
+    if 'sensor' in grid.point_data:
+        v_sensor = [float(v) for v in grid.point_data['sensor']]
+        vparams['SENSOR'] = v_sensor
+        n_sensors = sum(1 for v in v_sensor if v == 1.0)
+        print(f"Sensor field loaded: {n_sensors} sensor node(s)", flush=True)
     # Ensure fibers_orientation exists (default to [0,0,0] if missing)
     if 'fibers_orientation' in grid.point_data:
         fiber_or = list(map(list, grid.point_data['fibers_orientation']))
@@ -82,6 +90,7 @@ def create_tissue(grid, params):
     cv_cfg = params['CV_MODEL_CONFIG_PATH']
     # Initialize restitution and CV models using the provided file paths
     tissue.InitModels(apd_cfg, cv_cfg)
+    tissue.SetInitialAPD(params['INITIAL_APD'])
     print("Types of arguments passed to InitPy():", type(v_type), type(vparams), type(fiber_or), flush=True)
     tissue.InitPy(v_type, vparams, fiber_or)
     print("tissue initialized", flush=True)
@@ -89,12 +98,16 @@ def create_tissue(grid, params):
     return tissue
 
 
-def run_simulation(case_dir, cfg):
+def run_simulation(case_dir, cfg, debug_level=0):
+
+    # Sensors output directory
+    sensors_dir = os.path.join(case_dir, "sensors")
 
     vtk_file = cfg['VTK_INPUT_FILE']
 
     # keep the original file name for saving the output
     out_file_name = os.path.splitext(os.path.basename(vtk_file))[0]
+    out_ext = cfg['VTK_OUTPUT_FORMAT']
 
     # Load the grid from the VTK file
     grid = load_grid(vtk_file)
@@ -102,8 +115,11 @@ def run_simulation(case_dir, cfg):
     # Create the tissue from the grid, passing the loaded configuration dict
     tissue = create_tissue(grid, cfg)
 
-    # Set the timer for saving the VTK files
-    tissue.SetTimer(arritmic3d.SystemEventType.FILE_WRITE, cfg['VTK_OUTPUT_PERIOD'])  # time in ms
+    # Set the timer for saving the VTK files (times in ms)
+    tissue.SetTimer(
+        arritmic3d.SystemEventType.FILE_WRITE,
+        cfg['VTK_OUTPUT_PERIOD'],
+        initial_time=cfg['VTK_OUTPUT_INITIAL_TIME'])
 
     # Schedule the activation protocol
     activations = schedule_activation(cfg, grid, tissue)
@@ -111,7 +127,7 @@ def run_simulation(case_dir, cfg):
     time = tissue.GetTime()
 
     while time < cfg['SIMULATION_DURATION']:
-        tick = tissue.update(0)
+        tick = tissue.update(debug_level)
         time = tissue.GetTime()
 
         if tick == arritmic3d.SystemEventType.EXT_ACTIVATION:
@@ -122,17 +138,38 @@ def run_simulation(case_dir, cfg):
                 print("Beat at time:", time, flush=True)
 
         elif tick == arritmic3d.SystemEventType.FILE_WRITE:
-            # Update the cell states
-            grid.point_data['State'] = tissue.GetStates()
-            grid.point_data['APD'] = tissue.GetAPD()
-            grid.point_data['DI'] = tissue.GetLastDI()
-            grid.point_data['CV'] = tissue.GetCV()
-            grid.point_data['AP'] = tissue.GetAP()
-            grid.point_data['LAT'] = tissue.GetLAT()
-            grid.point_data['Beat'] = tissue.GetBeat()
+            fields = cfg['VTK_OUTPUT_FIELDS']
+            if 'State' in fields:
+                grid.point_data['State'] = tissue.GetStates()
+            if 'APD' in fields:
+                grid.point_data['APD'] = tissue.GetAPD()
+            if 'DI' in fields:
+                grid.point_data['DI'] = tissue.GetLastDI()
+            if 'CV' in fields:
+                grid.point_data['CV'] = tissue.GetCV()
+            if 'AP' in fields:
+                grid.point_data['AP'] = tissue.GetAP()
+            if 'LAT' in fields:
+                grid.point_data['LAT'] = tissue.GetLAT()
+            if 'Beat' in fields:
+                grid.point_data['Beat'] = tissue.GetBeat()
+            grid.field_data['Time'] = time
 
+            clean_grid = grid.threshold(0.5, scalars="restitution_model", all_scalars=True)
+            clean_grid.save(f"{os.path.join(case_dir, out_file_name)}_{int(time):05d}.{out_ext}")
 
-            grid.save(f"{os.path.join(case_dir, out_file_name)}_{int(time):05d}.vtk")
+            # Incremental sensor data saving
+            sensor_data = tissue.GetSensorInfo()
+            if sensor_data:
+                sensor_names = tissue.GetSensorDataNames()
+                WriteAllSensorData(sensors_dir, sensor_data, sensor_names)
+
+    # Save sensor data to CSV files in <case_dir>/sensors/
+    sensor_data = tissue.GetSensorInfo()
+    if sensor_data:
+        sensor_names = tissue.GetSensorDataNames()
+        WriteAllSensorData(sensors_dir, sensor_data, sensor_names)
+        print(f"Sensor data saved to {sensors_dir}", flush=True)
 
 
 def get_arg_parser():
@@ -162,7 +199,8 @@ Examples:
   python arritmic3D.py /path/to/case_dir \\
     --input-file /path/to/tissue.vtk \\
     --config-param SIMULATION_DURATION=8000 \\
-    --config-param VTK_OUTPUT_PERIOD=50
+    --config-param VTK_OUTPUT_PERIOD=50 \\
+    --config-param VTK_OUTPUT_INITIAL_TIME=4000
         """
     )
 
@@ -412,7 +450,7 @@ def generate_slab_to_output(case_dir, slab_args):
     return slab_path
 
 
-def run_arritmic3D(case_dir, config : dict = {}, save_run_config=True):
+def run_arritmic3D(case_dir, config : dict = {}, save_run_config=True, debug_level = 0):
     """
     Run the Arritmic3D simulation in the given case directory with the provided configuration dict
 
@@ -448,8 +486,12 @@ def run_arritmic3D(case_dir, config : dict = {}, save_run_config=True):
     if save_run_config:
         save_run_configuration(config, case_dir)
 
+    # Create the sensors output directory alongside the case directory
+    sensors_dir = os.path.join(case_dir, "sensors")
+    os.makedirs(sensors_dir, exist_ok=True)
+
     # Run simulation with runtime config (absolute paths)
-    run_simulation(case_dir, config)
+    run_simulation(case_dir, config, debug_level)
     print("Simulation finished", flush=True)
 
 def run_test_case(output_dir):

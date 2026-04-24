@@ -51,7 +51,9 @@ PYBIND11_MODULE(MODULE_NAME, m) {
         .def("update", &CardiacTissue<T_AP, T_CV>::update,
              py::arg("debug") = 0,
              "Update the tissue state by processing the next event in the queue. Returns the type of event that was processed.")
-        .def("SetTimer", &CardiacTissue<T_AP, T_CV>::SetTimer)
+        .def("SetTimer", &CardiacTissue<T_AP, T_CV>::SetTimer,
+             py::arg("type"), py::arg("period"), py::arg("initial_time") = 0.0f,
+             "Set a timer for a system event. There can be one timer for each type of system event.")
         .def("SetSystemEvent", &CardiacTissue<T_AP, T_CV>::SetSystemEvent)
         .def("size", &CardiacTissue<T_AP, T_CV>::size)
         .def("GetNumLiveNodes", &CardiacTissue<T_AP, T_CV>::GetNumLiveNodes)

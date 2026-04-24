@@ -20,6 +20,7 @@
 
 #include "spline2D.h"
 #include "node.h"
+#include "node_parameters.h"
 #include <cmath>
 
 /**
@@ -34,24 +35,11 @@ public:
      */
     ActionPotentialRestSurface()
     {
+        this->parameters = nullptr;
         this->last_di = 100.0;
         this->ta = 0.0;
-        this->correction_factor = 1.0;
         this->apd = 0.0;
-    };
-
-    /**
-     * @brief Constructor.
-     *
-     * @param type Cell type.
-     * @param apd_ Action potential duration.
-     * @param t0_ Time of the activation.
-     * @param di_ Diastolic interval.
-     * @param corrfc_ Correction factor for restitution models.
-     */
-    ActionPotentialRestSurface(CellType type, float apd_, float t0_, float di_ = 0.0, float corrfc_ = 1.0)
-    {
-        Init(type, apd_, t0_, di_, corrfc_);
+        this->delta_apd = 0.0;
     };
 
     static void InitModel(const std::string &path)
@@ -62,24 +50,24 @@ public:
     /**
      * @brief Initialize the action potential.
      *
+     * @param parameters Pointer to the node parameters.
      * @param type Cell type.
      * @param apd_ Action potential duration.
      * @param t0_ Time of the activation.
      * @param di_ Diastolic interval.
-     * @param corrfc_ Correction factor for restitution models.
      */
-    void Init(CellType type, float apd_, float t0_, float di_ = 0.0, float corrfc_ = 1.0)
+    void Init(NodeParameters* params, CellType type, float apd_, float t0_, float di_ = 0.0)
     {
+        this->parameters = params;
         SetRestitutionModel(type);
         if(type == CELL_TYPE_VOID)
             return;
 
-        this->correction_factor = corrfc_;
         if (di_ > 0.0)
         {
             this->last_di = di_;
             // The next call can return -1, meaning no activation
-            float new_apd = restitution_model->getValue(apd_, this->last_di)*this->correction_factor;
+            float new_apd = restitution_model->getValue(apd_, this->last_di)*this->parameters->correction_factor_apd;
             // Check invalid value
             if(! restitution_model->is_novalue(new_apd) )
                 this->apd = new_apd;
@@ -121,9 +109,11 @@ public:
         bool activated = false;
         float di = new_ta -(this->ta + this->apd);
 
-        float new_apd = restitution_model->getValue(this->apd, di)*this->correction_factor;
+        float new_apd = restitution_model->getValue(this->apd, di);
         if (! restitution_model->is_novalue(new_apd) )
         {
+            new_apd *= this->parameters->correction_factor_apd;
+            new_apd = this->parameters->apd_memory_coeff*this->apd + (1.0 - this->parameters->apd_memory_coeff)*new_apd;  // Inertia
             this->last_di = di;
             this->delta_apd = std::fabs(new_apd - this->apd);    // Calculated without electrotonic effect !!
             this->apd = new_apd;
@@ -307,7 +297,6 @@ public:
         f.write( (char *) &ta, sizeof(float) );
         f.write( (char *) &last_di, sizeof(float) );
         f.write( (char *) &delta_apd, sizeof(float) );
-        f.write( (char *) &correction_factor, sizeof(float) );
     }
 
     /**
@@ -320,17 +309,17 @@ public:
         f.read( (char *) &ta, sizeof(float) );
         f.read( (char *) &last_di, sizeof(float) );
         f.read( (char *) &delta_apd, sizeof(float) );
-        f.read( (char *) &correction_factor, sizeof(float) );
 
         SetRestitutionModel(type);
     }
 
 private:
+    NodeParameters*  parameters;         ///< @brief Parameters of the Node
+
     float apd; /**< Action potential duration. */
     float ta; /**< Time of the activation. */
     float last_di; /**< Last diastolic interval. */
     float delta_apd; ///< Change in APD due to restitution models (without electrotonic effect).
-    float correction_factor; /**< Correction factor for restitution models. */
 
     Spline2D * restitution_model; /**< APD restitution model. */
     static SplineContainer2D splines; /**< Container of APD restitution models. */

@@ -17,6 +17,7 @@
 
 #include "spline2D.h"
 #include "node.h"
+#include "node_parameters.h"
 
 /**
  * @brief Conduction velocity model based on step function.
@@ -32,21 +33,8 @@ public:
      */
     ConductionVelocity()
     {
+        this->parameters = nullptr;
         this->cv = INITIAL_CV;
-        this->correction_factor = 1.0;
-    };
-
-
-    /**
-     * @brief Constructor.
-     *
-     * @param type Cell type.
-     * @param corrfc_ Correction factor for restitution models.
-     * @param cv_ Initial conduction velocity.
-     */
-    ConductionVelocity(CellType type, float corrfc_ = 1.0, float cv_ = INITIAL_CV)
-    {
-        Init(type, corrfc_, cv_);
     };
 
 
@@ -58,25 +46,25 @@ public:
     /**
      * @brief Initialize the conduction velocity.
      *
+     * @param parameters Pointer to the node parameters.
      * @param type Cell type.
-     * @param corrfc_ Correction factor for restitution models.
      * @param cv_ Initial conduction velocity.
      */
-    void Init(CellType type, float corrfc_ = 1.0, float cv_ = INITIAL_CV)
+    void Init(NodeParameters* parameters, CellType type, float cv_ = INITIAL_CV)
     {
+        this->parameters = parameters;
         SetRestitutionModel(type);
-        this->correction_factor = corrfc_;
         this->cv = cv_;
     };
 
-    void Init(CellType type, float corrfc_, float di_, float apd_)
+    void InitWithAPD(NodeParameters* parameters, CellType type, float di_, float apd_)
     {
+        this->parameters = parameters;
         SetRestitutionModel(type);
-        this->correction_factor = corrfc_;
         if(di_ < 0.0 || apd_ < 0.0 || type == CELL_TYPE_VOID)
             this->cv = INITIAL_CV;
         else
-            this->cv = this->restitution_model->getValue(apd_, di_)*this->correction_factor;
+            this->cv = this->restitution_model->getValue(apd_, di_)*this->parameters->correction_factor_cv;
     };
 
     /**
@@ -98,7 +86,12 @@ public:
      */
     void Activate(float di,float apd)
     {
-        this->cv = this->restitution_model->getValue(apd, di)*this->correction_factor;
+        float new_cv = this->restitution_model->getValue(apd, di);
+        if(! restitution_model->is_novalue(new_cv) )
+        {
+            new_cv *= this->parameters->correction_factor_cv;
+            this->cv = this->parameters->cv_memory_coeff*this->cv + (1.0 - this->parameters->cv_memory_coeff)*new_cv;  // Inertia
+        }
     };
 
    /**
@@ -132,7 +125,6 @@ public:
     void SaveState(std::ofstream & f) const
     {
         f.write( (char *) &cv, sizeof(float) );
-        f.write( (char *) &correction_factor, sizeof(float) );
     }
 
     /**
@@ -142,16 +134,15 @@ public:
     void LoadState(std::ifstream & f, CellType type)
     {
         f.read( (char *) &cv, sizeof(float) );
-        f.read( (char *) &correction_factor, sizeof(float) );
 
         SetRestitutionModel(type);
     }
 
 private:
+    NodeParameters*  parameters;         ///< @brief Parameters of the Node
 
     float cv; ///< Conduction velocity.
     static constexpr float INITIAL_CV = 1.0; ///< Initial conduction velocity.
-    float correction_factor; /**< Correction factor for restitution model. */
 
     Spline2D * restitution_model; ///< APD restitution model.
     static SplineContainer2D splines; ///< Container of APD restitution models.

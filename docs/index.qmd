@@ -192,7 +192,7 @@ VTK files from the previous run may be present inside the case directory.
 Make sure to delete them before running the new simulation
 :::
 
-# Simulation output
+# Simulation output {#sec-sim-output}
 
 During the simulation, VTK files are written to the case directory with the pattern:
 
@@ -211,7 +211,25 @@ Each VTK contains the following point data fields:
 |   `LAT`    |                   Local activation time.                    |
 |   `Beat`   |                    Beat counter per cell                    |
 
-The output frequency is controlled by `VTK_OUTPUT_PERIOD`, and it can be enabled/disabled via `VTK_OUTPUT_SAVE`.
+The output can be controlled in the configuration file (see @sec-config-file).
+The output frequency is controlled by `VTK_OUTPUT_PERIOD`, and it can be enabled/disabled via `VTK_OUTPUT_SAVE`. The start time of the output is controlled by `VTK_OUTPUT_INITIAL_TIME`. The format of the output VTK files can be  `vtu`(the default) or `vtk`, and it is controlled via `VTK_OUTPUT_FORMAT`. The list of fields saved to output can be controlled via `VTK_FIELDS`. If the parameter is present (a list of strings), only the fields in the list will be saved. If it is not present, all fields will be saved.
+
+If any sensor nodes are defined in the input VTK file (see @sec-sim-domain), the simulation will save sensor data to CSV files in `<case_dir>/sensors/`. A CSV file will be saved for each sensor node including the information of the whole simulation. Each row of the file corresponds to the state of that node at each ativation/deactivation event. The columns will be the following:
+
+|   Field                    |                         Description                         |
+|:---------------------------|:------------------------------------------------------------|
+|  `Time`                    | Time in milliseconds.                                       |
+| `event_type`               | Type of event (0=activation, 1=deactivation).               |
+| `type`                     | Cell type (restitution model id).                           |
+| `beat`                     | Beat counter.                                               |
+| `local_activation_time`    | Local activation time.                                      |
+| `activated`                | Whether the cell was actually activated or not.             |
+| `APD`                      | Action potential duration.                                  |
+| `LastDI`                   | Last diastolic interval used in the computation of the APD. |
+| `conduction_velocity`      | Conduction velocity.                                        |
+| `next_activation_time`     | Next activation time.                                       |
+| `next_deactivation_time`   | Next deactivation time.                                     |
+| `received_potential`       | Received potential.                                         |
 
 
 # Running simulations
@@ -241,7 +259,7 @@ However, note that the default configuration **and restitution** models for APD 
 
 :::
 
-## Definition of the simulation domain
+## Definition of the simulation domain {#sec-sim-domain}
 
 For the Python interface, this domain definition is done using an input VTK file. The input VTK file has to store a `RectilinearGrid` that includes, at least, the following point data field:
 
@@ -251,6 +269,7 @@ Additionally the following optional point data fields can be defined:
 
 - **fibers_orientation**: A 3-component vector field representing the orientation of the fibers in each cell. To define isotropic conduction, set all components to zero. If this field is not present, isotropic conduction is assumed for all cells.
 - **activation_region**: An integer field that defines different regions on the tissue where activation is wanted. This field is used to define activation regions, such as the pacing sites for a pacing protocol or the PMJs. The activation times are defined in the configuration file and can refer to these regions by ID. Activations can be explicitly prescribed at certain node IDs when defining the activation in the configuration file as described in @sec-stimulation-protocols.
+- **sensor**: A binary field indicating whether a node is a sensor node. If this field is present, the simulation will save sensor data for these nodes.
 
 ## Setting configuration parameters
 
@@ -302,8 +321,8 @@ The configuration file is a JSON file with the following parameters:
 
 | Field                  | Description                                                                   |
 |:-----------------------|:------------------------------------------------------------------------------|
-| `CV_MODEL_CONFIG_PATH` | Path to the `csv` configuration file of the conduction velocities models.     |
-| `APD_MODEL_CONFIG_PATH` | Path to the `csv` configuration file of the action potential duration models. |
+| `CV_MODEL_CONFIG_PATH` | Path to the `csv` configuration file of the conduction velocities models. The path must be relative to the path of the JSON file. |
+| `APD_MODEL_CONFIG_PATH` | Path to the `csv` configuration file of the action potential duration models. The path must be relative to the path of the JSON file. |
 | `CV_MODEL`             | Name of the CV model to use. Use this instead of the path to use library models. |
 | `APD_MODEL`             | Name of the APD model to use. Use this instead of the path to use library models. |
 
@@ -316,15 +335,20 @@ The configuration file is a JSON file with the following parameters:
 | `CORRECTION_FACTOR_APD`            | Correction factor for action potential duration (APD). |
 | `CORRECTION_FACTOR_CV`             | Correction factor for conduction velocity.             |
 | `ELECTROTONIC_EFFECT`              | Factor accounting for electrotonic effects in tissue.  |
+| `CV_MEMORY_COEFF`                  | Coefficient for memory effect in CV.                   |
+| `APD_MEMORY_COEFF`                 | Coefficient for memory effect in APD.                  |
 | `INITIAL_APD`                      | Initial action potential duration.                     |
 
 : Electrophysiollogy and conduction parameters
 
-| Field               | Description                        |
-|:--------------------|:-----------------------------------|
-| `VTK_OUTPUT_SAVE`   | If `true`, saves VTK output files. |
-| `VTK_OUTPUT_PERIOD` | Time interval between VTK outputs. |
-| `VTK_INPUT_FILE`    | Path to the input VTK file.        |
+| Field                       | Description                        |
+|:----------------------------|:-----------------------------------|
+| `VTK_OUTPUT_SAVE`           | If `true`, saves VTK output files. |
+| `VTK_OUTPUT_FORMAT`         | Format of the output VTK files (`vtu` or `vtk`). Default: `vtu`. |
+| `VTK_OUTPUT_FIELDS`                | List of fields to save (see @sec-sim-output).            |
+| `VTK_OUTPUT_PERIOD`         | Time interval between VTK outputs. |
+| `VTK_OUTPUT_INITIAL_TIME`   | Time for the first VTK output.     |
+| `VTK_INPUT_FILE`            | Path to the input VTK file.        |
 
 : I/O and file management.
 
@@ -420,7 +444,7 @@ The activation time of the first stimulus can be set using the `FIRST_ACTIVATION
 
 Note that using this option will not change the numer of activations, only the time at which the first activation occurs. In this case, the first activation will occur 50 ms after the simulation starts. This can generate an apparent mismatch between the first activation time and the BCL schedule.
 This option is an advanced setup, and is only meant to add flexibility to the protocol definition if the starting state of the tissue considers a certain activation state. That is, the previous example could be useful with a tissue that was activated 550ms before the simulation started, so that the first activation must occur at 50 ms (600ms after the last activation).
-If this field is not provided (which is the recommended option), the first activation time is set to the value of the first BCL (which would be 600 ms after the simulation start in the previous example).
+If this field is not provided (which is the recommended option), the first activation time is set to 0.
 This option also admits as input a list of first activation times (one for each activation region).
 
 External files can be used to reduce the size of the configuration file when the activation must be defined for each node separately. The first example can be rewritten as follows:

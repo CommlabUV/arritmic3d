@@ -43,6 +43,8 @@ struct NodeParameters
     float       correction_factor_apd = 1.0;            ///< @brief Correction factor to apply to APD in BZ Nodes
     float       electrotonic_effect = 0.85;              ///< @brief Electrotonic effect factor.
     float       min_potential = 0.0;                    ///< @brief Used with safety factor.
+    float       apd_memory_coeff = 0.0;                 ///< @brief Inertia coefficient for APD.
+    float       cv_memory_coeff = 0.0;                  ///< @brief Inertia coefficient for CV.
 
     static const std::vector<std::string> names;        ///< @brief Names of the parameters.
 
@@ -62,10 +64,12 @@ struct NodeParameters
             case 4: correction_factor_apd = value; break;
             case 5: electrotonic_effect = value; break;
             case 6: min_potential = value; break;
+            case 7: apd_memory_coeff = value; break;
+            case 8: cv_memory_coeff = value; break;
 
             // int parameters automatically converted to float
-            case 7: sensor = static_cast<unsigned char>(value); break; // sensor is an unsigned char
-            case 8: label1 = static_cast<unsigned char>(value); break; // label1 is an unsigned char
+            case 9: sensor = static_cast<unsigned char>(value); break; // sensor is an unsigned char
+            case 10: label1 = static_cast<unsigned char>(value); break; // label1 is an unsigned char
             default: std::cerr << "Unknown FLOAT parameter index: " << i << std::endl;
         }
     }
@@ -79,8 +83,8 @@ struct NodeParameters
     {
         switch(i)
         {
-            case 7: sensor = value; break;
-            case 8: label1 = value; break;
+            case 9: sensor = value; break;
+            case 10: label1 = value; break;
             default: std::cerr << "Unknown INT parameter index: " << i << std::endl;
         }
     }
@@ -100,7 +104,11 @@ struct NodeParameters
         parameters["CORRECTION_FACTOR_APD"] = correction_factor_apd;
         parameters["ELECTROTONIC_EFFECT"] = electrotonic_effect;
         parameters["MIN_POTENTIAL"] = min_potential;
+        parameters["APD_MEMORY_COEFF"] = apd_memory_coeff;
+        parameters["CV_MEMORY_COEFF"] = cv_memory_coeff;
         parameters["SENSOR"] = static_cast<float>(sensor);
+        parameters["LABEL1"] = static_cast<float>(label1);
+
         return parameters;
     }
 
@@ -119,7 +127,8 @@ struct NodeParameters
 const std::vector<std::string> NodeParameters::names = {"INITIAL_APD",
                                                   "COND_VELOC_TRANSVERSAL_REDUCTION", "SAFETY_FACTOR",
                                                   "CORRECTION_FACTOR_CV_BORDER_ZONE", "CORRECTION_FACTOR_APD",
-                                                  "ELECTROTONIC_EFFECT", "MIN_POTENTIAL", "SENSOR", "LABEL1"};
+                                                  "ELECTROTONIC_EFFECT", "MIN_POTENTIAL", "APD_MEMORY_COEFF",
+                                                  "CV_MEMORY_COEFF", "SENSOR", "LABEL1"};
 
 /**
  * @brief Pool of NodeParameters.

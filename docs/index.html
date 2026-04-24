@@ -143,10 +143,10 @@ window.Quarto = {
   <li><a href="#inspection-of-the-test-case" id="toc-inspection-of-the-test-case" class="nav-link" data-scroll-target="#inspection-of-the-test-case">Inspection of the test case</a></li>
   <li><a href="#running-existing-cases" id="toc-running-existing-cases" class="nav-link" data-scroll-target="#running-existing-cases">Running existing cases</a></li>
   </ul></li>
-  <li><a href="#simulation-output" id="toc-simulation-output" class="nav-link" data-scroll-target="#simulation-output">Simulation output</a></li>
+  <li><a href="#sec-sim-output" id="toc-sec-sim-output" class="nav-link" data-scroll-target="#sec-sim-output">Simulation output</a></li>
   <li><a href="#running-simulations" id="toc-running-simulations" class="nav-link" data-scroll-target="#running-simulations">Running simulations</a>
   <ul class="collapse">
-  <li><a href="#definition-of-the-simulation-domain" id="toc-definition-of-the-simulation-domain" class="nav-link" data-scroll-target="#definition-of-the-simulation-domain">Definition of the simulation domain</a></li>
+  <li><a href="#sec-sim-domain" id="toc-sec-sim-domain" class="nav-link" data-scroll-target="#sec-sim-domain">Definition of the simulation domain</a></li>
   <li><a href="#setting-configuration-parameters" id="toc-setting-configuration-parameters" class="nav-link" data-scroll-target="#setting-configuration-parameters">Setting configuration parameters</a></li>
   <li><a href="#backup-of-the-run-configuration" id="toc-backup-of-the-run-configuration" class="nav-link" data-scroll-target="#backup-of-the-run-configuration">Backup of the run configuration</a></li>
   </ul></li>
@@ -368,7 +368,7 @@ Warning
 </div>
 </section>
 </section>
-<section id="simulation-output" class="level1">
+<section id="sec-sim-output" class="level1">
 <h1>Simulation output</h1>
 <p>During the simulation, VTK files are written to the case directory with the pattern:</p>
 <ul>
@@ -421,7 +421,70 @@ Warning
 </tr>
 </tbody>
 </table>
-<p>The output frequency is controlled by <code>VTK_OUTPUT_PERIOD</code>, and it can be enabled/disabled via <code>VTK_OUTPUT_SAVE</code>.</p>
+<p>The output can be controlled in the configuration file (see <a href="#sec-config-file" class="quarto-xref">Section&nbsp;7</a>). The output frequency is controlled by <code>VTK_OUTPUT_PERIOD</code>, and it can be enabled/disabled via <code>VTK_OUTPUT_SAVE</code>. The start time of the output is controlled by <code>VTK_OUTPUT_INITIAL_TIME</code>. The format of the output VTK files can be <code>vtu</code>(the default) or <code>vtk</code>, and it is controlled via <code>VTK_OUTPUT_FORMAT</code>. The list of fields saved to output can be controlled via <code>VTK_FIELDS</code>. If the parameter is present (a list of strings), only the fields in the list will be saved. If it is not present, all fields will be saved.</p>
+<p>If any sensor nodes are defined in the input VTK file (see <a href="#sec-sim-domain" class="quarto-xref">Section&nbsp;6.1</a>), the simulation will save sensor data to CSV files in <code>&lt;case_dir&gt;/sensors/</code>. A CSV file will be saved for each sensor node including the information of the whole simulation. Each row of the file corresponds to the state of that node at each ativation/deactivation event. The columns will be the following:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 31%">
+<col style="width: 68%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Field</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>Time</code></td>
+<td style="text-align: left;">Time in milliseconds.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>event_type</code></td>
+<td style="text-align: left;">Type of event (0=activation, 1=deactivation).</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>type</code></td>
+<td style="text-align: left;">Cell type (restitution model id).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>beat</code></td>
+<td style="text-align: left;">Beat counter.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>local_activation_time</code></td>
+<td style="text-align: left;">Local activation time.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>activated</code></td>
+<td style="text-align: left;">Whether the cell was actually activated or not.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>APD</code></td>
+<td style="text-align: left;">Action potential duration.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>LastDI</code></td>
+<td style="text-align: left;">Last diastolic interval used in the computation of the APD.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>conduction_velocity</code></td>
+<td style="text-align: left;">Conduction velocity.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>next_activation_time</code></td>
+<td style="text-align: left;">Next activation time.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>next_deactivation_time</code></td>
+<td style="text-align: left;">Next deactivation time.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>received_potential</code></td>
+<td style="text-align: left;">Received potential.</td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="running-simulations" class="level1">
 <h1>Running simulations</h1>
@@ -449,8 +512,8 @@ Warning
 <p>However, note that the default configuration <strong>and restitution</strong> models for APD and CV are defined in milliseconds and in millimeters per millisecond. Therefore if you want to change the units you will need to adapt the restitution models accordingly.</p>
 </div>
 </div>
-<section id="definition-of-the-simulation-domain" class="level2">
-<h2 class="anchored" data-anchor-id="definition-of-the-simulation-domain">Definition of the simulation domain</h2>
+<section id="sec-sim-domain" class="level2">
+<h2 class="anchored" data-anchor-id="sec-sim-domain">Definition of the simulation domain</h2>
 <p>For the Python interface, this domain definition is done using an input VTK file. The input VTK file has to store a <code>RectilinearGrid</code> that includes, at least, the following point data field:</p>
 <ul>
 <li><strong>restitution_model</strong>: An integer field indicating the restitution model to be used for each cell. This field is used to define the cells that belong to tissue and to select the restitution model for each cell. Nodes with <code>restitution_model</code> equal to 0 are considered non-tissue (void). The value for tissue regions starts from 1 upwards. The mapping between <code>restitution_model</code> values and the corresponding restitution model files is defined in a separate CSV file specified in the configuration, as described in <a href="#sec-config-file" class="quarto-xref">Section&nbsp;7</a>.</li>
@@ -459,6 +522,7 @@ Warning
 <ul>
 <li><strong>fibers_orientation</strong>: A 3-component vector field representing the orientation of the fibers in each cell. To define isotropic conduction, set all components to zero. If this field is not present, isotropic conduction is assumed for all cells.</li>
 <li><strong>activation_region</strong>: An integer field that defines different regions on the tissue where activation is wanted. This field is used to define activation regions, such as the pacing sites for a pacing protocol or the PMJs. The activation times are defined in the configuration file and can refer to these regions by ID. Activations can be explicitly prescribed at certain node IDs when defining the activation in the configuration file as described in <a href="#sec-stimulation-protocols" class="quarto-xref">Section&nbsp;7.1</a>.</li>
+<li><strong>sensor</strong>: A binary field indicating whether a node is a sensor node. If this field is present, the simulation will save sensor data for these nodes.</li>
 </ul>
 </section>
 <section id="setting-configuration-parameters" class="level2">
@@ -511,11 +575,11 @@ Warning
 <tbody>
 <tr class="odd">
 <td style="text-align: left;"><code>CV_MODEL_CONFIG_PATH</code></td>
-<td style="text-align: left;">Path to the <code>csv</code> configuration file of the conduction velocities models.</td>
+<td style="text-align: left;">Path to the <code>csv</code> configuration file of the conduction velocities models. The path must be relative to the path of the JSON file.</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;"><code>APD_MODEL_CONFIG_PATH</code></td>
-<td style="text-align: left;">Path to the <code>csv</code> configuration file of the action potential duration models.</td>
+<td style="text-align: left;">Path to the <code>csv</code> configuration file of the action potential duration models. The path must be relative to the path of the JSON file.</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;"><code>CV_MODEL</code></td>
@@ -557,6 +621,14 @@ Warning
 <td style="text-align: left;">Factor accounting for electrotonic effects in tissue.</td>
 </tr>
 <tr class="odd">
+<td style="text-align: left;"><code>CV_MEMORY_COEFF</code></td>
+<td style="text-align: left;">Coefficient for memory effect in CV.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>APD_MEMORY_COEFF</code></td>
+<td style="text-align: left;">Coefficient for memory effect in APD.</td>
+</tr>
+<tr class="odd">
 <td style="text-align: left;"><code>INITIAL_APD</code></td>
 <td style="text-align: left;">Initial action potential duration.</td>
 </tr>
@@ -564,6 +636,10 @@ Warning
 </table>
 <table class="caption-top table">
 <caption>I/O and file management.</caption>
+<colgroup>
+<col style="width: 44%">
+<col style="width: 55%">
+</colgroup>
 <thead>
 <tr class="header">
 <th style="text-align: left;">Field</th>
@@ -576,10 +652,22 @@ Warning
 <td style="text-align: left;">If <code>true</code>, saves VTK output files.</td>
 </tr>
 <tr class="even">
+<td style="text-align: left;"><code>VTK_OUTPUT_FORMAT</code></td>
+<td style="text-align: left;">Format of the output VTK files (<code>vtu</code> or <code>vtk</code>). Default: <code>vtu</code>.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>VTK_OUTPUT_FIELDS</code></td>
+<td style="text-align: left;">List of fields to save (see <a href="#sec-sim-output" class="quarto-xref">Section&nbsp;5</a>).</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;"><code>VTK_OUTPUT_PERIOD</code></td>
 <td style="text-align: left;">Time interval between VTK outputs.</td>
 </tr>
 <tr class="odd">
+<td style="text-align: left;"><code>VTK_OUTPUT_INITIAL_TIME</code></td>
+<td style="text-align: left;">Time for the first VTK output.</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;"><code>VTK_INPUT_FILE</code></td>
 <td style="text-align: left;">Path to the input VTK file.</td>
 </tr>
@@ -682,7 +770,7 @@ Figure&nbsp;6: Result of the simulation with the S1-S2-S3-S4 protocol.
 <span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"FIRST_ACTIVATION_TIME"</span><span class="fu">:</span> <span class="dv">50</span></span>
 <span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
 <span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="ot">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Note that using this option will not change the numer of activations, only the time at which the first activation occurs. In this case, the first activation will occur 50 ms after the simulation starts. This can generate an apparent mismatch between the first activation time and the BCL schedule. This option is an advanced setup, and is only meant to add flexibility to the protocol definition if the starting state of the tissue considers a certain activation state. That is, the previous example could be useful with a tissue that was activated 550ms before the simulation started, so that the first activation must occur at 50 ms (600ms after the last activation). If this field is not provided (which is the recommended option), the first activation time is set to the value of the first BCL (which would be 600 ms after the simulation start in the previous example). This option also admits as input a list of first activation times (one for each activation region).</p>
+<p>Note that using this option will not change the numer of activations, only the time at which the first activation occurs. In this case, the first activation will occur 50 ms after the simulation starts. This can generate an apparent mismatch between the first activation time and the BCL schedule. This option is an advanced setup, and is only meant to add flexibility to the protocol definition if the starting state of the tissue considers a certain activation state. That is, the previous example could be useful with a tissue that was activated 550ms before the simulation started, so that the first activation must occur at 50 ms (600ms after the last activation). If this field is not provided (which is the recommended option), the first activation time is set to 0. This option also admits as input a list of first activation times (one for each activation region).</p>
 <p>External files can be used to reduce the size of the configuration file when the activation must be defined for each node separately. The first example can be rewritten as follows:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="er">"PROTOCOL":</span>  <span class="ot">[</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">{</span></span>

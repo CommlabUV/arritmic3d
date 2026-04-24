@@ -125,31 +125,36 @@ def load_case_config(case_dir):
 def get_vectorial_parameters(tissue, dims, prms):
 
     ncells_x, ncells_y , ncells_z = dims
-    initial_apd                 = prms['INITIAL_APD']
     initial_cvr                 = prms['COND_VELOC_TRANSVERSAL_REDUCTION']
     initial_cfapd               = prms['CORRECTION_FACTOR_APD']
     initial_cfcvbz              = prms['CORRECTION_FACTOR_CV']
     initial_electrotonic_effect = prms['ELECTROTONIC_EFFECT']
     initial_min_potential       = prms['MIN_POTENTIAL']
     initial_safety_factor       = prms['SAFETY_FACTOR']
+    initial_cv_memory_coeff     = prms['CV_MEMORY_COEFF']
+    initial_apd_memory_coeff    = prms['APD_MEMORY_COEFF']
+    print(f"Initial CV memory coefficient: {initial_cv_memory_coeff}", flush=True)
 
     # vectorial parameters
-    v_apd                       = [initial_apd] * (ncells_x * ncells_y * ncells_z)
     v_cvr                       = [initial_cvr] * (ncells_x * ncells_y * ncells_z)
     v_cfapd                     = [initial_cfapd] * (ncells_x * ncells_y * ncells_z)
     v_cfcvbz                    = [initial_cfcvbz] * (ncells_x * ncells_y * ncells_z)
     v_electrotonic_effect       = [initial_electrotonic_effect] * (ncells_x * ncells_y * ncells_z)
     v_min_potential             = [initial_min_potential] * (ncells_x * ncells_y * ncells_z)
     v_safety_factor             = [initial_safety_factor] * (ncells_x * ncells_y * ncells_z)
+    v_cv_memory_coeff           = [initial_cv_memory_coeff] * (ncells_x * ncells_y * ncells_z)
+    v_apd_memory_coeff          = [initial_apd_memory_coeff] * (ncells_x * ncells_y * ncells_z)
 
     vparameters = {}
-    vparameters['INITIAL_APD']   = v_apd
     vparameters['COND_VELOC_TRANSVERSAL_REDUCTION'] = v_cvr
     vparameters['CORRECTION_FACTOR_APD'] = v_cfapd
     vparameters['CORRECTION_FACTOR_CV'] = v_cfcvbz
     vparameters['ELECTROTONIC_EFFECT'] = v_electrotonic_effect
     vparameters['MIN_POTENTIAL'] = v_min_potential
     vparameters['SAFETY_FACTOR'] = v_safety_factor
+    vparameters['CV_MEMORY_COEFF'] = v_cv_memory_coeff
+    vparameters['APD_MEMORY_COEFF'] = v_apd_memory_coeff
+    print(f"CV memory coefficient: {vparameters['CV_MEMORY_COEFF'][:10]}", flush=True)
 
     return vparameters
 
@@ -169,9 +174,14 @@ def make_default_config():
         "MIN_POTENTIAL": 0.0,
         "SAFETY_FACTOR": 1.0,
         "VTK_OUTPUT_SAVE": True,
+        "VTK_OUTPUT_FORMAT": "vtu",
+        "VTK_OUTPUT_FIELDS": ["State", "APD", "DI", "CV", "AP", "LAT", "Beat"],
         "VTK_OUTPUT_PERIOD": 20.0,
+        "VTK_OUTPUT_INITIAL_TIME": 0.0,
         "SENSORS_OUTPUT_SAVE": True,
         "SIMULATION_DURATION": 6000.0,
+        "CV_MEMORY_COEFF": 0.0,
+        "APD_MEMORY_COEFF": 0.0,
         # PROTOCOL / ACTIVATE_NODES intentionally omitted; can be provided via --config-param
     }
 

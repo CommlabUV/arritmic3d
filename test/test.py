@@ -11,10 +11,12 @@ def main():
     v_type = [HEALTHY_ENDO] * tissue.size()
     initial_apd = 200.0
     apd_correction_factor = 1.0
+    apd_memory_coeff = 0.3
     v_cf = [apd_correction_factor] * tissue.size()
+    v_memory = [apd_memory_coeff] * tissue.size()
     v_sensor = [0.0] * tissue.size()
     v_sensor[tissue.GetIndex(5, 3, 1)] = 1.0
-    parameters = {"CORRECTION_FACTOR_APD" : v_cf, "SENSOR" : v_sensor}
+    parameters = {"CORRECTION_FACTOR_APD" : v_cf, "SENSOR" : v_sensor, "APD_MEMORY_COEFF" : v_memory}
     tissue.InitModels("restitutionModels/config_TenTuscher_APD.csv","restitutionModels/config_TenTuscher_CV.csv")
     #tissue.InitModels("restitutionModels/config_TorOrd_APD.csv","restitutionModels/config_TorOrd_CV.csv")
     tissue.SetInitialAPD(initial_apd)
@@ -25,7 +27,7 @@ def main():
     initial_node = tissue.GetIndex(2, 2, 1)
     beat = 0
     CL = 300.0  # cycle length in ms
-    tissue.SetSystemEvent(arritmic3d.SystemEventType.EXT_ACTIVATION, 1)
+    tissue.SetTimer(arritmic3d.SystemEventType.EXT_ACTIVATION, CL)
     #tissue.SaveVTK("output/test0.vtk")
 
     print("-- Begin Simulation --", flush=True)
@@ -41,7 +43,7 @@ def main():
 
             print("External activation for beat ", beat, " at time ", tissue.GetTime())
             tissue.ExternalActivation([initial_node], tissue.GetTime(), beat)
-            tissue.SetSystemEvent(arritmic3d.SystemEventType.EXT_ACTIVATION, tissue.GetTime() + CL)
+            #tissue.SetSystemEvent(arritmic3d.SystemEventType.EXT_ACTIVATION, tissue.GetTime() + CL)
 
         if tick == arritmic3d.SystemEventType.FILE_WRITE:
             tissue.SaveVTK(f"output/test{i}.vtk")
