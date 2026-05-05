@@ -1,7 +1,7 @@
 import pyvista as pv
 import numpy as np
 import argparse
-import json
+import ast
 
 Endo2Epi = {
     0 : "Endo",
@@ -46,6 +46,7 @@ def convert_to_rectilinear(input_filename, output_filename,
                            default_value_scalar=0.0,
                            default_value_vector=np.array([0.0, 0.0, 0.0]),
                            field_defaults=None,
+                           activation=[],
                            add_layer=True):
     """
     Converts a VTK file of type UNSTRUCTURED_GRID to RECTILINEAR_GRID, preserving all point data fields.
@@ -56,6 +57,7 @@ def convert_to_rectilinear(input_filename, output_filename,
         default_value_scalar (float): Default value for missing scalar data points.
         default_value_vector (float): Default value for missing vector data points.
         field_defaults (dict): A dictionary with specific default values for individual fields.
+        activation (list[dict]): A list of dictionaries with specific default values for individual fields.
         add_layer (bool): Whether to add an extra layer at each edge of each axis.
     """
     # Load the UNSTRUCTURED_GRID file
@@ -84,6 +86,28 @@ def convert_to_rectilinear(input_filename, output_filename,
     else:
         # Set to [0,0,0] -> isotropic
         mesh.point_data["fibers_orientation"] = np.zeros((len(points), 3))
+
+    # Add activation sites
+    activation_region = np.zeros(len(points), dtype=int)
+    # First, for each node with 34_pacing >0, set a different activation region
+    # We get the indices of nodes that have 34_pacing > 0 and set them as different activation regions
+    if "34_pacing" in mesh.point_data:
+        pacing_sites = np.where(mesh.point_data["34_pacing"] > 0)[0]
+        i = 1
+        for site_index in pacing_sites:
+            activation_region[site_index] = i
+            i+=1
+
+    # Then, process input
+    for act in (activation or []):
+        try:
+            act_dict = ast.literal_eval(act)
+        except (ValueError, SyntaxError):
+            raise ValueError(f"Error parsing activation region: {act}")
+        for region_id, nodes in act_dict.items():
+            activation_region[nodes] = region_id
+
+    mesh.point_data["activation_region"] = activation_region
 
     # Add an extra layer at each edge of each axis
     def extend_coords(coords):
@@ -152,10 +176,14 @@ def main():
     parser.add_argument("output_file", help="Path to the output VTK file (RECTILINEAR_GRID).")
     parser.add_argument("--add_no_layer", action="store_true",
                         help="Doest not add an extra layer at each edge of each axis.")
+    parser.add_argument("--activation", action = "append",
+                        help="define an activation region by node ids. The input must be a dictionary with key an integer (region id) and value a list of node ids (ints), that form that region. For example: --activation '{1 : [100, 101, 102]}'")
+
     args = parser.parse_args()
 
     # Call the main conversion function
     convert_to_rectilinear(args.input_file, args.output_file,
+                           activation = args.activation,
                            add_layer = not args.add_no_layer)
 
 if __name__ == "__main__":
