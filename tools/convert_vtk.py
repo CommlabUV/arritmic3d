@@ -3,9 +3,48 @@ import numpy as np
 import argparse
 import json
 
+Endo2Epi = {
+    0 : "Endo",
+    1 : "Mid",
+    2 : "Epi"
+}
+
+CellType = {
+    0 : "Healthy",
+    1 : "BZ",
+    2 : "Core"
+}
+
+"""
+1,    HE_Endo
+2,    HE_Mid
+3,    HE_Epi
+4,    BZ_Endo
+5,    BZ_Mid
+6,    BZ_Epi
+7,    Core
+"""
+TenTusscherRestitutionModels = {
+    "Healthy" : {
+        "Endo" : 1,
+        "Mid" : 2,
+        "Epi" : 3
+    },
+    "BZ" : {
+        "Endo" : 4,
+        "Mid" : 5,
+        "Epi" : 6
+    },
+    "Core" :  {
+        "Endo" : 7,
+        "Mid" : 7,
+        "Epi" : 7
+    },
+}
+
 def convert_to_rectilinear(input_filename, output_filename,
-                           default_value_scalar=np.nan,
-                           default_value_vector=0.0,
+                           default_value_scalar=0.0,
+                           default_value_vector=np.array([0.0, 0.0, 0.0]),
                            field_defaults=None,
                            add_layer=True):
     """
@@ -17,6 +56,7 @@ def convert_to_rectilinear(input_filename, output_filename,
         default_value_scalar (float): Default value for missing scalar data points.
         default_value_vector (float): Default value for missing vector data points.
         field_defaults (dict): A dictionary with specific default values for individual fields.
+        add_layer (bool): Whether to add an extra layer at each edge of each axis.
     """
     # Load the UNSTRUCTURED_GRID file
     mesh = pv.read(input_filename)
@@ -26,6 +66,24 @@ def convert_to_rectilinear(input_filename, output_filename,
     x_coords = np.unique(points[:, 0])  # Unique X coordinates
     y_coords = np.unique(points[:, 1])  # Unique Y coordinates
     z_coords = np.unique(points[:, 2])  # Unique Z coordinates
+
+    # Convert EndoToEpi + Cell_type labels to restitution_model
+    if "EndoToEpi" in mesh.point_data and "Cell_type" in mesh.point_data:
+        restitution_model = np.zeros(len(points), dtype=int)
+        for i, p in enumerate(points):
+            endo2epi = Endo2Epi[int(mesh.point_data["EndoToEpi"][i])]
+            cell_type = CellType[int(mesh.point_data["Cell_type"][i])]
+            restitution_model[i] = TenTusscherRestitutionModels[cell_type][endo2epi]
+        mesh.point_data["restitution_model"] = restitution_model
+    else:
+        raise ValueError("The input file does not contain the fields 'EndoToEpi' and 'Cell_type'.")
+
+    # Transfer fiber orientation, from 'fibers_OR' to 'fibers_orientation'
+    if "fibers_OR" in mesh.point_data:
+        mesh.point_data["fibers_orientation"] = mesh.point_data["fibers_OR"]
+    else:
+        # Set to [0,0,0] -> isotropic
+        mesh.point_data["fibers_orientation"] = np.zeros((len(points), 3))
 
     # Add an extra layer at each edge of each axis
     def extend_coords(coords):
@@ -92,28 +150,12 @@ def main():
     parser = argparse.ArgumentParser(description="Converts a UNSTRUCTURED_GRID VTK file to RECTILINEAR_GRID.")
     parser.add_argument("input_file", help="Path to the input VTK file (UNSTRUCTURED_GRID).")
     parser.add_argument("output_file", help="Path to the output VTK file (RECTILINEAR_GRID).")
-    parser.add_argument("--default_scalar", type=float, default=np.nan,
-                        help="Default value for scalar fields (missing points).")
-    parser.add_argument("--default_vector", type=float, default=0.0,
-                        help="Default value for vector fields (missing points).")
-    parser.add_argument("--defaults", type=str, default="{}",
-                        help="JSON-formatted dictionary of specific default values for fields.")
     parser.add_argument("--add_no_layer", action="store_true",
                         help="Doest not add an extra layer at each edge of each axis.")
     args = parser.parse_args()
 
-    # Convert the dictionary of defaults
-    try:
-        field_defaults = json.loads(args.defaults)
-    except json.JSONDecodeError:
-        print("Error parsing the dictionary of default values. Ensure it is in valid JSON format.")
-        return
-
     # Call the main conversion function
     convert_to_rectilinear(args.input_file, args.output_file,
-                           default_value_scalar=args.default_scalar,
-                           default_value_vector=args.default_vector,
-                           field_defaults=field_defaults,
                            add_layer = not args.add_no_layer)
 
 if __name__ == "__main__":
