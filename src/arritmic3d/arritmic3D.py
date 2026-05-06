@@ -471,7 +471,7 @@ def run_arritmic3D(case_dir, config : dict = {}, save_run_config=True, debug_lev
     if not case_config:
         config = make_default_config() | config
     else:
-        config = case_config | config
+        config = make_default_config() | case_config | config
 
 
     # Validate that VTK input file exists
