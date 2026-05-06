@@ -43,8 +43,8 @@ TenTusscherRestitutionModels = {
 }
 
 def convert_to_rectilinear(input_filename, output_filename,
-                           default_value_scalar=0.0,
-                           default_value_vector=np.array([0.0, 0.0, 0.0]),
+                           default_value_scalar=0,
+                           default_value_vector=[0.0, 0.0, 0.0],
                            field_defaults=None,
                            activation=[],
                            add_layer=True):
@@ -143,21 +143,22 @@ def convert_to_rectilinear(input_filename, output_filename,
         print(f"Processing field: {field_name}")
         # Retrieve the current field's data
         point_data = mesh.point_data[field_name]
+        point_dtype = point_data.dtype
         data_shape = point_data.shape[1:] if point_data.ndim > 1 else ()
 
         # Determine the specific or general default value
         if field_name in field_defaults:
             field_default = field_defaults[field_name]
         elif len(data_shape) == 0:  # Scalar
-            field_default = default_value_scalar
+            field_default = point_dtype.type(default_value_scalar)
         else:  # Vector or tensor
-            field_default = np.full(data_shape, default_value_vector)
+            field_default = np.zeros(data_shape, dtype=point_dtype)
 
         # Create a dictionary for quick access to point values
         point_dict = {tuple(p): v for p, v in zip(points, point_data)}
 
         # Assign values to the grid points in the correct order
-        values = np.array([point_dict.get(tuple(p), field_default) for p in grid_points])
+        values = np.array([point_dict.get(tuple(p), field_default) for p in grid_points], dtype=point_dtype)
 
         # Assign the values to the new grid
         rectilinear_grid[field_name] = values
