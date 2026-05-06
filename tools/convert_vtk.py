@@ -47,6 +47,7 @@ def convert_to_rectilinear(input_filename, output_filename,
                            default_value_vector=[0.0, 0.0, 0.0],
                            field_defaults=None,
                            activation=[],
+                           keep_all_fields = False,
                            add_layer=True):
     """
     Converts a VTK file of type UNSTRUCTURED_GRID to RECTILINEAR_GRID, preserving all point data fields.
@@ -93,12 +94,14 @@ def convert_to_rectilinear(input_filename, output_filename,
     # We get the indices of nodes that have 34_pacing > 0 and set them as different activation regions
     if "34_pacing" in mesh.point_data:
         pacing_sites = np.where(mesh.point_data["34_pacing"] > 0)[0]
+        print(f"Pacing sites read: \n{pacing_sites}")
         i = 1
         for site_index in pacing_sites:
             activation_region[site_index] = i
             i+=1
 
     # Then, process input
+    cli_act_sites = []
     for act in (activation or []):
         try:
             act_dict = ast.literal_eval(act)
@@ -106,6 +109,9 @@ def convert_to_rectilinear(input_filename, output_filename,
             raise ValueError(f"Error parsing activation region: {act}")
         for region_id, nodes in act_dict.items():
             activation_region[nodes] = region_id
+        cli_act_sites.append(act_dict)
+    if cli_act_sites:
+        print(f"Input given pacing sites {cli_act_sites}")
 
     mesh.point_data["activation_region"] = activation_region
 
@@ -140,6 +146,12 @@ def convert_to_rectilinear(input_filename, output_filename,
     # Transfer all point data fields to the new grid
     field_defaults = field_defaults or {}
     for field_name in mesh.point_data:
+
+        if not keep_all_fields:
+            if field_name not in ["restitution_model","activation_region","fibers_orientation"]:
+                print(f"Skipping field: {field_name}")
+                continue
+
         print(f"Processing field: {field_name}")
         # Retrieve the current field's data
         point_data = mesh.point_data[field_name]
