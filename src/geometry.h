@@ -3,6 +3,8 @@
 #define GEOMETRY_H
 
 #include <array>
+#include <vector>
+#include <limits>
 #include <cstdint>
 #include <Eigen/Dense>
 #include "error.h"
@@ -27,6 +29,7 @@ constexpr size_t calculate_neighbours(size_t distance)
 
 /**
  * @brief Class to model the geometry of the tissue
+ * It contains functions that map the 3D grid of the tissue (IndexGrid) to a 1D array of nodes (MemIndex) using the index vector.
  */
 
 class Geometry
@@ -172,9 +175,28 @@ public:
     }
 
     /**
-     * @brief Get the coordinates of a node given its index inside the array
+     * @brief Get the index of a node in the tissue array given its index in the 3D grid
+     */
+    Index_t GetMemIndex_from_GridIndex(size_t index) const
+    {
+        return this->index.at(index);
+    }
+
+    /**
+     * @brief Get the index of a node in the tissue array given its id.
+     * @todo Currently, the id corresponds with the index in the tissue array, but it should be changed. In that case, a binary search could be used to find the index.
+     */
+    Index_t GetMemIndex_from_NodeId(size_t id) const
+    {
+        assert(id < std::numeric_limits<Index_t>::max());
+
+        return id;
+    }
+
+    /**
+     * @brief Get the coordinates of a node given its index inside the 3D grid
     */
-    Eigen::Vector3i GetCoords(size_t index) const
+    Eigen::Vector3i GetCoords_from_GridIndex(size_t index) const
     {
         int z = index / (size_x*size_y);
         int y = (index - z*size_x*size_y) / size_x;
@@ -184,21 +206,13 @@ public:
     }
 
     /**
-     * @brief Get the index inside the array of a node given its coordinates
+     * @brief Get the index inside the 3D grid of a node given its coordinates
     */
-    size_t GetIndex(int x, int y, int z) const
+    size_t GetGridIndex_from_Coords(int x, int y, int z) const
     {
         return z*size_x*size_y + y*size_x + x;
     }
 
-    /**
-     * @brief Get the physical central position of a node given its index
-    */
-    Vector3 GetPos(size_t index) const
-    {
-        Eigen::Vector3i coords = GetCoords(index);
-        return origin + Vector3(0.5*dx, 0.5*dy, 0.5*dz) + Vector3(coords[0]*dx, coords[1]*dy, coords[2]*dz);
-    }
 
     /**
      * @brief Create the index vector.
@@ -217,7 +231,7 @@ public:
                 pos += distance; // Skip the first layers in x
                 for(int i_x = 0; i_x < size_x; i_x++)
                 {
-                    index[pos] = GetIndex(i_x, i_y, i_z);
+                    index[pos] = GetGridIndex_from_Coords(i_x, i_y, i_z);
                     pos++;
                 }
                 pos += distance; // Skip the last layers in x
