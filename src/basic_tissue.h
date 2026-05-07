@@ -76,7 +76,10 @@ public:
     float GetTime() const { return tissue_time; }
     void SetBorder(vector<CellType> & cell_types_, CellType border_type);
     /** Get the id (index) of node with coordinates (x, y, z) */
-    size_t GetIndex(int x, int y, int z) const  { return tissue_geometry.GetIndex(x, y, z);}
+    size_t GetIndex(int x, int y, int z) const
+    {
+        return tissue_geometry.GetGridIndex_from_Coords(x, y, z);
+    }
     /** Get the number of nodes in the tissue */
     size_t size() const { return tissue_nodes.size(); }
     /** Get the number of live nodes (not CORE) in the tissue */
@@ -172,15 +175,6 @@ protected:
         return &tissue_nodes[id];
     }
 
-    /**
-     * Obtain position of Node in the tissue_nodes vector
-     *
-     */
-    Index_t NodeIndex(size_t id) const
-    {
-        assert(id < tissue_nodes.size());
-        return tissue_geometry.index[id];
-    }
 };
 
 /**
@@ -572,24 +566,24 @@ void BasicTissue<APM,CVM>::SetBorder(vector<CellType> & cell_types_, CellType bo
         for(int y = 0; y < tissue_geometry.size_y; y++)
             for(int k = 0; k < dist; k++)
             {
-                cell_types_[tissue_geometry.GetIndex(x, y, k)] = border_type;
-                cell_types_[tissue_geometry.GetIndex(x, y, tissue_geometry.size_z-1-k)] = border_type;
+                cell_types_[tissue_geometry.GetGridIndex_from_Coords(x, y, k)] = border_type;
+                cell_types_[tissue_geometry.GetGridIndex_from_Coords(x, y, tissue_geometry.size_z-1-k)] = border_type;
             }
 
     for(int x = 0; x < tissue_geometry.size_x; x++)
         for(int z = 0; z < tissue_geometry.size_z; z++)
             for(int k = 0; k < dist; k++)
             {
-                cell_types_[tissue_geometry.GetIndex(x, k, z)] = border_type;
-                cell_types_[tissue_geometry.GetIndex(x, tissue_geometry.size_y-1-k, z)] = border_type;
+                cell_types_[tissue_geometry.GetGridIndex_from_Coords(x, k, z)] = border_type;
+                cell_types_[tissue_geometry.GetGridIndex_from_Coords(x, tissue_geometry.size_y-1-k, z)] = border_type;
             }
 
     for(int y = 0; y < tissue_geometry.size_y; y++)
         for(int z = 0; z < tissue_geometry.size_z; z++)
             for(int k = 0; k < dist; k++)
             {
-                cell_types_[tissue_geometry.GetIndex(k, y, z)] = border_type;
-                cell_types_[tissue_geometry.GetIndex(tissue_geometry.size_x-1-k, y, z)] = border_type;
+                cell_types_[tissue_geometry.GetGridIndex_from_Coords(k, y, z)] = border_type;
+                cell_types_[tissue_geometry.GetGridIndex_from_Coords(tissue_geometry.size_x-1-k, y, z)] = border_type;
             }
 }
 

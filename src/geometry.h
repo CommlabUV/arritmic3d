@@ -175,7 +175,7 @@ public:
     }
 
     /**
-     * @brief Get the index of a node in the tissue array given its index in the 3D grid
+     * @brief Get the index of a node in the tissue array given its index in the 3D grid. Negative values (NO_INDEX) correspond to VOID nodes.
      */
     Index_t GetMemIndex_from_GridIndex(size_t index) const
     {
