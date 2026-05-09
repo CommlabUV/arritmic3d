@@ -190,7 +190,7 @@ void CardiacTissue<APM,CVM>::TriggerEvent(CellEvent* ev)
                 {
                     // We get the neighbour node
                     // Danger! May go out of the array of Node
-                    Node* neigh = node_ + this->tissue_geometry.displacement[i];  // @todo Look for a better way to do this
+                    Node* neigh = this->NodeDisplace(node_, this->tissue_geometry.displacement[i]);  // @todo Look for a better way to do this
                     assert(neigh >= this->tissue_nodes.data() && neigh < this->tissue_nodes.data() + this->tissue_nodes.size());
 
                     // We skip core nodes

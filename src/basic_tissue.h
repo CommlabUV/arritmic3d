@@ -175,6 +175,15 @@ protected:
         return &tissue_nodes[id];
     }
 
+    Node* NodeDisplace(Node* node, int grid_distance)
+    {
+        size_t grid_pos = node->id + grid_distance;
+        auto mem_index = tissue_geometry.GetMemIndex_from_GridIndex(grid_pos);
+        if(mem_index == NO_INDEX)
+            return nullptr;
+        return &tissue_nodes[mem_index];
+    }
+
 };
 
 /**
@@ -223,7 +232,7 @@ void BasicTissue<APM,CVM>::Init(const vector<CellType> & cell_types_, vector<Nod
         {
             tissue_nodes[i] = Node();  // Totally reset the node
 
-            tissue_nodes[i].id = i;
+            tissue_nodes[i].id = i;     // The id corresponds with the grid position.
             tissue_nodes[i].type = type;
             // Set the fiber orientation, default is isotropic
             if(this->tissue_fiber_orientation == FiberOrientation::HOMOGENEOUS)
