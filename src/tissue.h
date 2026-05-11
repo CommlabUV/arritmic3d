@@ -123,22 +123,23 @@ SystemEventType CardiacTissue<APM,CVM>::update(int debug)
 
 /**
  * External activation of a set of nodes.
- * @param nodes List of nodes to activate.
+ * @param nodes List of node ids to activate.
  * @param activation_time Time of activation.
  *
  * @todo If the node is already active, generates a core-dump.
 */
 template <typename APM,typename CVM>
-void CardiacTissue<APM,CVM>::ExternalActivation(const vector<size_t> & nodes, float activation_time, int beat_n)
+void CardiacTissue<APM,CVM>::ExternalActivation(const vector<size_t> & node_ids, float activation_time, int beat_n)
 {
-    for(size_t i = 0; i < nodes.size(); i++)
+    for(size_t i = 0; i < node_ids.size(); i++)
     {
-        if(this->tissue_nodes.at(nodes[i]).type == CELL_TYPE_VOID)
+        auto node_pos = this->tissue_geometry.GetMemIndex_from_NodeId(node_ids[i]);
+        if(node_pos == NO_INDEX || this->tissue_nodes.at(node_pos).type == CELL_TYPE_VOID)
         {
-            LOG::Warning(true, "ExternalActivation(): Node ", nodes[i], " is a CORE node. Activation ignored.");
+            LOG::Warning(true, "ExternalActivation(): Node id ", node_ids[i], " is VOID or out of bounds. Activation ignored.");
             continue;
         }
-        CellEvent * e = this->tissue_nodes.at(nodes[i]).ScheduleExternalActivation(activation_time, beat_n);
+        CellEvent * e = this->tissue_nodes.at(node_pos).ScheduleExternalActivation(activation_time, beat_n);
         if(e != nullptr)
             this->event_queue.InsertCellEvent(e);
     }
@@ -190,10 +191,12 @@ void CardiacTissue<APM,CVM>::TriggerEvent(CellEvent* ev)
                 {
                     // We get the neighbour node
                     // Danger! May go out of the array of Node
-                    Node* neigh = this->NodeDisplace(node_, this->tissue_geometry.displacement[i]);  // @todo Look for a better way to do this
+                    Node* neigh = this->NodeDisplace(node_, this->tissue_geometry.displacement[i]);
+                    if(neigh == nullptr)    // We are in a void node, we skip it
+                        continue;
                     assert(neigh >= this->tissue_nodes.data() && neigh < this->tissue_nodes.data() + this->tissue_nodes.size());
 
-                    // We skip core nodes
+                    // We skip void nodes
                     if ( neigh->type == CELL_TYPE_VOID )
                     {
                         continue;
@@ -271,9 +274,12 @@ void CardiacTissue<APM,CVM>::TriggerEvent(CellEvent* ev)
             for (unsigned int i = 0; i < this->tissue_geometry.num_neighbours; ++i )
             {
                 // Danger! May go out of the array of Node
-                Node* neigh = node_ + this->tissue_geometry.displacement[i];  // @todo Look for a better way to do this
+                Node* neigh = this->NodeDisplace(node_, this->tissue_geometry.displacement[i]);
+                if (neigh == nullptr)
+                    continue;
                 assert(neigh >= this->tissue_nodes.data() && neigh < this->tissue_nodes.data() + this->tissue_nodes.size());
-                // We skip core nodes
+
+                // We skip void nodes
                 if ( neigh->type != CELL_TYPE_VOID )
                 {
                     // If neighbour is active
