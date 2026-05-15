@@ -60,7 +60,10 @@ public:
         distance_to_neighbour = NeighboursDistance<num_neighbours>();
         displ_axis = DisplacementAxis<num_axis>(distance);
 
+        //CreateTrivialIndex();
         CreateIndex();
+
+        WriteIndex();
     }
 
     /**
@@ -240,6 +243,33 @@ public:
         }
     }
 
+    /**
+     * @brief Create a trivial index vector for debugging purposes.
+     */
+    void CreateTrivialIndex()
+    {
+        for(size_t i = 0; i < index.size(); i++)
+            index[i] = i;
+    }
+
+    void WriteIndex() const
+    {
+        size_t pos = 0;
+        for(int i_z = 0; i_z < size_z + 2*distance; i_z++)
+        {
+            std::cout << "Layer z=" << i_z << std::endl;
+            for(int i_y = 0; i_y < size_y + 2*distance; i_y++)
+            {
+                for(int i_x = 0; i_x < size_x + 2*distance; i_x++)
+                {
+                    std::cout << index[pos] << " ";
+                    pos++;
+                }
+                std::cout << std::endl;
+            }
+            std::cout << std::endl;
+        }
+    }
 
     /**
      * @brief Save the geometry state to a binary file
