@@ -46,13 +46,15 @@ public:
     std::array<float, num_neighbours> distance_to_neighbour;
     std::array<int, num_axis> displ_axis;
 
+    int ext_size_x, ext_size_y, ext_size_z; // Size of the virtual grid that includes the CORE nodes.
     std::vector<Index_t> index; // Index of nodes in the tissue array given the index in a rectilinear grid
 
     Geometry()=default;
 
     Geometry(int size_x_, int size_y_, int size_z_, float dx_, float dy_, float dz_) :
         size_x(size_x_), size_y(size_y_), size_z(size_z_), dx(dx_), dy(dy_), dz(dz_),
-        index((size_x_ + 2*distance) * (size_y_ + 2*distance) * (size_z_ + 2*distance), NO_INDEX)
+        ext_size_x(size_x_ + 2*distance), ext_size_y(size_y_ + 2*distance), ext_size_z(size_z_ + 2*distance),
+        index(ext_size_x * ext_size_y * ext_size_z, NO_INDEX)
     {
         origin = Vector3::Zero();
         displacement = NeighboursDisplace<num_neighbours>(distance);
@@ -84,7 +86,7 @@ public:
                 {
                     if(i == 0 && j == 0 && k == 0)
                         continue;
-                    neighbours[pos] = i*size_x*size_y + j*size_x + k;
+                    neighbours[pos] = i*ext_size_x*ext_size_y + j*ext_size_x + k;
                     ++pos;
                 }
             }
@@ -116,7 +118,7 @@ public:
         {
                     if(j == 0)
                         continue;
-                    neighbours[pos] = j*size_x;
+                    neighbours[pos] = j*ext_size_x;
                     ++pos;
         }
 
@@ -124,7 +126,7 @@ public:
         {
                     if(i == 0)
                         continue;
-                    neighbours[pos] = i*size_x*size_y;
+                    neighbours[pos] = i*ext_size_x*ext_size_y;
                     ++pos;
         }
 
@@ -209,11 +211,31 @@ public:
     }
 
     /**
+     * @brief Get the coordinates of a node given its index inside the extended 3D grid
+    */
+    Eigen::Vector3i GetCoords_from_ExtGridIndex(size_t index) const
+    {
+        int z = index / (ext_size_x*ext_size_y);
+        int y = (index - z*ext_size_x*ext_size_y) / ext_size_x;
+        int x = index - z*ext_size_x*ext_size_y - y*ext_size_x;
+
+        return Eigen::Vector3i(x, y, z);
+    }
+
+    /**
      * @brief Get the index inside the 3D grid of a node given its coordinates
     */
     size_t GetGridIndex_from_Coords(int x, int y, int z) const
     {
         return z*size_x*size_y + y*size_x + x;
+    }
+
+    /**
+     * @brief Get the index inside the extended 3D grid of a node given its coordinates
+    */
+    size_t GetExtGridIndex_from_Coords(int x, int y, int z) const
+    {
+        return z*ext_size_x*ext_size_y + y*ext_size_x + x;
     }
 
 
@@ -225,10 +247,10 @@ public:
     void CreateIndex()
     {
         size_t pos = 0;
-        pos += distance*(size_x + 2*distance) * (size_y + 2*distance); // Skip the first layers in z
+        pos += distance * ext_size_x * ext_size_y; // Skip the first layers in z
         for(int i_z = 0; i_z < size_z; i_z++)
         {
-            pos += distance*(size_x + 2*distance); // Skip the first layers in y
+            pos += distance * ext_size_x; // Skip the first layers in y
             for(int i_y = 0; i_y < size_y; i_y++)
             {
                 pos += distance; // Skip the first layers in x
@@ -239,7 +261,7 @@ public:
                 }
                 pos += distance; // Skip the last layers in x
             }
-            pos += distance*(size_x + 2*distance); // Skip the last layers in y
+            pos += distance*(ext_size_x); // Skip the last layers in y
         }
     }
 
@@ -255,12 +277,12 @@ public:
     void WriteIndex() const
     {
         size_t pos = 0;
-        for(int i_z = 0; i_z < size_z + 2*distance; i_z++)
+        for(int i_z = 0; i_z < ext_size_z; i_z++)
         {
             std::cout << "Layer z=" << i_z << std::endl;
-            for(int i_y = 0; i_y < size_y + 2*distance; i_y++)
+            for(int i_y = 0; i_y < ext_size_y; i_y++)
             {
-                for(int i_x = 0; i_x < size_x + 2*distance; i_x++)
+                for(int i_x = 0; i_x < ext_size_x; i_x++)
                 {
                     std::cout << index[pos] << " ";
                     pos++;
