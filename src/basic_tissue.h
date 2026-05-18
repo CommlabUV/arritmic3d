@@ -220,10 +220,6 @@ void BasicTissue<APM,CVM>::Init(const vector<CellType> & cell_types_, vector<Nod
     // Reset the timer
     timer.fill(0.0f);
 
-    // Set borders to VOID type
-    auto cell_types2 = cell_types_;
-    SetBorder(cell_types2, CELL_TYPE_VOID);
-
     // Fiber orientation
     if( fiber_orientation_.size() == n_nodes )
         this->tissue_fiber_orientation = FiberOrientation::HETEROGENEOUS;
@@ -237,7 +233,7 @@ void BasicTissue<APM,CVM>::Init(const vector<CellType> & cell_types_, vector<Nod
     assert(parameters_.size() == n_nodes || parameters_.size() == 1);
     for(size_t i = 0; i < n_nodes; i++)
     {
-        CellType type = cell_types2[i];
+        CellType type = cell_types_[i];
         if(true)   //(type != CELL_TYPE_VOID)
         {
             tissue_nodes[i] = Node();  // Totally reset the node
