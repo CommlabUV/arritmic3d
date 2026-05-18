@@ -176,7 +176,7 @@ void CardiacTissue<APM,CVM>::TriggerEvent(CellEvent* ev)
         {
             /// @todo Missing reentry checks
             // The Node is activated.
-            if (node_->Activate(this->tissue_time, this->tissue_geometry))
+            if (node_->Activate(this->tissue_time, this))
             {
                 // Once activated and computed the APD, we set the next deactivation event
                 node_->next_deactivation_event->ChangeEvent(node_->next_deactivation_time);

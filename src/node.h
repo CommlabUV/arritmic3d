@@ -92,6 +92,7 @@ private:
     constexpr static int SAVE_VERSION = 2;  ///< Version of the NodeT class for state saving/loading.
     NodeParameters*  parameters;         ///< @brief Parameters of the Node
     unsigned int    id;                 ///< @brief Unique Node id. Corresponds with the grid position in the tissue.
+    size_t          ext_grid_pos;        ///< @brief Position in the extended grid (index vector).
 
     CellType        type = CELL_TYPE_VOID; ///< @brief Type of the Node
     bool            external_activation;
@@ -124,8 +125,8 @@ private:
 
 
     //void Deactivate(float current_time_);
-    bool Activate(float current_time_, const Geometry &geometry);
-    bool ComputeActivation(float current_time_, const Geometry &geometry);
+    bool Activate(float current_time_, CardiacTissue<ActionPotentialModel, ConductionVelocityModel> * tissue_);
+    bool ComputeActivation(float current_time_, CardiacTissue<ActionPotentialModel, ConductionVelocityModel> * tissue_);
 
 };
 

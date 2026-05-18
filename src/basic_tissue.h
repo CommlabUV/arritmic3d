@@ -177,11 +177,21 @@ protected:
 
     Node* NodeDisplace(Node* node, int grid_distance)
     {
-        size_t grid_pos = node->id + grid_distance;
+        size_t grid_pos = node->ext_grid_pos + grid_distance;
         auto mem_index = tissue_geometry.GetMemIndex_from_GridIndex(grid_pos);
         if(mem_index == NO_INDEX)
             return nullptr;
         return &tissue_nodes[mem_index];
+    }
+
+    void UpdateExtGridPos()
+    {
+        for(size_t i = 0; i < tissue_geometry.index.size(); i++)
+        {
+            auto mem_index = tissue_geometry.GetMemIndex_from_GridIndex(i);
+            if(mem_index != NO_INDEX)
+                tissue_nodes.at(mem_index).ext_grid_pos = i;
+        }
     }
 
 };
@@ -248,6 +258,7 @@ void BasicTissue<APM,CVM>::Init(const vector<CellType> & cell_types_, vector<Nod
                 n_live_nodes++;
         }
     }
+    UpdateExtGridPos();
 
     LOG::Warning(n_live_nodes == 0, "Tissue has no live cells (all cells are VOID).");
 

@@ -99,7 +99,7 @@ void NodeT<APD, CVM>::ReApplyParam(float current_time_)
  * From Node.pde: calcularActivacion
 */
 template <typename APD, typename CVM>
-bool NodeT<APD, CVM>::ComputeActivation(float current_time_, const Geometry &geometry)
+bool NodeT<APD, CVM>::ComputeActivation(float current_time_,  CardiacTissue<APD, CVM> * tissue_)
 {
     // Conduction velocity. Has to be activated with the previous DI. Otherwise, DI will be 0
     // Thus, we activate before updating the APD.
@@ -116,10 +116,12 @@ bool NodeT<APD, CVM>::ComputeActivation(float current_time_, const Geometry &geo
     {
         float avg_apd = 0;
         unsigned int active_neighs = 0;
-        for(int disp: geometry.displacement)    //(Node * neigh : this->neighbours)
+        for(int disp: tissue_->tissue_geometry.displacement)    //(Node * neigh : this->neighbours)
         {
             // Danger! May go out of the array of Node
-            NodeT * neigh = this + disp;
+            NodeT * neigh = tissue_->NodeDisplace(this, disp);
+            if(neigh == nullptr)    // We are in a void node, we skip it
+                continue;
             if (neigh->GetState(current_time_) == CellActivationState::ACTIVE)
             {
                 avg_apd += neigh->apd_model.getAPD();
@@ -153,13 +155,13 @@ bool NodeT<APD, CVM>::ComputeActivation(float current_time_, const Geometry &geo
  * From Node.pde: activar
 */
 template <typename APD, typename CVM>
-bool NodeT<APD, CVM>::Activate(float current_time_, const Geometry &geometry)
+bool NodeT<APD, CVM>::Activate(float current_time_,  CardiacTissue<APD, CVM> * tissue_)
 {
     bool activated = false;
 
     if (this->GetState(current_time_) <= CellActivationState::WAITING_FOR_ACTIVATION)
     {
-        if( ! this->ComputeActivation(current_time_, geometry))
+        if( ! this->ComputeActivation(current_time_, tissue_))
             activated = false;
         else
         {
