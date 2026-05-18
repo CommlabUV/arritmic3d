@@ -22,14 +22,14 @@ int main(int argc, char **argv)
     // Test of the CardiacTissue class. Units in meters.
     //CardiacTissue<ActionPotentialRestCurve,ConductionVelocitySimple> tissue(6, 6, 6, 0.1, 0.1, 0.2);  // Constant CV
     //CardiacTissue<ActionPotentialRestCurve,ConductionVelocity> tissue(6, 6, 6, 0.1, 0.1, 0.2);
-    CardiacTissue<ActionPotentialRestSurface,ConductionVelocity> tissue(10, 6, 4, 0.1, 0.1, 0.1);
-    std::vector<CellType> v_type(10*6*4, HEALTHY_ENDO);
+    CardiacTissue<ActionPotentialRestSurface,ConductionVelocity> tissue(6, 4, 3, 0.1, 0.1, 0.1);  //(10, 6, 4, 0.1, 0.1, 0.1);
+    std::vector<CellType> v_type(tissue.size(), HEALTHY_ENDO);
 
     NodeParameters np;
     //np.initial_apd = 200.0;
     np.correction_factor_apd = 1.0;
     vector<NodeParameters> v_np(tissue.size(), np);
-    v_np.at(tissue.GetIndex(5, 3, 1)).sensor = 1;  // Set a sensor
+    v_np.at(tissue.GetIndex(3, 2, 1)).sensor = 1;  // Set a sensor
 
     Eigen::VectorXf fiber_dir = Eigen::Vector3f(1.0, 0.0, 0.0);
     tissue.InitModels("restitutionModels/config_TenTuscher_APD.csv","restitutionModels/config_TenTuscher_CV.csv");
@@ -42,12 +42,12 @@ int main(int argc, char **argv)
     size_t initial_node = tissue.GetIndex(2,2,1);  // 1*6*6 + 2*6 + 2
     int beat = 0;
     float CL = 300.0f;  // cycle length in ms
-    tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, 1);
+    tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, 0.0f);
+    //tissue.SetTimer(SystemEventType::FILE_WRITE, 1, 0.0f);  // Period in ms.
 
-    tissue.SaveVTK("output/test0.vtk");
     std::cout << "--- Begin simulation ---" << std::endl;
 
-    for(int i = 1; i <= 2000; ++i)
+    for(int i = 1; i <= 200; ++i)
     {
         auto tick = tissue.update();
         //std::cout << i << " " << tissue.GetTime() << std::endl;
@@ -60,15 +60,12 @@ int main(int argc, char **argv)
             std::cout << "External activation for beat " << beat << " at time " << tissue.GetTime() << std::endl;
             tissue.ExternalActivation({initial_node}, tissue.GetTime(), beat);
             tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, tissue.GetTime() + CL);
-            // Write VTK file after activation
-            //tissue.SetSystemEvent(SystemEventType::FILE_WRITE, tissue.GetTime() + 20);
         }
         if(tick == SystemEventType::FILE_WRITE)
             tissue.SaveVTK("output/test"+ std::to_string(i) +".vtk");
 
-        //std::cout << "State of initial node: " << tissue.GetStates()[initial_node] << std::endl;
         // Write after each event
-        //tissue.SaveVTK("output/test"+ std::to_string(i) +".vtk");
+        tissue.SaveVTK("output/test"+ std::to_string(i) +".vtk");
     }
 
     std::ofstream sensor_file("sensor_0.txt");
