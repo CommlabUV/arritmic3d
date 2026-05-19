@@ -1,12 +1,53 @@
 import pyvista as pv
 import numpy as np
 import argparse
-import json
+import ast
+
+Endo2Epi = {
+    0 : "Endo",
+    1 : "Mid",
+    2 : "Epi"
+}
+
+CellType = {
+    0 : "Healthy",
+    1 : "BZ",
+    2 : "Core"
+}
+
+"""
+1,    HE_Endo
+2,    HE_Mid
+3,    HE_Epi
+4,    BZ_Endo
+5,    BZ_Mid
+6,    BZ_Epi
+7,    Core
+"""
+TenTusscherRestitutionModels = {
+    "Healthy" : {
+        "Endo" : 1,
+        "Mid" : 2,
+        "Epi" : 3
+    },
+    "BZ" : {
+        "Endo" : 4,
+        "Mid" : 5,
+        "Epi" : 6
+    },
+    "Core" :  {
+        "Endo" : 7,
+        "Mid" : 7,
+        "Epi" : 7
+    },
+}
 
 def convert_to_rectilinear(input_filename, output_filename,
-                           default_value_scalar=np.nan,
-                           default_value_vector=0.0,
+                           default_value_scalar=0,
+                           default_value_vector=[0.0, 0.0, 0.0],
                            field_defaults=None,
+                           activation=[],
+                           keep_all_fields = False,
                            add_layer=True):
     """
     Converts a VTK file of type UNSTRUCTURED_GRID to RECTILINEAR_GRID, preserving all point data fields.
@@ -17,6 +58,8 @@ def convert_to_rectilinear(input_filename, output_filename,
         default_value_scalar (float): Default value for missing scalar data points.
         default_value_vector (float): Default value for missing vector data points.
         field_defaults (dict): A dictionary with specific default values for individual fields.
+        activation (list[dict]): A list of dictionaries with specific default values for individual fields.
+        add_layer (bool): Whether to add an extra layer at each edge of each axis.
     """
     # Load the UNSTRUCTURED_GRID file
     mesh = pv.read(input_filename)
@@ -26,6 +69,51 @@ def convert_to_rectilinear(input_filename, output_filename,
     x_coords = np.unique(points[:, 0])  # Unique X coordinates
     y_coords = np.unique(points[:, 1])  # Unique Y coordinates
     z_coords = np.unique(points[:, 2])  # Unique Z coordinates
+
+    # Convert EndoToEpi + Cell_type labels to restitution_model
+    if "EndoToEpi" in mesh.point_data and "Cell_type" in mesh.point_data:
+        restitution_model = np.zeros(len(points), dtype=int)
+        for i, p in enumerate(points):
+            endo2epi = Endo2Epi[int(mesh.point_data["EndoToEpi"][i])]
+            cell_type = CellType[int(mesh.point_data["Cell_type"][i])]
+            restitution_model[i] = TenTusscherRestitutionModels[cell_type][endo2epi]
+        mesh.point_data["restitution_model"] = restitution_model
+    else:
+        raise ValueError("The input file does not contain the fields 'EndoToEpi' and 'Cell_type'.")
+
+    # Transfer fiber orientation, from 'fibers_OR' to 'fibers_orientation'
+    if "fibers_OR" in mesh.point_data:
+        mesh.point_data["fibers_orientation"] = mesh.point_data["fibers_OR"]
+    else:
+        # Set to [0,0,0] -> isotropic
+        mesh.point_data["fibers_orientation"] = np.zeros((len(points), 3))
+
+    # Add activation sites
+    activation_region = np.zeros(len(points), dtype=int)
+    # First, for each node with 34_pacing >0, set a different activation region
+    # We get the indices of nodes that have 34_pacing > 0 and set them as different activation regions
+    if "34_pacing" in mesh.point_data:
+        pacing_sites = np.where(mesh.point_data["34_pacing"] > 0)[0]
+        print(f"Pacing sites read: \n{pacing_sites}")
+        i = 1
+        for site_index in pacing_sites:
+            activation_region[site_index] = i
+            i+=1
+
+    # Then, process input
+    cli_act_sites = []
+    for act in (activation or []):
+        try:
+            act_dict = ast.literal_eval(act)
+        except (ValueError, SyntaxError):
+            raise ValueError(f"Error parsing activation region: {act}")
+        for region_id, nodes in act_dict.items():
+            activation_region[nodes] = region_id
+        cli_act_sites.append(act_dict)
+    if cli_act_sites:
+        print(f"Input given pacing sites {cli_act_sites}")
+
+    mesh.point_data["activation_region"] = activation_region
 
     # Add an extra layer at each edge of each axis
     def extend_coords(coords):
@@ -58,24 +146,31 @@ def convert_to_rectilinear(input_filename, output_filename,
     # Transfer all point data fields to the new grid
     field_defaults = field_defaults or {}
     for field_name in mesh.point_data:
+
+        if not keep_all_fields:
+            if field_name not in ["restitution_model","activation_region","fibers_orientation"]:
+                print(f"Skipping field: {field_name}")
+                continue
+
         print(f"Processing field: {field_name}")
         # Retrieve the current field's data
         point_data = mesh.point_data[field_name]
+        point_dtype = point_data.dtype
         data_shape = point_data.shape[1:] if point_data.ndim > 1 else ()
 
         # Determine the specific or general default value
         if field_name in field_defaults:
             field_default = field_defaults[field_name]
         elif len(data_shape) == 0:  # Scalar
-            field_default = default_value_scalar
+            field_default = point_dtype.type(default_value_scalar)
         else:  # Vector or tensor
-            field_default = np.full(data_shape, default_value_vector)
+            field_default = np.zeros(data_shape, dtype=point_dtype)
 
         # Create a dictionary for quick access to point values
         point_dict = {tuple(p): v for p, v in zip(points, point_data)}
 
         # Assign values to the grid points in the correct order
-        values = np.array([point_dict.get(tuple(p), field_default) for p in grid_points])
+        values = np.array([point_dict.get(tuple(p), field_default) for p in grid_points], dtype=point_dtype)
 
         # Assign the values to the new grid
         rectilinear_grid[field_name] = values
@@ -92,28 +187,16 @@ def main():
     parser = argparse.ArgumentParser(description="Converts a UNSTRUCTURED_GRID VTK file to RECTILINEAR_GRID.")
     parser.add_argument("input_file", help="Path to the input VTK file (UNSTRUCTURED_GRID).")
     parser.add_argument("output_file", help="Path to the output VTK file (RECTILINEAR_GRID).")
-    parser.add_argument("--default_scalar", type=float, default=np.nan,
-                        help="Default value for scalar fields (missing points).")
-    parser.add_argument("--default_vector", type=float, default=0.0,
-                        help="Default value for vector fields (missing points).")
-    parser.add_argument("--defaults", type=str, default="{}",
-                        help="JSON-formatted dictionary of specific default values for fields.")
     parser.add_argument("--add_no_layer", action="store_true",
                         help="Doest not add an extra layer at each edge of each axis.")
-    args = parser.parse_args()
+    parser.add_argument("--activation", action = "append",
+                        help="define an activation region by node ids. The input must be a dictionary with key an integer (region id) and value a list of node ids (ints), that form that region. For example: --activation '{1 : [100, 101, 102]}'")
 
-    # Convert the dictionary of defaults
-    try:
-        field_defaults = json.loads(args.defaults)
-    except json.JSONDecodeError:
-        print("Error parsing the dictionary of default values. Ensure it is in valid JSON format.")
-        return
+    args = parser.parse_args()
 
     # Call the main conversion function
     convert_to_rectilinear(args.input_file, args.output_file,
-                           default_value_scalar=args.default_scalar,
-                           default_value_vector=args.default_vector,
-                           field_defaults=field_defaults,
+                           activation = args.activation,
                            add_layer = not args.add_no_layer)
 
 if __name__ == "__main__":

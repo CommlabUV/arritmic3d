@@ -54,7 +54,7 @@ def create_tissue(grid, params):
     print("Grid Spacing:", x_spacing, y_spacing, z_spacing)
     print("VTK-Scalars:", grid.point_data.keys())
 
-    v_type = list(np.array(grid.point_data['restitution_model']))
+    v_type = list(np.array(grid.point_data['restitution_model'], dtype=int))
 
     # Number of cells in each dimension
     ncells_x = dims[0]
@@ -471,7 +471,7 @@ def run_arritmic3D(case_dir, config : dict = {}, save_run_config=True, debug_lev
     if not case_config:
         config = make_default_config() | config
     else:
-        config = case_config | config
+        config = make_default_config() | case_config | config
 
 
     # Validate that VTK input file exists
