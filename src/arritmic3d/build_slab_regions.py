@@ -4,14 +4,6 @@ import numpy as np
 
 
 
-def _get_tissue_write_indices(grid, flat_inds_all, n_points):
-    """
-    Returns indices for writing. All nodes are considered tissue.
-    """
-    if len(flat_inds_all) == 0:
-        return None
-    return flat_inds_all
-
 
 def _write_field_values(grid, field, val, write_inds, n_points):
     """
@@ -101,14 +93,13 @@ def set_region(grid, center, radius, data, shape="circle"):
         flat_inds_all.append(flat_inds)
     flat_inds_all = np.concatenate(flat_inds_all)
 
-    n_points = grid.number_of_points
-    write_inds = _get_tissue_write_indices(grid, flat_inds_all, n_points)
-    if write_inds is None:
+    if len(flat_inds_all) == 0:
         return
 
+    n_points = grid.number_of_points
     # For each field in data, prepare target array (create if necessary) and assign value(s)
     for field, val in data.items():
-        _write_field_values(grid, field, val, write_inds, n_points)
+        _write_field_values(grid, field, val, flat_inds_all, n_points)
 
 
 
@@ -357,26 +348,24 @@ def _apply_side_region(grid, side, targets):
                 flat_inds_all.append(idx)
     flat_inds_all = np.array(flat_inds_all)
 
-    n_points = grid.number_of_points
-    write_inds = _get_tissue_write_indices(grid, flat_inds_all, n_points)
-    if write_inds is None:
+    if len(flat_inds_all) == 0:
         return
 
+    n_points = grid.number_of_points
     # write targets to fields
     for field, val in targets.items():
-        _write_field_values(grid, field, val, write_inds, n_points)
+        _write_field_values(grid, field, val, flat_inds_all, n_points)
 
 
 def _apply_node_ids_region(grid, ids, targets):
     """
     Apply field values to explicitly specified node IDs.
     """
-    n_points = grid.number_of_points
-    # filter tissue
-    write_inds = _get_tissue_write_indices(grid, np.array(ids), n_points)
-    if write_inds is None:
+    if len(ids) == 0:
         return
 
+    n_points = grid.number_of_points
+    write_inds = np.array(ids)
     # write targets to fields
     for field, val in targets.items():
         _write_field_values(grid, field, val, write_inds, n_points)
