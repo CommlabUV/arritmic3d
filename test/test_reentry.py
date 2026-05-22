@@ -69,7 +69,7 @@ plot_vtk(os.path.join(case_dir,"slab_03385.vtu"), title = "3385ms", plt_show=Tru
 
 # --- STEP 5: Build a larger slab ---
 
-case_dir = "/home/ignacio/tmp/out_test/3.reentry_2"
+case_dir = "out_test/3.reentry_2"
 delete_case_dir(case_dir)
 
 # Ensure the subfolder for the slab exists
