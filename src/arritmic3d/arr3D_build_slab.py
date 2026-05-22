@@ -14,42 +14,18 @@ def generate_rectilinear_slab(nnodes, spacing=(1.0, 1.0, 1.0), field_data={}):
         ndivs (tuple): (nx_divs, ny_divs, nz_divs) number of divisions along each axis.
         spacing (tuple): (dx, dy, dz) spacing between grid points.
         field_data (dict): Optional. Dictionary of field_name: value to assign as point data.
-                          Values can be scalar (applied uniformly) or array of interior points (ndivs[0]*ndivs[1]*ndivs[2]).
+                          Values can be scalar (applied uniformly) or array of points.
 
     Returns:
         pv.RectilinearGrid: The generated rectilinear grid.
     """
-    def make_coords(n_nodes, step):
-        """Generates coordinates for one axis, adding an extra layer of thickness 1."""
-        # nnodes + 2 nodes: padding -1 .. nnodes-1 (exclusive)
-        coords = np.arange(-1, n_nodes + 1) * step
-        return coords
-
-    def make_mask(n_nodes):
-        """Create an axis mask where 1 indicates tissue (interior) and 0 indicates exterior layer."""
-        # interior nodes are ones, exterior padding (first and last) are zeros
-        mask = np.concatenate(([0], np.ones(n_nodes, dtype=int), [0]))
-        return mask
-
-    x_coords = make_coords(nnodes[0], spacing[0])
-    y_coords = make_coords(nnodes[1], spacing[1])
-    z_coords = make_coords(nnodes[2], spacing[2])
-
-    x_mask = make_mask(nnodes[0])
-    y_mask = make_mask(nnodes[1])
-    z_mask = make_mask(nnodes[2])
-
-    # Combine masks so that a cell is tissue only if it's interior on all three axes
-    # use logical_and to get True only where all axis masks == 1
-    mask_3d = np.logical_and.outer(
-        np.logical_and.outer(x_mask, y_mask), z_mask
-    ).astype(int)
+    x_coords = np.arange(0, nnodes[0]) * spacing[0]
+    y_coords = np.arange(0, nnodes[1]) * spacing[1]
+    z_coords = np.arange(0, nnodes[2]) * spacing[2]
 
     # Create the rectilinear grid
     grid = pv.RectilinearGrid(x_coords, y_coords, z_coords)
     n_points = grid.number_of_points
-    n_interior = nnodes[0] * nnodes[1] * nnodes[2]
-    interior_mask = mask_3d.ravel(order="F") != 0
 
     # Default fields
     default_field_data = {
@@ -68,34 +44,26 @@ def generate_rectilinear_slab(nnodes, spacing=(1.0, 1.0, 1.0), field_data={}):
         if isinstance(val, np.ndarray):
             # Could be a vector (components) or an array of values
             if val.ndim == 1:
-                # 1D array: could be components (len <= 3) or values for interior points
+                # 1D array: could be components (len <= 3) or values for all points
                 if len(val) <= 3:
-                    # Treat as vector: zeros for exterior, val for interior
+                    # Treat as vector: val for all points
                     values = np.zeros((n_points, len(val)))
-                    values[interior_mask] = val
-                elif len(val) == n_interior:
-                    # Treat as values for interior points: expand with padding (0 for exterior)
-                    full_val = np.zeros(n_points)
-                    full_val[interior_mask] = val
-                    values = full_val
+                    values[:] = val
+                elif len(val) == n_points:
+                    values = val
                 else:
-                    raise ValueError(f"Field '{field_name}' has {len(val)} values, expected {n_interior} (interior points) or <= 3 (vector components).")
+                    raise ValueError(f"Field '{field_name}' has {len(val)} values, expected {n_points} or <= 3 (vector components).")
             elif val.ndim == 2:
-                # 2D array: vector field (n_points, components) or (n_interior, components)
+                # 2D array: vector field (n_points, components)
                 if val.shape[0] == n_points:
                     values = val
-                elif val.shape[0] == n_interior:
-                    # Expand with zero vectors for exterior
-                    values = np.zeros((n_points, val.shape[1]))
-                    values[interior_mask] = val
                 else:
-                    raise ValueError(f"Field '{field_name}' has {val.shape[0]} rows, expected {n_interior} (interior) or {n_points} (all points).")
+                    raise ValueError(f"Field '{field_name}' has {val.shape[0]} rows, expected {n_points}.")
             else:
                 raise ValueError(f"Field '{field_name}' has invalid shape {val.shape}.")
         else:
-            # Scalar: 0 for exterior, val for interior
-            values = np.zeros(n_points, dtype=int if isinstance(val, int) else float)
-            values[interior_mask] = val
+            # Scalar: val for all points
+            values = np.full(n_points, val, dtype=int if isinstance(val, int) else float)
 
         grid[field_name] = values
 

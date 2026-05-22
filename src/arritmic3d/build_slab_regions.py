@@ -6,17 +6,11 @@ import numpy as np
 
 def _get_tissue_write_indices(grid, flat_inds_all, n_points):
     """
-    Returns indices inside tissue (restitution_model != 0) or None if no tissue.
+    Returns indices for writing. All nodes are considered tissue.
     """
-    if "restitution_model" not in grid.point_data:
-        raise ValueError("Field 'restitution_model' not found in grid.point_data; required to determine tissue mask.")
-    rm = grid.point_data["restitution_model"]
-    if rm.ndim != 1 or rm.size != n_points:
-        raise ValueError("Field 'restitution_model' has unexpected shape.")
-    tissue_mask = rm[flat_inds_all] != 0
-    if not np.any(tissue_mask):
+    if len(flat_inds_all) == 0:
         return None
-    return flat_inds_all[tissue_mask]
+    return flat_inds_all
 
 
 def _write_field_values(grid, field, val, write_inds, n_points):
@@ -319,19 +313,15 @@ def _apply_shape_with_gradient(grid, shape, center, r1, r2, targets):
 
 def _apply_side_region(grid, side, targets):
     """
-    Apply field values to an side (side: north,south,east,west).
+    Apply field values to a side (side: north,south,east,west).
     Uses the same logic as region_by_side from build_slab.
     """
     # Validate side
     if side not in {"north", "south", "east", "west"}:
         raise ValueError("side must be one of: north, south, east, west")
 
-    # Determine interior sizes considering padding offset=1
     dims = grid.dimensions
-    offset = 1
-    nx = dims[0] - 2*offset
-    ny = dims[1] - 2*offset
-    nz = dims[2] - 2*offset
+    nx, ny, nz = dims
 
     # Map side to region_type and index
     if side == "north":
@@ -347,11 +337,7 @@ def _apply_side_region(grid, side, targets):
         region_type = "row"
         index_int = 0
 
-    # Compute node ids (reuse helper from build_slab if available; otherwise inline)
-    # For simplicity, inline the logic here
-    x_coords = np.asarray(grid.x)
-    y_coords = np.asarray(grid.y)
-
+    # Compute node ids
     if region_type == "row":
         # y fixed, x varies
         y_indices = [index_int]
@@ -367,7 +353,7 @@ def _apply_side_region(grid, side, targets):
     for z in z_indices:
         for y in y_indices:
             for x in x_indices:
-                idx = np.ravel_multi_index((x + offset, y + offset, z + offset), dims, order="F")
+                idx = np.ravel_multi_index((x, y, z), dims, order="F")
                 flat_inds_all.append(idx)
     flat_inds_all = np.array(flat_inds_all)
 
