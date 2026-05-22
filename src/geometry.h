@@ -65,7 +65,7 @@ public:
         //CreateTrivialIndex();
         CreateIndex();
 
-        WriteIndex();
+        //WriteIndex();
     }
 
     /**
@@ -213,7 +213,7 @@ public:
     /**
      * @brief Get the coordinates of a node given its index inside the extended 3D grid
     */
-    Eigen::Vector3i GetCoords_from_ExtGridIndex(size_t index) const
+    Eigen::Vector3i GetExtCoords_from_ExtGridIndex(size_t index) const
     {
         int z = index / (ext_size_x*ext_size_y);
         int y = (index - z*ext_size_x*ext_size_y) / ext_size_x;
@@ -233,9 +233,15 @@ public:
     /**
      * @brief Get the index inside the extended 3D grid of a node given its coordinates
     */
-    size_t GetExtGridIndex_from_Coords(int x, int y, int z) const
+    size_t GetExtGridIndex_from_ExtCoords(int x, int y, int z) const
     {
         return z*ext_size_x*ext_size_y + y*ext_size_x + x;
+    }
+
+    size_t GetExtGridIndex_from_GridIndex(size_t index) const
+    {
+        Eigen::Vector3i coords = GetCoords_from_GridIndex(index);
+        return GetExtGridIndex_from_ExtCoords(coords.x() + distance, coords.y() + distance, coords.z() + distance);
     }
 
 
