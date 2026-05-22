@@ -123,7 +123,7 @@ SystemEventType CardiacTissue<APM,CVM>::update(int debug)
 
 /**
  * External activation of a set of nodes.
- * @param nodes List of node ids to activate.
+ * @param node_ids List of node ids to activate.
  * @param activation_time Time of activation.
  *
  * @todo If the node is already active, generates a core-dump.
@@ -133,7 +133,7 @@ void CardiacTissue<APM,CVM>::ExternalActivation(const vector<size_t> & node_ids,
 {
     for(size_t i = 0; i < node_ids.size(); i++)
     {
-        auto node_pos = this->tissue_geometry.GetMemIndex_from_NodeId(node_ids[i]);
+        auto node_pos = this->tissue_geometry.GetMemIndex_from_GridIndex(node_ids[i]);
         if(node_pos == NO_INDEX || this->tissue_nodes.at(node_pos).type == CELL_TYPE_VOID)
         {
             LOG::Warning(true, "ExternalActivation(): Node id ", node_ids[i], " is VOID or out of bounds. Activation ignored.");

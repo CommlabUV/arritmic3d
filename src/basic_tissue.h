@@ -166,29 +166,41 @@ protected:
     SensorDict<typename Node::NodeData> sensor_dict;  ///< Dictionary to store sensor data
 
     /**
-     * @brief Get the position of a node in the tissue_nodes vector
-     * Now corresponds with the id, but it may change in the future
+     * @brief Get the position of a node in the tissue_nodes vector from its id.
+     * @param id Node id. Corresponds with the grid index of the node.
      */
     Node* GetNodePtr(size_t id)
     {
-        assert(id < tissue_nodes.size());
-        return &tissue_nodes[id];
+        auto mem_index = tissue_geometry.GetMemIndex_from_GridIndex(id);
+        assert(mem_index < tissue_nodes.size());
+        if(mem_index == NO_INDEX)
+            throw std::out_of_range("GetNodePtr: Node id " + std::to_string(id) + " is VOID.");
+        std::cout << "GetNodePtr: id=" << id << " mem_index=" << mem_index << std::endl;
+        return &tissue_nodes[mem_index];
     }
 
+    /**
+     * @brief Get the node at a certain index distance from another node in the grid.
+     * @param node Pointer to the node from which to calculate the displacement.
+     * @param grid_distance Index distance in the grid to the node to get. It can be positive or negative.
+     */
     Node* NodeDisplace(Node* node, int grid_distance)
     {
         size_t grid_pos = node->ext_grid_pos + grid_distance;
-        auto mem_index = tissue_geometry.GetMemIndex_from_GridIndex(grid_pos);
+        auto mem_index = tissue_geometry.GetMemIndex_from_ExtGridIndex(grid_pos);
         if(mem_index == NO_INDEX)
             return nullptr;
         return &tissue_nodes[mem_index];
     }
 
+    /**
+     * @brief Update the position of the nodes in the extended grid (ext_grid_pos attribute). It should be called after initializing the nodes.
+     */
     void UpdateExtGridPos()
     {
         for(size_t i = 0; i < tissue_geometry.index.size(); i++)
         {
-            auto mem_index = tissue_geometry.GetMemIndex_from_GridIndex(i);
+            auto mem_index = tissue_geometry.GetMemIndex_from_ExtGridIndex(i);
             if(mem_index != NO_INDEX)
                 tissue_nodes.at(mem_index).ext_grid_pos = i;
         }

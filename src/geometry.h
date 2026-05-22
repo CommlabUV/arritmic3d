@@ -184,18 +184,16 @@ public:
      */
     Index_t GetMemIndex_from_GridIndex(size_t index) const
     {
-        return this->index.at(index);
+        auto ext_index = GetExtGridIndex_from_GridIndex(index);
+        return this->index.at(ext_index);
     }
 
     /**
-     * @brief Get the index of a node in the tissue array given its id.
-     * @todo Currently, the id corresponds with the index in the tissue array, but it should be changed. In that case, a binary search could be used to find the index.
+     * @brief Get the index of a node in the tissue array given its index in the extended 3D grid. Negative values (NO_INDEX) correspond to VOID nodes.
      */
-    Index_t GetMemIndex_from_NodeId(size_t id) const
+    Index_t GetMemIndex_from_ExtGridIndex(size_t index) const
     {
-        assert(id < std::numeric_limits<Index_t>::max());
-
-        return id;
+        return this->index.at(index);
     }
 
     /**
