@@ -49,8 +49,7 @@ int main(int argc, char **argv)
     // Test of the CardiacTissue class
     CardiacTissue<ActionPotentialRestSurface,ConductionVelocity> tissue(N_NODES, N_NODES, N_NODES, 0.1, 0.1, 0.1);
     std::vector<CellType> v_type(tissue.size(), HEALTHY_ENDO);
-    //tissue.SetBorder(v_type, CELL_TYPE_VOID);
-    SetCore(tissue, v_type, N_NODES-8, N_NODES-8, N_NODES-8, CELL_TYPE_VOID);
+    SetCore(tissue, v_type, N_NODES-6, N_NODES-6, N_NODES-6, CELL_TYPE_VOID);
 
     std::vector<NodeParameters> v_np(1);
     Eigen::VectorXf fiber_dir = Eigen::Vector3f(0.7, 0.7, 0.0);
@@ -65,7 +64,7 @@ int main(int argc, char **argv)
 
     int s1 = 300;
     tissue.SetTimer(SystemEventType::EXT_ACTIVATION, s1);
-    tissue.SetTimer(SystemEventType::FILE_WRITE, s1, 400.0f);  // Write every s1 ms starting at t=400 ms
+    //tissue.SetTimer(SystemEventType::FILE_WRITE, s1, 301.0f);  // Write every s1 ms starting at t=400 ms
 
     int beat = 0;
 
@@ -95,8 +94,11 @@ int main(int argc, char **argv)
 
             std::cout << "External activation scheduled for beat " << beat << " at time " << tissue.GetTime() << std::endl;
             tissue.ExternalActivation({initial_node}, tissue.GetTime(), beat);
-            //tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, tissue.GetTime() + CL);
         }
+
+        // Write after a fix number of events
+        if(i < 200 && i%10 == 0)
+            tissue.SaveVTK("output/testb"+ std::to_string(i) +".vtk");
 
     }
 
