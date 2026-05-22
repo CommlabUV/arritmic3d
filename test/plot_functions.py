@@ -37,11 +37,11 @@ def plot_vtk(file_path, field="AP",plt_show=False,title = ""):
 def plot_animation(case_dir, field="AP", init_time=None, end_time=None, step=None):
     config = a3d.load_case_config(case_dir)
     if init_time is None:
-        init_time = config.get("VTK_OUTPUT_INITIAL_TIME")
+        init_time = int(config.get("VTK_OUTPUT_INITIAL_TIME"))
     if step is None:
-        step = config.get("VTK_OUTPUT_PERIOD")
+        step = int(config.get("VTK_OUTPUT_PERIOD"))
     if end_time is None:
-        end_time = config.get("SIMULATION_DURATION")
+        end_time = int(config.get("SIMULATION_DURATION"))
 
     for time_ms in range(init_time, end_time + 1, step):
         file_path = f"{case_dir}/slab_{time_ms:05d}.vtk"
