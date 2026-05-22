@@ -84,4 +84,4 @@ print("Simulation completed!")
 
 # --- STEP 5: Visualize a single result ---
 print("\n--- Visualizing a frame at 2850ms ---")
-plot_vtk(os.path.join(case_dir, f"slab_02850.vtk"), plt_show=True, title="t=2850ms")
+plot_vtk(os.path.join(case_dir, f"slab_02850.vtu"), plt_show=True, title="t=2850ms")

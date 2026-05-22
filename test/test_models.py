@@ -59,7 +59,7 @@ print("Simulation completed!")
 
 # --- STEP 5: Visualize a single result ---
 print("\n--- Visualizing a frame at 500ms ---")
-plot_vtk(os.path.join(case_dir, f"slab_00040.vtk"), plt_show=True, title="t=40ms")
+plot_vtk(os.path.join(case_dir, f"slab_00040.vtu"), plt_show=True, title="t=40ms")
 
 # --- STEP 6: Show an animation of the simulation ---
 print("\n--- Showing an animation of the simulation ---")
@@ -119,8 +119,8 @@ print("Simulation completed!")
 
 # --- STEP 10: Visualize the results ---
 print("\n--- Visualizing a frame at 500ms ---")
-plot_vtk(os.path.join(case_dir, f"slab_00040.vtk"), plt_show=True, title="t=40ms")
-plot_vtk(os.path.join(case_dir, f"slab_00060.vtk"), plt_show=True, title="t=60ms")
+plot_vtk(os.path.join(case_dir, f"slab_00040.vtu"), plt_show=True, title="t=40ms")
+plot_vtk(os.path.join(case_dir, f"slab_00060.vtu"), plt_show=True, title="t=60ms")
 
 # Show an animation of the simulation
 print("\n--- Showing an animation of the simulation ---")

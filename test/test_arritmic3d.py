@@ -12,7 +12,7 @@ print("Simulation completed!")
 
 # --- STEP 3: Visualize a single result ---
 print("\n--- Visualizing a frame at 715ms ---")
-plot_vtk(case_dir + "/slab_00715.vtk",plt_show=True, title="t=715ms")
+plot_vtk(case_dir + "/slab_00715.vtu",plt_show=True, title="t=715ms")
 
 # --- STEP 4: Re-run Case ---
 # Arritmic3D is designed so that you can easily re-run a simulation
@@ -32,7 +32,7 @@ clean_case_dir(case_dir)
 a3d.arritmic3d(case_dir,config=config)
 print("Simulation finished.")
 
-plot_vtk(case_dir+"/slab_00720.vtk",plt_show=True, title="t=720ms")
+plot_vtk(case_dir+"/slab_00720.vtu",plt_show=True, title="t=720ms")
 
 # --- STEP 6: Show an animation of the simulation
 print("\n--- Showing an animation of the simulation ---")
