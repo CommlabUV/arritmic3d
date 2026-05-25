@@ -44,7 +44,7 @@ public:
 
     BasicTissue(int size_x_, int size_y_, int size_z_, float dx_, float dy_, float dz_) :
         tissue_geometry(size_x_, size_y_, size_z_, dx_, dy_, dz_),
-        tissue_nodes(size_x_ * size_y_ * size_z_),
+        grid_size(size_x_ * size_y_ * size_z_),
         sensor_dict(Node::GetDataNames())
     {
         tissue_time = 0.0;
@@ -81,7 +81,7 @@ public:
         return tissue_geometry.GetGridIndex_from_Coords(x, y, z);
     }
     /** Get the number of nodes in the tissue */
-    size_t size() const { return tissue_nodes.size(); }
+    size_t size() const { return grid_size; }
     /** Get the number of live nodes (not CORE) in the tissue */
     int GetNumLiveNodes() const { return n_live_nodes; }
 
@@ -149,18 +149,19 @@ protected:
 
     // Geometry
     FiberOrientation    tissue_fiber_orientation;
-    Geometry      tissue_geometry;
+    Geometry    tissue_geometry;
     vector<Node>        tissue_nodes;
     CellEventQueue<Node>  event_queue;
-    int           n_live_nodes = 0;   ///< Number of nodes that are not CORE
+    size_t      grid_size;      ///< Total number of nodes in the tissue (including CORE nodes).
+    int         n_live_nodes = 0;   ///< Number of nodes that are not CORE
 
     // Parameters
     ParametersPool      parameters_pool;
 
     // Simulation
-    float           tissue_time;
-    int             debug_level = 0;
-    float           initial_apd = 100.0f;
+    float       tissue_time;
+    int         debug_level = 0;
+    float       initial_apd = 100.0f;
     std::array<float, int(SystemEventType::SIZE)> timer; ///< Timer for each of the different system events. 0 unused.
 
     SensorDict<typename Node::NodeData> sensor_dict;  ///< Dictionary to store sensor data
@@ -219,7 +220,7 @@ template <typename APM,typename CVM>
 void BasicTissue<APM,CVM>::Init(const vector<CellType> & cell_types_, vector<NodeParameters> & parameters_, const vector<Eigen::Vector3f> & fiber_orientation_)
 {
     // First, check if data vectors are consistent
-    size_t n_nodes = tissue_nodes.size();
+    size_t n_nodes = grid_size;
     LOG::Error(cell_types_.size() != n_nodes, "Number of cell types (", cell_types_.size(), ") does not match number of nodes (", n_nodes, ").");
     assert(cell_types_.size() == n_nodes);
 
@@ -241,8 +242,15 @@ void BasicTissue<APM,CVM>::Init(const vector<CellType> & cell_types_, vector<Nod
         else
             this->tissue_fiber_orientation = FiberOrientation::ISOTROPIC;
 
-    // Initialize nodes
+    // --- Initialize nodes ---
     assert(parameters_.size() == n_nodes || parameters_.size() == 1);
+    // First calculate number of live nodes
+    n_live_nodes = 0;
+    for(auto type : cell_types_)
+        if(type != CELL_TYPE_VOID)
+            n_live_nodes++;
+    tissue_nodes.resize(n_live_nodes);
+
     for(size_t i = 0; i < n_nodes; i++)
     {
         CellType type = cell_types_[i];
@@ -262,8 +270,6 @@ void BasicTissue<APM,CVM>::Init(const vector<CellType> & cell_types_, vector<Nod
                 tissue_nodes[i].orientation = fiber_orientation_.at(i);
             }
 
-            if(tissue_nodes[i].type != CELL_TYPE_VOID)
-                n_live_nodes++;
         }
     }
     UpdateExtGridPos();
@@ -277,7 +283,7 @@ void BasicTissue<APM,CVM>::Init(const vector<CellType> & cell_types_, vector<Nod
     event_queue.Init(tissue_nodes, n_live_nodes);
 
     // Link each node with its events.
-    for(size_t i = 0; i < n_nodes; i++)
+    for(size_t i = 0; i < tissue_node.size(); i++)
     {
         tissue_nodes[i].next_activation_event = event_queue.GetEvent(i,CellEventType::ACTIVATION);
         tissue_nodes[i].next_deactivation_event = event_queue.GetEvent(i,CellEventType::DEACTIVATION);
