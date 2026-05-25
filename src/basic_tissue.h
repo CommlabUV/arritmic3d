@@ -251,28 +251,40 @@ void BasicTissue<APM,CVM>::Init(const vector<CellType> & cell_types_, vector<Nod
             n_live_nodes++;
     tissue_nodes.resize(n_live_nodes);
 
+    size_t grip_pos = 0;
     for(size_t i = 0; i < n_nodes; i++)
     {
+        int extended_grid_pos = tissue_geometry.GetExtGridIndex_from_GridIndex(i);
+        assert(extended_grid_pos != NO_INDEX);
         CellType type = cell_types_[i];
-        if(true)   //(type != CELL_TYPE_VOID)
+        if(type != CELL_TYPE_VOID)
         {
-            tissue_nodes[i] = Node();  // Totally reset the node
+            tissue_nodes[grip_pos] = Node();  // Totally reset the node
 
-            tissue_nodes[i].id = i;     // The id corresponds with the grid position.
-            tissue_nodes[i].type = type;
+            tissue_nodes[grip_pos].id = i;     // The id corresponds with the grid position.
+            tissue_nodes[grip_pos].type = type;
             // Set the fiber orientation, default is isotropic
             if(this->tissue_fiber_orientation == FiberOrientation::HOMOGENEOUS)
             {
-                tissue_nodes[i].orientation = fiber_orientation_.at(0);
+                tissue_nodes[grip_pos].orientation = fiber_orientation_.at(0);
             }
             else if(this->tissue_fiber_orientation == FiberOrientation::HETEROGENEOUS)
             {
-                tissue_nodes[i].orientation = fiber_orientation_.at(i);
+                tissue_nodes[grip_pos].orientation = fiber_orientation_.at(i);
             }
+            // Update the index of the node in the extended grid
+            tissue_geometry.index[extended_grid_pos] = grip_pos;
 
+            grip_pos++;
+        }
+        else
+        {
+            // VOID node. Index vector should be adjusted.
+            tissue_geometry.index[extended_grid_pos] = NO_INDEX;
         }
     }
     UpdateExtGridPos();
+    tissue_geometry.WriteIndex();
 
     LOG::Warning(n_live_nodes == 0, "Tissue has no live cells (all cells are VOID).");
 
@@ -283,7 +295,7 @@ void BasicTissue<APM,CVM>::Init(const vector<CellType> & cell_types_, vector<Nod
     event_queue.Init(tissue_nodes, n_live_nodes);
 
     // Link each node with its events.
-    for(size_t i = 0; i < tissue_node.size(); i++)
+    for(size_t i = 0; i < tissue_nodes.size(); i++)
     {
         tissue_nodes[i].next_activation_event = event_queue.GetEvent(i,CellEventType::ACTIVATION);
         tissue_nodes[i].next_deactivation_event = event_queue.GetEvent(i,CellEventType::DEACTIVATION);

@@ -64,8 +64,6 @@ public:
 
         //CreateTrivialIndex();
         CreateIndex();
-
-        //WriteIndex();
     }
 
     /**
