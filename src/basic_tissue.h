@@ -314,6 +314,8 @@ void BasicTissue<APM,CVM>::Init(const vector<CellType> & cell_types_, vector<Nod
         // Init should only be called after the Node parameters are set.
         tissue_nodes[i].Init(tissue_time, initial_apd);
     }
+
+    LOG::Info(debug_level > 1, "End of Init");
 }
 
 /**
@@ -339,23 +341,24 @@ void BasicTissue<APM,CVM>::ChangeParameters(vector<NodeParameters> & parameters_
     parameters_pool.Init(parameters_);
     LOG::Info(debug_level > 0, parameters_pool.Info());
 
-    for(size_t i = 0; i < tissue_nodes.size(); i++)
+    for(size_t i = 0; i < this->size(); i++)
     {
+        auto index = tissue_geometry.GetMemIndex_from_GridIndex(i);
         if(parameters_.size() == 1)
-            tissue_nodes[i].parameters = parameters_pool.Find(parameters_[0]);
+            tissue_nodes.at(index).parameters = parameters_pool.Find(parameters_[0]);
         else
-        {
-            auto index = tissue_geometry.GetMemIndex_from_GridIndex(i);
             if(index != NO_INDEX)
                 tissue_nodes.at(index).parameters = parameters_pool.Find(parameters_[i]);
-        }
-        if(tissue_nodes[i].type != CELL_TYPE_VOID)
-            tissue_nodes[i].ReApplyParam(tissue_time);
+
+        if(index != NO_INDEX && tissue_nodes.at(index).type != CELL_TYPE_VOID)
+            tissue_nodes.at(index).ReApplyParam(tissue_time);
     }
 
 
     // Clear the finder map in the parameters pool to save memory
     parameters_pool.FinderClear();
+
+    LOG::Info(debug_level > 1, "End of ChangeParameters");
 }
 
 /**
@@ -422,7 +425,7 @@ void BasicTissue<APM,CVM>::InitPy(const vector<CellType> & cell_types_, std::map
         LOG::Error(true, " Number of fiber orientations (", fiber_orientation_.size(), ") does not match number of nodes (", this->size(), " or 1).");
         return;
     }
-
+    LOG::Info(debug_level > 1, "End of InitPy");
 
     Init(cell_types_, parameters, fiber_orientation);
 }
