@@ -324,8 +324,7 @@ void BasicTissue<APM,CVM>::Init(const vector<CellType> & cell_types_, vector<Nod
 template <typename APM,typename CVM>
 void BasicTissue<APM,CVM>::ChangeParameters(vector<NodeParameters> & parameters_)
 {
-    size_t n_nodes = tissue_nodes.size();
-    assert(parameters_.size() == n_nodes || parameters_.size() == 1);
+    assert(parameters_.size() == this->size() || parameters_.size() == 1);
 
     // Set isotropic diffusion, default is true
     // @todo if heterogeneous and locally isotropic, it is not set in parameters.
@@ -334,19 +333,22 @@ void BasicTissue<APM,CVM>::ChangeParameters(vector<NodeParameters> & parameters_
         isotropic = false;
     for(size_t i = 0; i < parameters_.size(); i++)
     {
-        parameters_[i].isotropic_diffusion = isotropic;
+        parameters_.at(i).isotropic_diffusion = isotropic;
     }
 
     parameters_pool.Init(parameters_);
     LOG::Info(debug_level > 0, parameters_pool.Info());
 
-    for(size_t i = 0; i < n_nodes; i++)
+    for(size_t i = 0; i < tissue_nodes.size(); i++)
     {
         if(parameters_.size() == 1)
             tissue_nodes[i].parameters = parameters_pool.Find(parameters_[0]);
         else
-            tissue_nodes[i].parameters = parameters_pool.Find(parameters_[i]);
-
+        {
+            auto index = tissue_geometry.GetMemIndex_from_GridIndex(i);
+            if(index != NO_INDEX)
+                tissue_nodes.at(index).parameters = parameters_pool.Find(parameters_[i]);
+        }
         if(tissue_nodes[i].type != CELL_TYPE_VOID)
             tissue_nodes[i].ReApplyParam(tissue_time);
     }
@@ -389,7 +391,7 @@ void BasicTissue<APM,CVM>::Reset()
 template <typename APM,typename CVM>
 void BasicTissue<APM,CVM>::InitPy(const vector<CellType> & cell_types_, std::map<std::string, std::vector<float> > & parameters_, const std::vector<vector<float> > & fiber_orientation_)
 {
-    vector<NodeParameters> parameters(tissue_nodes.size() );
+    vector<NodeParameters> parameters(this->size() );
 
     for(size_t param = 0; param < NodeParameters::names.size(); param++)
     {
@@ -402,22 +404,22 @@ void BasicTissue<APM,CVM>::InitPy(const vector<CellType> & cell_types_, std::map
     }
 
     // Set the fiber orientation
-    vector<Eigen::Vector3f> fiber_orientation(tissue_nodes.size(), Eigen::Vector3f::Zero());
+    vector<Eigen::Vector3f> fiber_orientation(this->size(), Eigen::Vector3f::Zero());
     if(fiber_orientation_.size() == 1)
     {
         // If only one fiber orientation is given, use it for all nodes
-        for(size_t i = 0; i < tissue_nodes.size(); i++)
+        for(size_t i = 0; i < this->size(); i++)
             fiber_orientation[i] = Eigen::Vector3f(fiber_orientation_[0].data());
     }
-    else if(fiber_orientation_.size() == tissue_nodes.size())
+    else if(fiber_orientation_.size() == this->size())
     {
         // If fiber orientation is given for each node, use it
-        for(size_t i = 0; i < tissue_nodes.size(); i++)
+        for(size_t i = 0; i < this->size(); i++)
             fiber_orientation[i] = Eigen::Vector3f(fiber_orientation_[i].data());
     }
     else
     {
-        LOG::Error(true, " Number of fiber orientations (", fiber_orientation_.size(), ") does not match number of nodes (", tissue_nodes.size(), " or 1).");
+        LOG::Error(true, " Number of fiber orientations (", fiber_orientation_.size(), ") does not match number of nodes (", this->size(), " or 1).");
         return;
     }
 
