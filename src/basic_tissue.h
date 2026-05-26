@@ -758,9 +758,17 @@ void BasicTissue<APM,CVM>::SaveVTK(const std::string & filename) const
     vtk_file << "\nPOINT_DATA " << tissue_geometry.size_x * tissue_geometry.size_y * tissue_geometry.size_z << std::endl;
     vtk_file << "SCALARS Type int 1\n";
     vtk_file << "LOOKUP_TABLE default" << std::endl;
-    for(int i = 0; i < int(tissue_nodes.size()); i++)
+    for(int i = 0; i < int(this->size()); i++)
     {
-        vtk_file << int(tissue_nodes[i].type) << " ";
+        auto index = tissue_geometry.GetMemIndex_from_GridIndex(i);
+        if(index != NO_INDEX)
+        {
+            vtk_file << int(tissue_nodes[index].type) << " ";
+        }
+        else
+        {
+            vtk_file << int(CELL_TYPE_VOID) << " ";
+        }
         if((i+1) % 10 == 0)
             vtk_file << "\n";
     }
@@ -768,9 +776,17 @@ void BasicTissue<APM,CVM>::SaveVTK(const std::string & filename) const
 
     vtk_file << "SCALARS State int 1\n";
     vtk_file << "LOOKUP_TABLE default" << std::endl;
-    for(int i = 0; i < int(tissue_nodes.size()); i++)
+    for(int i = 0; i < int(this->size()); i++)
     {
-        vtk_file << int(tissue_nodes[i].GetState(tissue_time) ) << " ";
+        auto index = tissue_geometry.GetMemIndex_from_GridIndex(i);
+        if(index != NO_INDEX)
+        {
+            vtk_file << int(tissue_nodes[index].GetState(tissue_time) ) << " ";
+        }
+        else
+        {
+            vtk_file << 0 << " ";
+        }
         if((i+1) % 10 == 0)
             vtk_file << "\n";
     }
