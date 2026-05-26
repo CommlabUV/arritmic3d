@@ -72,6 +72,17 @@ public:
     vector<float> GetLife() const;
     vector<int> GetBeat() const;
     vector<float> GetAPDVariation() const;
+
+    vector<int> GetStatesIndexed() const;
+    vector<float> GetAPDIndexed() const;
+    vector<float> GetAPIndexed() const;
+    vector<float> GetCVIndexed() const;
+    vector<float> GetDIIndexed() const;
+    vector<float> GetLastDIIndexed() const;
+    vector<float> GetLATIndexed() const;
+    vector<float> GetLifeIndexed() const;
+    vector<int> GetBeatIndexed() const;
+    vector<float> GetAPDVariationIndexed() const;
     /** Get the current time of the tissue */
     float GetTime() const { return tissue_time; }
     void SetBorder(vector<CellType> & cell_types_, CellType border_type);
@@ -173,7 +184,7 @@ protected:
     Node* GetNodePtr(size_t id)
     {
         auto mem_index = tissue_geometry.GetMemIndex_from_GridIndex(id);
-        assert(mem_index < tissue_nodes.size());
+        assert(mem_index < static_cast<long int>(tissue_nodes.size()));
         if(mem_index == NO_INDEX)
             throw std::out_of_range("GetNodePtr: Node id " + std::to_string(id) + " is VOID.");
         std::cout << "GetNodePtr: id=" << id << " mem_index=" << mem_index << std::endl;
@@ -284,7 +295,7 @@ void BasicTissue<APM,CVM>::Init(const vector<CellType> & cell_types_, vector<Nod
         }
     }
     UpdateExtGridPos();
-    tissue_geometry.WriteIndex();
+    //tissue_geometry.WriteIndex();
 
     LOG::Warning(n_live_nodes == 0, "Tissue has no live cells (all cells are VOID).");
 
@@ -415,16 +426,45 @@ void BasicTissue<APM,CVM>::InitPy(const vector<CellType> & cell_types_, std::map
 }
 
 /**
+ * Get the states of the non-void tissue nodes.
+ * @return Vector of states of the tissue nodes.
+ */
+template <typename APM,typename CVM>
+vector<int> BasicTissue<APM,CVM>::GetStatesIndexed() const
+{
+    vector<int> state(tissue_nodes.size());
+    for(size_t i = 0; i < tissue_nodes.size(); i++)
+        state[i] = int(tissue_nodes[i].GetState(tissue_time));
+    return state;
+}
+
+/**
  * Get the states of the tissue nodes.
  * @return Vector of states of the tissue nodes.
  */
 template <typename APM,typename CVM>
 vector<int> BasicTissue<APM,CVM>::GetStates() const
 {
-    vector<int> state(tissue_nodes.size());
-    for(size_t i = 0; i < tissue_nodes.size(); i++)
-        state[i] = int(tissue_nodes[i].GetState(tissue_time));
+    vector<int> state(this->size());
+    for(size_t i = 0; i < this->size(); i++)
+    {
+        auto index = tissue_geometry.GetMemIndex_from_GridIndex(i);
+        state[i] = int(tissue_nodes[index].GetState(tissue_time));
+    }
     return state;
+}
+
+/**
+ * Get the APD of the tissue nodes.
+ * @return Vector of APD of the tissue nodes.
+ */
+template <typename APM,typename CVM>
+vector<float> BasicTissue<APM,CVM>::GetAPDIndexed() const
+{
+    vector<float> apd(tissue_nodes.size());
+    for(size_t i = 0; i < tissue_nodes.size(); i++)
+        apd[i] = tissue_nodes[i].apd_model.getAPD();
+    return apd;
 }
 
 /**
@@ -434,10 +474,26 @@ vector<int> BasicTissue<APM,CVM>::GetStates() const
 template <typename APM,typename CVM>
 vector<float> BasicTissue<APM,CVM>::GetAPD() const
 {
-    vector<float> apd(tissue_nodes.size());
-    for(size_t i = 0; i < tissue_nodes.size(); i++)
-        apd[i] = tissue_nodes[i].apd_model.getAPD();
+    vector<float> apd(this->size());
+    for(size_t i = 0; i < this->size(); i++)
+    {
+        auto index = tissue_geometry.GetMemIndex_from_GridIndex(i);
+        apd[i] = tissue_nodes[index].apd_model.getAPD();
+    }
     return apd;
+}
+
+/**
+ * Get the AP of the tissue nodes.
+ * @return Vector of AP of the tissue nodes.
+ */
+template <typename APM,typename CVM>
+vector<float> BasicTissue<APM,CVM>::GetAPIndexed() const
+{
+    vector<float> ap(tissue_nodes.size());
+    for(size_t i = 0; i < tissue_nodes.size(); i++)
+        ap[i] = tissue_nodes[i].apd_model.getActionPotential(GetTime());
+    return ap;
 }
 
 /**
@@ -447,10 +503,26 @@ vector<float> BasicTissue<APM,CVM>::GetAPD() const
 template <typename APM,typename CVM>
 vector<float> BasicTissue<APM,CVM>::GetAP() const
 {
-    vector<float> ap(tissue_nodes.size());
-    for(size_t i = 0; i < tissue_nodes.size(); i++)
-        ap[i] = tissue_nodes[i].apd_model.getActionPotential(GetTime());
+    vector<float> ap(this->size());
+    for(size_t i = 0; i < this->size(); i++)
+    {
+        auto index = tissue_geometry.GetMemIndex_from_GridIndex(i);
+        ap[i] = tissue_nodes[index].apd_model.getActionPotential(GetTime());
+    }
     return ap;
+}
+
+/**
+ * Get the conduction velocity of the tissue nodes.
+ * @return Vector of conduction velocity of the tissue nodes.
+ */
+template <typename APM,typename CVM>
+vector<float> BasicTissue<APM,CVM>::GetCVIndexed() const
+{
+    vector<float> cv(tissue_nodes.size());
+    for(size_t i = 0; i < tissue_nodes.size(); i++)
+        cv[i] = tissue_nodes[i].conduction_vel;
+    return cv;
 }
 
 /**
@@ -460,10 +532,26 @@ vector<float> BasicTissue<APM,CVM>::GetAP() const
 template <typename APM,typename CVM>
 vector<float> BasicTissue<APM,CVM>::GetCV() const
 {
-    vector<float> cv(tissue_nodes.size());
-    for(size_t i = 0; i < tissue_nodes.size(); i++)
-        cv[i] = tissue_nodes[i].conduction_vel;
+    vector<float> cv(this->size());
+    for(size_t i = 0; i < this->size(); i++)
+    {
+        auto index = tissue_geometry.GetMemIndex_from_GridIndex(i);
+        cv[i] = tissue_nodes[index].conduction_vel;
+    }
     return cv;
+}
+
+/**
+ * Get the DI (diastolic interval) of the tissue nodes.
+ * @return Vector of DI of the tissue nodes.
+ */
+template <typename APM,typename CVM>
+vector<float> BasicTissue<APM,CVM>::GetDIIndexed() const
+{
+    vector<float> di(tissue_nodes.size());
+    for(size_t i = 0; i < tissue_nodes.size(); i++)
+        di[i] = tissue_nodes[i].apd_model.getDI(GetTime());
+    return di;
 }
 
 /**
@@ -473,10 +561,26 @@ vector<float> BasicTissue<APM,CVM>::GetCV() const
 template <typename APM,typename CVM>
 vector<float> BasicTissue<APM,CVM>::GetDI() const
 {
-    vector<float> di(tissue_nodes.size());
-    for(size_t i = 0; i < tissue_nodes.size(); i++)
-        di[i] = tissue_nodes[i].apd_model.getDI(GetTime());
+    vector<float> di(this->size());
+    for(size_t i = 0; i < this->size(); i++)
+    {
+        auto index = tissue_geometry.GetMemIndex_from_GridIndex(i);
+        di[i] = tissue_nodes[index].apd_model.getDI(GetTime());
+    }
     return di;
+}
+
+/**
+ * Get the last DI (diastolic interval) of the tissue nodes.
+ * @return Vector of last DI of the tissue nodes.
+ */
+template <typename APM,typename CVM>
+vector<float> BasicTissue<APM,CVM>::GetLastDIIndexed() const
+{
+    vector<float> last_di(tissue_nodes.size());
+    for(size_t i = 0; i < tissue_nodes.size(); i++)
+        last_di[i] = tissue_nodes[i].apd_model.getLastDI();
+    return last_di;
 }
 
 /**
@@ -486,10 +590,26 @@ vector<float> BasicTissue<APM,CVM>::GetDI() const
 template <typename APM,typename CVM>
 vector<float> BasicTissue<APM,CVM>::GetLastDI() const
 {
-    vector<float> last_di(tissue_nodes.size());
-    for(size_t i = 0; i < tissue_nodes.size(); i++)
-        last_di[i] = tissue_nodes[i].apd_model.getLastDI();
+    vector<float> last_di(this->size());
+    for(size_t i = 0; i < this->size(); i++)
+    {
+        auto index = tissue_geometry.GetMemIndex_from_GridIndex(i);
+        last_di[i] = tissue_nodes[index].apd_model.getLastDI();
+    }
     return last_di;
+}
+
+/**
+ * Get the LAT (local activationtime) of the tissue nodes.
+ * @return Vector of LAT of the tissue nodes.
+ */
+template <typename APM,typename CVM>
+vector<float> BasicTissue<APM,CVM>::GetLATIndexed() const
+{
+    vector<float> lat(tissue_nodes.size());
+    for(size_t i = 0; i < tissue_nodes.size(); i++)
+        lat[i] = tissue_nodes[i].apd_model.getActivationTime();
+    return lat;
 }
 
 /**
@@ -499,10 +619,29 @@ vector<float> BasicTissue<APM,CVM>::GetLastDI() const
 template <typename APM,typename CVM>
 vector<float> BasicTissue<APM,CVM>::GetLAT() const
 {
-    vector<float> lat(tissue_nodes.size());
-    for(size_t i = 0; i < tissue_nodes.size(); i++)
-        lat[i] = tissue_nodes[i].apd_model.getActivationTime();
+    vector<float> lat(this->size());
+    for(size_t i = 0; i < this->size(); i++)
+    {
+        auto index = tissue_geometry.GetMemIndex_from_GridIndex(i);
+        lat[i] = tissue_nodes[index].apd_model.getActivationTime();
+    }
     return lat;
+}
+
+/**
+ * Get the Life (life time) of the tissue nodes.
+ * Life is a value between 0 and 1 that indicates how long the cell
+ * has been active, normalized by its APD.
+ * It is 0 if the cell is inactive and 1 if the cell has been active for a time equal to its APD.
+ * @return Vector of life values of the tissue nodes.
+ */
+template <typename APM,typename CVM>
+vector<float> BasicTissue<APM,CVM>::GetLifeIndexed() const
+{
+    vector<float> lt(tissue_nodes.size());
+    for(size_t i = 0; i < tissue_nodes.size(); i++)
+        lt[i] = tissue_nodes[i].apd_model.getLife(GetTime());
+    return lt;
 }
 
 /**
@@ -515,10 +654,26 @@ vector<float> BasicTissue<APM,CVM>::GetLAT() const
 template <typename APM,typename CVM>
 vector<float> BasicTissue<APM,CVM>::GetLife() const
 {
-    vector<float> lt(tissue_nodes.size());
-    for(size_t i = 0; i < tissue_nodes.size(); i++)
-        lt[i] = tissue_nodes[i].apd_model.getLife(GetTime());
+    vector<float> lt(this->size());
+    for(size_t i = 0; i < this->size(); i++)
+    {
+        auto index = tissue_geometry.GetMemIndex_from_GridIndex(i);
+        lt[i] = tissue_nodes[index].apd_model.getLife(GetTime());
+    }
     return lt;
+}
+
+/**
+ * Get the beat number that induced the last activation of the tissue nodes.
+ * @return Vector of beat number of the tissue nodes.
+ */
+template <typename APM,typename CVM>
+vector<int> BasicTissue<APM,CVM>::GetBeatIndexed() const
+{
+    vector<int> beat(tissue_nodes.size());
+    for(size_t i = 0; i < tissue_nodes.size(); i++)
+        beat[i] = tissue_nodes[i].GetBeat();
+    return beat;
 }
 
 /**
@@ -528,10 +683,26 @@ vector<float> BasicTissue<APM,CVM>::GetLife() const
 template <typename APM,typename CVM>
 vector<int> BasicTissue<APM,CVM>::GetBeat() const
 {
-    vector<int> beat(tissue_nodes.size());
-    for(size_t i = 0; i < tissue_nodes.size(); i++)
-        beat[i] = tissue_nodes[i].GetBeat();
+    vector<int> beat(this->size());
+    for(size_t i = 0; i < this->size(); i++)
+    {
+        auto index = tissue_geometry.GetMemIndex_from_GridIndex(i);
+        beat[i] = tissue_nodes[index].GetBeat();
+    }
     return beat;
+}
+
+/**
+ * Get the variation in APD of the tissue nodes.
+ * @return Vector of variation of APD of the tissue nodes.
+ */
+template <typename APM,typename CVM>
+vector<float> BasicTissue<APM,CVM>::GetAPDVariationIndexed() const
+{
+    vector<float> delta_apd(tissue_nodes.size());
+    for(size_t i = 0; i < tissue_nodes.size(); i++)
+        delta_apd[i] = tissue_nodes[i].apd_model.getDeltaAPD();
+    return delta_apd;
 }
 
 /**
@@ -541,9 +712,12 @@ vector<int> BasicTissue<APM,CVM>::GetBeat() const
 template <typename APM,typename CVM>
 vector<float> BasicTissue<APM,CVM>::GetAPDVariation() const
 {
-    vector<float> delta_apd(tissue_nodes.size());
-    for(size_t i = 0; i < tissue_nodes.size(); i++)
-        delta_apd[i] = tissue_nodes[i].apd_model.getDeltaAPD();
+    vector<float> delta_apd(this->size());
+    for(size_t i = 0; i < this->size(); i++)
+    {
+        auto index = tissue_geometry.GetMemIndex_from_GridIndex(i);
+        delta_apd[i] = tissue_nodes[index].apd_model.getDeltaAPD();
+    }
     return delta_apd;
 }
 
