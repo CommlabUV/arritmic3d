@@ -6,7 +6,7 @@
 #include <iostream>
 #include <string>
 #include "../src/tissue.h"
-#include "../src/action_potential_rc.h"
+#include "../src/action_potential_rs.h"
 #include "../src/conduction_velocity.h"
 
 const int N_NODES = 20;
@@ -44,7 +44,7 @@ void SetCore(const T & tissue, std::vector<CellType> &v_type, int size_x, int si
 
 int main(int argc, char **argv)
 {
-    CardiacTissue<ActionPotentialRestCurve,ConductionVelocity> tissue(N_NODES, N_NODES, THICKNESS, 0.1, 0.1, 0.1);
+    CardiacTissue<ActionPotentialRestSurface,ConductionVelocity> tissue(N_NODES, N_NODES, THICKNESS, 0.1, 0.1, 0.1);
     int total_nodes = tissue.size();
     std::vector<CellType> v_type(total_nodes, HEALTHY_ENDO);
 
@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 
     NodeParameters np;
     np.initial_apd = 300.0;
-    vector<NodeParameters> v_np = {np};
+    std::vector<NodeParameters> v_np = {np};
     //Eigen::VectorXf fiber_dir = Eigen::Vector3f(0.7, 0.7, 0.0);
     Eigen::VectorXf fiber_dir = Eigen::Vector3f(0, 0, 0.0);
     tissue.InitModels("restitutionModels/config_TenTuscher_APD.csv","restitutionModels/config_TenTuscher_CV.csv");
