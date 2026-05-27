@@ -62,6 +62,7 @@ public:
     void InitPy(const vector<CellType> & cell_types_ , std::map<std::string, std::vector<float> > & parameters_, const std::vector<vector<float>> & fiber_orientation_);
     //void Reset();
     void ChangeParameters(vector<NodeParameters> & parameters_);
+    vector<int> GetNodeIndex() const;
     vector<int> GetStates() const;
     vector<float> GetAPD() const;
     vector<float> GetAP() const;
@@ -428,6 +429,19 @@ void BasicTissue<APM,CVM>::InitPy(const vector<CellType> & cell_types_, std::map
     LOG::Info(debug_level > 1, "End of InitPy");
 
     Init(cell_types_, parameters, fiber_orientation);
+}
+
+/**
+ * Get the index of the non-void tissue nodes.
+ * @return Vector of indices of the tissue nodes.
+ */
+template <typename APM,typename CVM>
+ vector<int> BasicTissue<APM,CVM>::GetNodeIndex() const
+{
+    vector<int> node_index(tissue_nodes.size());
+    for(size_t i = 0; i < tissue_nodes.size(); i++)
+        node_index[i] = tissue_nodes[i].id;
+    return node_index;
 }
 
 /**
