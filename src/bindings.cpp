@@ -33,7 +33,8 @@ PYBIND11_MODULE(MODULE_NAME, m) {
         .def("InitPy", &CardiacTissue<T_AP, T_CV>::InitPy,
              py::arg("cell_types"), py::arg("parameters"), py::arg("fiber_orientation") = std::vector<std::vector<float>>({{0.0, 0.0, 0.0}}))
         .def("ChangeParameters", &CardiacTissue<T_AP, T_CV>::ChangeParameters)
-        //.def("Reset", &CardiacTissue<T_AP, T_CV>::Reset)
+
+        .def("GetNodeIndex", &CardiacTissue<T_AP, T_CV>::GetNodeIndex)
         .def("GetStates", &CardiacTissue<T_AP, T_CV>::GetStates)
         .def("GetAPD", &CardiacTissue<T_AP, T_CV>::GetAPD)
         .def("GetAP", &CardiacTissue<T_AP, T_CV>::GetAP)
@@ -44,6 +45,17 @@ PYBIND11_MODULE(MODULE_NAME, m) {
         .def("GetLife", &CardiacTissue<T_AP, T_CV>::GetLife)
         .def("GetBeat", &CardiacTissue<T_AP, T_CV>::GetBeat)
         .def("GetAPDVariation", &CardiacTissue<T_AP, T_CV>::GetAPDVariation)
+        .def("GetStatesIndexed", &CardiacTissue<T_AP, T_CV>::GetStatesIndexed)
+        .def("GetAPDIndexed", &CardiacTissue<T_AP, T_CV>::GetAPDIndexed)
+        .def("GetAPIndexed", &CardiacTissue<T_AP, T_CV>::GetAPIndexed)
+        .def("GetCVIndexed", &CardiacTissue<T_AP, T_CV>::GetCVIndexed)
+        .def("GetDIIndexed", &CardiacTissue<T_AP, T_CV>::GetDIIndexed)
+        .def("GetLastDIIndexed", &CardiacTissue<T_AP, T_CV>::GetLastDIIndexed)
+        .def("GetLATIndexed", &CardiacTissue<T_AP, T_CV>::GetLATIndexed)
+        .def("GetLifeIndexed", &CardiacTissue<T_AP, T_CV>::GetLifeIndexed)
+        .def("GetBeatIndexed", &CardiacTissue<T_AP, T_CV>::GetBeatIndexed)
+        .def("GetAPDVariationIndexed", &CardiacTissue<T_AP, T_CV>::GetAPDVariationIndexed)
+
         .def("GetIndex", &CardiacTissue<T_AP, T_CV>::GetIndex)
         .def("ExternalActivation", &CardiacTissue<T_AP, T_CV>::ExternalActivation)
         .def("SaveVTK", &CardiacTissue<T_AP, T_CV>::SaveVTK)
