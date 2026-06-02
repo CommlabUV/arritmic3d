@@ -110,6 +110,8 @@ public:
     void SetSystemEvent(SystemEventType type, float t);
 
     void SaveVTK(const std::string & filename) const;
+    void SaveVTKPoints(const std::string & filename) const;
+
     void SaveState(const std::string & filename) const;
     void LoadState(const std::string & filename);
 
@@ -916,6 +918,10 @@ void BasicTissue<APM,CVM>::LoadState(const std::string & filename)
     state_file.close();
 }
 
+/**
+ * @brief Save the state of the tissue in a VTK file for visualization.
+ * @param filename Name of the file to save. It should end with .vtk.
+ */
 template <typename APM,typename CVM>
 void BasicTissue<APM,CVM>::SaveVTK(const std::string & filename) const
 {
@@ -990,6 +996,64 @@ void BasicTissue<APM,CVM>::SaveVTK(const std::string & filename) const
         {
             vtk_file << 0 << " ";
         }
+        if((i+1) % 10 == 0)
+            vtk_file << "\n";
+    }
+    vtk_file << std::endl;
+
+    vtk_file.close();
+}
+
+/**
+ * @brief Save the state of the tissue in a VTK file for visualization.
+ * @param filename Name of the file to save. It should end with .vtk.
+ */
+template <typename APM,typename CVM>
+void BasicTissue<APM,CVM>::SaveVTKPoints(const std::string & filename) const
+{
+    std::ofstream vtk_file;
+    vtk_file.open(filename);
+    if(!vtk_file)
+    {
+        LOG::Error(true, "Could not open file " + filename + " for writing.");
+        return;
+    }
+    // Write the header
+    vtk_file << "# vtk DataFile Version 3.0\n";
+    vtk_file << "Cardiac Tissue\n";
+    vtk_file << "ASCII\n";
+    vtk_file << "DATASET POLYDATA\n";
+
+    // Write the points
+    vtk_file << "POINTS " << this->tissue_nodes.size() << " float" << std::endl;
+    for(size_t i = 0; i < this->tissue_nodes.size(); i++)
+    {
+        auto grid_index = tissue_nodes[i].id;
+        auto coords = tissue_geometry.GetCoords_from_GridIndex(grid_index);
+        vtk_file << coords[0] << " " << coords[1] << " " << coords[2] << "\n";
+    }
+
+    vtk_file << std::endl;
+
+    // Write the data
+    vtk_file << "\nPOINT_DATA " << this->tissue_nodes.size() << std::endl;
+    vtk_file << "SCALARS Type int 1\n";
+    vtk_file << "LOOKUP_TABLE default" << std::endl;
+    for(int i = 0; i < int(this->tissue_nodes.size()); i++)
+    {
+        vtk_file << int(tissue_nodes[i].type) << " ";
+
+        if((i+1) % 10 == 0)
+            vtk_file << "\n";
+    }
+    vtk_file << std::endl;
+
+    vtk_file << "SCALARS State int 1\n";
+    vtk_file << "LOOKUP_TABLE default" << std::endl;
+    for(int i = 0; i < int(this->tissue_nodes.size()); i++)
+    {
+        vtk_file << int(tissue_nodes[i].GetState(tissue_time) ) << " ";
+
         if((i+1) % 10 == 0)
             vtk_file << "\n";
     }

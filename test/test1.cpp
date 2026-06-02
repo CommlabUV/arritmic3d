@@ -65,7 +65,7 @@ int main(int argc, char **argv)
             tissue.SaveVTK("output/test"+ std::to_string(i) +".vtk");
 
         // Write after each event
-        tissue.SaveVTK("output/test"+ std::to_string(i) +".vtk");
+        tissue.SaveVTKPoints("output/test"+ std::to_string(i) +".vtk");
     }
 
     std::ofstream sensor_file("sensor_0.txt");

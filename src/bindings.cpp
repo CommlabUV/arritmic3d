@@ -59,6 +59,7 @@ PYBIND11_MODULE(MODULE_NAME, m) {
         .def("GetIndex", &CardiacTissue<T_AP, T_CV>::GetIndex)
         .def("ExternalActivation", &CardiacTissue<T_AP, T_CV>::ExternalActivation)
         .def("SaveVTK", &CardiacTissue<T_AP, T_CV>::SaveVTK)
+        .def("SaveVTKPoints", &CardiacTissue<T_AP, T_CV>::SaveVTKPoints)
         .def("GetTime", &CardiacTissue<T_AP, T_CV>::GetTime)
         .def("update", &CardiacTissue<T_AP, T_CV>::update,
              py::arg("debug") = 0,
