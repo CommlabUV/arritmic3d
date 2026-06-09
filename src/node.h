@@ -20,11 +20,28 @@
 
 using std::vector;
 
+constexpr int pow2(int exp) { return 1 << exp; }
 
 template <typename ActionPotentialModel, typename ConductionVelocityModel>
 class BasicTissue;
 template <typename ActionPotentialModel, typename ConductionVelocityModel>
 class CardiacTissue;
+
+enum class NodeDataId : int
+{
+    ID = pow2(0),
+    TYPE = pow2(1),
+    BEAT = pow2(2),
+    STATE = pow2(3),
+    LAT = pow2(4),
+    APD = pow2(5),
+    LAST_DI = pow2(6),
+    CV = pow2(7),
+    AP = pow2(8),
+    LIFE = pow2(9),
+    APD_VARIATION = pow2(10)
+};
+
 
 /**
  * @todo write docs
@@ -130,6 +147,6 @@ private:
 
 };
 
-#include "node.cpp"
+#include "node_impl.h"
 
 #endif // NODE_H
