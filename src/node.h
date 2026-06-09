@@ -27,7 +27,7 @@ class BasicTissue;
 template <typename ActionPotentialModel, typename ConductionVelocityModel>
 class CardiacTissue;
 
-enum class NodeDataId : int
+enum NodeDataId
 {
     ID = pow2(0),
     TYPE = pow2(1),
@@ -41,6 +41,8 @@ enum class NodeDataId : int
     LIFE = pow2(9),
     APD_VARIATION = pow2(10)
 };
+
+
 
 
 /**
