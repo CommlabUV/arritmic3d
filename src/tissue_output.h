@@ -110,7 +110,7 @@ void BasicTissue<APM,CVM>::SaveVTK(const std::string & filename) const
  * @param filename Name of the file to save. It should end with .vtk.
  */
 template <typename APM,typename CVM>
-void BasicTissue<APM,CVM>::SaveVTKPoints(const std::string & filename, const NodeDataId data_id) const
+void BasicTissue<APM,CVM>::SaveVTKPoints(const std::string & filename, const int data_id) const
 {
     std::ofstream vtk_file;
     vtk_file.open(filename);
@@ -138,27 +138,95 @@ void BasicTissue<APM,CVM>::SaveVTKPoints(const std::string & filename, const Nod
 
     // Write the data
     vtk_file << "\nPOINT_DATA " << this->tissue_nodes.size() << std::endl;
-    vtk_file << "SCALARS Type int 1\n";
-    vtk_file << "LOOKUP_TABLE default" << std::endl;
-    for(int i = 0; i < int(this->tissue_nodes.size()); i++)
+
+    if(data_id & NodeDataId::ID)
     {
-        vtk_file << int(tissue_nodes[i].type) << " ";
-
-        if((i+1) % 10 == 0)
-            vtk_file << "\n";
+        vtk_file << "SCALARS ID int 1\n";
+        vtk_file << "LOOKUP_TABLE default" << std::endl;
+        for(int i = 0; i < int(this->tissue_nodes.size()); i++)
+        {
+            vtk_file << int(tissue_nodes[i].id) << "\n";
+        }
+        vtk_file << std::endl;
     }
-    vtk_file << std::endl;
 
-    vtk_file << "SCALARS State int 1\n";
-    vtk_file << "LOOKUP_TABLE default" << std::endl;
-    for(int i = 0; i < int(this->tissue_nodes.size()); i++)
+    if(data_id & NodeDataId::TYPE)
     {
-        vtk_file << int(tissue_nodes[i].GetState(tissue_time) ) << " ";
-
-        if((i+1) % 10 == 0)
-            vtk_file << "\n";
+        vtk_file << "SCALARS Type int 1\n";
+        vtk_file << "LOOKUP_TABLE default" << std::endl;
+        for(int i = 0; i < int(this->tissue_nodes.size()); i++)
+        {
+            vtk_file << int(tissue_nodes[i].type) << "\n";
+        }
+        vtk_file << std::endl;
     }
-    vtk_file << std::endl;
+
+    if(data_id & NodeDataId::STATE)
+    {
+        vtk_file << "SCALARS State int 1\n";
+        vtk_file << "LOOKUP_TABLE default" << std::endl;
+        for(int i = 0; i < int(this->tissue_nodes.size()); i++)
+        {
+            vtk_file << int(tissue_nodes[i].GetState(tissue_time) ) << "\n";
+        }
+        vtk_file << std::endl;
+    }
+
+    if(data_id & NodeDataId::BEAT)
+    {
+        vtk_file << "SCALARS Beat int 1\n";
+        vtk_file << "LOOKUP_TABLE default" << std::endl;
+        for(int i = 0; i < int(this->tissue_nodes.size()); i++)
+        {
+            vtk_file << int(tissue_nodes[i].GetBeat() ) << "\n";
+        }
+        vtk_file << std::endl;
+    }
+
+     if(data_id & NodeDataId::APD)
+    {
+        vtk_file << "SCALARS APD float 1\n";
+        vtk_file << "LOOKUP_TABLE default" << std::endl;
+        for(int i = 0; i < int(this->tissue_nodes.size()); i++)
+        {
+            vtk_file << tissue_nodes[i].apd_model.getAPD() << "\n";
+        }
+        vtk_file << std::endl;
+    }
+
+     if(data_id & NodeDataId::CV)
+    {
+        vtk_file << "SCALARS CV float 1\n";
+        vtk_file << "LOOKUP_TABLE default" << std::endl;
+        for(int i = 0; i < int(this->tissue_nodes.size()); i++)
+        {
+            vtk_file << tissue_nodes[i].conduction_vel << "\n";
+        }
+        vtk_file << std::endl;
+    }
+
+     if(data_id & NodeDataId::LAT)
+    {
+        vtk_file << "SCALARS LAT float 1\n";
+        vtk_file << "LOOKUP_TABLE default" << std::endl;
+        for(int i = 0; i < int(this->tissue_nodes.size()); i++)
+        {
+            vtk_file << tissue_nodes[i].apd_model.getActivationTime() << "\n";
+        }
+        vtk_file << std::endl;
+    }
+
+     if(data_id & NodeDataId::LIFE)
+    {
+        vtk_file << "SCALARS Life float 1\n";
+        vtk_file << "LOOKUP_TABLE default" << std::endl;
+        for(int i = 0; i < int(this->tissue_nodes.size()); i++)
+        {
+            vtk_file << tissue_nodes[i].apd_model.getLife(tissue_time) << "\n";
+        }
+        vtk_file << std::endl;
+    }
+
 
     vtk_file.close();
 }
