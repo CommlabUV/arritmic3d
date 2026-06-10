@@ -7,7 +7,7 @@ import pyvista as pv
 # Tissue regions: 0 = Endo, 1 = Mid, 2 = Epi
 def convert_to_cell_type(cell_type, region):
     if cell_type < 0 or cell_type > 1:
-        type = 7  # Core
+        type = 0  # Void
     else:
         type = 1 + 3 * int(cell_type) + int(region)  # Combine cell type and region to get a unique identifier
     return type
@@ -80,11 +80,12 @@ def main():
 
         elif tick == arritmic3d.SystemEventType.FILE_WRITE:
             # Update the cell states
-            grid.point_data['State'] = tissue.GetStates()
-            grid.point_data['APD'] = tissue.GetAPD()
-            grid.point_data['CV'] = tissue.GetCV()
+            # grid.point_data['State'] = tissue.GetStates()
+            # grid.point_data['APD'] = tissue.GetAPD()
+            # grid.point_data['CV'] = tissue.GetCV()
 
-            grid.save(f"output/vent{int(tissue.GetTime())}.vtk")
+            #grid.save(f"output/vent{int(tissue.GetTime())}.vtk")
+            tissue.SaveVTKPoints(f"output/vent{int(tissue.GetTime())}.vtk", int(arritmic3d.NodeDataId.STATE) | int(arritmic3d.NodeDataId.APD) | int(arritmic3d.NodeDataId.CV))
 
         if i % 1000 == 0:
             print(i, tissue.GetTime())

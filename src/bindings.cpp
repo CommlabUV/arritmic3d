@@ -26,6 +26,20 @@ PYBIND11_MODULE(MODULE_NAME, m) {
         .value("NO_EVENT", SystemEventType::NO_EVENT)
         .export_values();
 
+    py::enum_<NodeDataId>(m, "NodeDataId")
+        .value("ID", NodeDataId::ID)
+        .value("TYPE", NodeDataId::TYPE)
+        .value("BEAT", NodeDataId::BEAT)
+        .value("STATE", NodeDataId::STATE)
+        .value("LAT", NodeDataId::LAT)
+        .value("APD", NodeDataId::APD)
+        .value("LAST_DI", NodeDataId::LAST_DI)
+        .value("CV", NodeDataId::CV)
+        .value("AP", NodeDataId::AP)
+        .value("LIFE", NodeDataId::LIFE)
+        .value("APD_VARIATION", NodeDataId::APD_VARIATION)
+        .export_values();
+
     py::class_<CardiacTissue<T_AP, T_CV>>(m, "CardiacTissue")
         .def(py::init<int, int, int, double, double, double>())
         .def("InitModels", &CardiacTissue<T_AP, T_CV>::InitModels,
