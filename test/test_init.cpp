@@ -39,7 +39,7 @@ int main(int argc, char **argv)
     tissue.SaveVTK("output/test0.vtk");
     std::cout << "--- Begin simulation ---" << std::endl;
 
-    for(int i = 1; i <= 1500; ++i)
+    for(int i = 1; i <= 3000; ++i)
     {
         auto tick = tissue.update();
         //std::cout << i << " " << tissue.GetTime() << std::endl;

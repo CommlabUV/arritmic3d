@@ -229,6 +229,8 @@ protected:
  * @param parameters_ Vector of parameters for each node. Isotropic diffusion is set according to fiber orientation.
  * @param fiber_orientation_ Vector of fiber orientations.
  *
+ * @todo Check if there is any problem if we change nodes from VOID to non-VOID or vice versa.
+ *
  */
 template <typename APM,typename CVM>
 void BasicTissue<APM,CVM>::Init(const vector<CellType> & cell_types_, vector<NodeParameters> & parameters_, const vector<Eigen::Vector3f> & fiber_orientation_)
