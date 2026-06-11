@@ -299,6 +299,8 @@ void NodeT<APD, CVM>::SaveState(std::ofstream & f, const class ParametersPool & 
 
     // Save id
     f.write( (char *) &id, sizeof(id) );
+    // Save extended grid position
+    f.write( (char *) &ext_grid_pos, sizeof(ext_grid_pos) );
     // Save type
     f.write( (char *) &type, sizeof(CellType) );
     // Save external activation flag
@@ -360,6 +362,8 @@ void NodeT<APD, CVM>::LoadState(std::ifstream & f, ParametersPool & parameters_p
 
     // Load id
     f.read( (char *) &id, sizeof(id) );
+    // Load extended grid position
+    f.read( (char *) &ext_grid_pos, sizeof(ext_grid_pos) );
     // Load type
     f.read( (char *) &type, sizeof(CellType) );
     // Load external activation flag

@@ -917,6 +917,8 @@ void BasicTissue<APM,CVM>::LoadState(const std::string & filename)
         node.LoadState(state_file, parameters_pool, event_queue, *this);
     }
 
+    // @todo Restore the node index.
+
     state_file.close();
 }
 
