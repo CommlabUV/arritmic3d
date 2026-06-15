@@ -12,6 +12,32 @@
 
 > NO_EVENT : There are no more events. Simulation has finished.
 
+## `enum identifiers for NodeDataId`
+
+Used in SaveVTKPoints to indicate which data to save.
+
+> ID : Identificator of node.
+
+> TYPE : Type of tissue
+
+> BEAT : Beat number
+
+> STATE : State of node
+
+> LAT : Local Activation Time
+
+> APD : Action Potential Duration
+
+> LAST_DI : Diastolic Interval of last activation
+
+> CV : Conduction Velocity
+
+> AP : Action Potential
+
+> LIFE : (Life Time) Value between 0 and 1 that indicates how long the cell has been active, normalized by its APD.
+
+> APD_VARIATION : Variation from previous APD to actual APD
+
 ## `arritmic3d.CardiacTissue(ncells_x, ncells_y, ncells_z, x_spacing, y_spacing, z_spacing)`
 
 Constructor of the CardiacTissue class.
@@ -195,6 +221,13 @@ Return a dictionary with the default parameters for the nodes. int values are co
 **Returns:**
 
 > Dictionary with the parameters.
+
+## `SaveVTKPoints(filename, data_id)`
+Save the state of the tissue in a VTK file for visualization.
+
+> filename : Name of the file where the data will be stored
+
+> data_id : Bitwise OR of NodeDataId values to select which data to save.
 
 ## `arritmic3d(case_dir, config={}, save_run_config=True)`
 

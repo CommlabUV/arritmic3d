@@ -108,6 +108,7 @@ void BasicTissue<APM,CVM>::SaveVTK(const std::string & filename) const
 /**
  * @brief Save the state of the tissue in a VTK file for visualization.
  * @param filename Name of the file to save. It should end with .vtk.
+ * @param data_id Bitwise OR of NodeDataId values to select which data to save.
  */
 template <typename APM,typename CVM>
 void BasicTissue<APM,CVM>::SaveVTKPoints(const std::string & filename, const int data_id) const
