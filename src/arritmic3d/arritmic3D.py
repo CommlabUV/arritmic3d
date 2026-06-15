@@ -114,6 +114,7 @@ def run_simulation(case_dir, cfg, debug_level=0):
 
     # Create the tissue from the grid, passing the loaded configuration dict
     tissue = create_tissue(grid, cfg)
+    indexes = tissue.GetNodeIndex()
 
     # Set the timer for saving the VTK files (times in ms)
     tissue.SetTimer(
@@ -140,19 +141,19 @@ def run_simulation(case_dir, cfg, debug_level=0):
         elif tick == arritmic3d.SystemEventType.FILE_WRITE:
             fields = cfg['VTK_OUTPUT_FIELDS']
             if 'State' in fields:
-                grid.point_data['State'] = tissue.GetStates()
+                np.put(grid.point_data['State'], indexes, tissue.GetStatesIndexed())
             if 'APD' in fields:
-                grid.point_data['APD'] = tissue.GetAPD()
+                np.put(grid.point_data['APD'], indexes, tissue.GetAPD())
             if 'DI' in fields:
-                grid.point_data['DI'] = tissue.GetLastDI()
+                np.put(grid.point_data['DI'], indexes, tissue.GetLastDI())
             if 'CV' in fields:
-                grid.point_data['CV'] = tissue.GetCV()
+                np.put(grid.point_data['CV'], indexes, tissue.GetCV())
             if 'AP' in fields:
-                grid.point_data['AP'] = tissue.GetAP()
+                np.put(grid.point_data['AP'], indexes, tissue.GetAP())
             if 'LAT' in fields:
-                grid.point_data['LAT'] = tissue.GetLAT()
+                np.put(grid.point_data['LAT'], indexes, tissue.GetLAT())
             if 'Beat' in fields:
-                grid.point_data['Beat'] = tissue.GetBeat()
+                np.put(grid.point_data['Beat'], indexes, tissue.GetBeat())
             grid.field_data['Time'] = time
 
             clean_grid = grid.threshold(0.5, scalars="restitution_model", all_scalars=True)
