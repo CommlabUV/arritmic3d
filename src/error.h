@@ -80,6 +80,7 @@ void Error(bool condition, Args... args)
     {
         std::cerr << RED << "\nERROR: " << NC;
         print_args(args...);
+        throw std::runtime_error("Irrecuperable error ");
     }
 
 #endif
