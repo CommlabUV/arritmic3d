@@ -915,7 +915,7 @@ void BasicTissue<APM,CVM>::LoadState(const std::string & filename)
     state_file.read( (char*) (timer.data()), sizeof(float) * int(SystemEventType::SIZE) );
     // Load number of live nodes
     state_file.read( (char*) (&n_live_nodes), sizeof(n_live_nodes) );
-    LOG::Error(n_live_nodes != int(tissue_nodes.size()), "Number of live nodes in the file (", n_live_nodes, ") does not match the current number of live nodes (", tissue_nodes.size(), ").");
+    tissue_nodes.resize(n_live_nodes);
 
     // Load geometry
     tissue_geometry.LoadState(state_file);
