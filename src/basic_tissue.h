@@ -221,6 +221,19 @@ protected:
         }
     }
 
+    /**
+     * @brief Reconstruct the index of the nodes in the extended grid from tissue_nodes.
+     */
+    void ReconstructIndex()
+    {
+        tissue_geometry.index.assign(tissue_geometry.index.size(), NO_INDEX);
+        for(size_t i = 0; i < tissue_nodes.size(); i++)
+        {
+            size_t ext_grid_pos = tissue_nodes[i].ext_grid_pos;
+            tissue_geometry.index[ext_grid_pos] = i;
+        }
+    }
+
 };
 
 /**
@@ -902,6 +915,7 @@ void BasicTissue<APM,CVM>::LoadState(const std::string & filename)
     state_file.read( (char*) (timer.data()), sizeof(float) * int(SystemEventType::SIZE) );
     // Load number of live nodes
     state_file.read( (char*) (&n_live_nodes), sizeof(n_live_nodes) );
+    LOG::Error(n_live_nodes != int(tissue_nodes.size()), "Number of live nodes in the file (", n_live_nodes, ") does not match the current number of live nodes (", tissue_nodes.size(), ").");
 
     // Load geometry
     tissue_geometry.LoadState(state_file);
@@ -917,7 +931,8 @@ void BasicTissue<APM,CVM>::LoadState(const std::string & filename)
         node.LoadState(state_file, parameters_pool, event_queue, *this);
     }
 
-    // @todo Restore the node index.
+    // Restore the node index.
+    ReconstructIndex();
 
     state_file.close();
 }

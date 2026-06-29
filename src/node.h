@@ -108,7 +108,7 @@ public:
     }
 
 private:
-    constexpr static int SAVE_VERSION = 2;  ///< Version of the NodeT class for state saving/loading.
+    constexpr static int SAVE_VERSION = 3;  ///< Version of the NodeT class for state saving/loading.
     NodeParameters*  parameters;         ///< @brief Parameters of the Node
     unsigned int    id;                 ///< @brief Unique Node id. Corresponds with the grid position in the tissue.
     size_t          ext_grid_pos;        ///< @brief Position in the extended grid (index vector).

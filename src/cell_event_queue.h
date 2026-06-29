@@ -526,7 +526,7 @@ void CellEventQueue<Node>::LoadState(std::ifstream & f, const std::vector<Node> 
     int file_version;
     f.read( (char *) &file_version, sizeof(int) );
     if(file_version != version)
-        throw std::runtime_error("CellEventQueue::LoadState: Wrong file version.");
+        throw std::runtime_error("CellEventQueue::LoadState: Wrong file version. Expected " + std::to_string(version) + ", got " + std::to_string(file_version) );
 
     // Load events
     size_t n_events;
