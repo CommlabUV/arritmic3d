@@ -34,20 +34,15 @@ int main(int argc, char **argv)
 
     size_t initial_node = tissue.GetIndex(2,2,1);  // 1*6*6 + 2*6 + 2
     int beat = 0;
-    tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, 200);
+    float CL = 300.0f;  // cycle length in ms
+    tissue.SetTimer(SystemEventType::EXT_ACTIVATION, CL, 0.0f);
 
     tissue.SaveVTK("output/test0.vtk");
     std::cout << "--- Begin simulation ---" << std::endl;
 
     int debug = 0;
-    for(int i = 1; i <= 1500; ++i)
+    for(int i = 1; i <= 3000; ++i)
     {
-        /*
-        if(i == 515)
-            debug = 2;
-        if(i == 525)
-            debug = 0;
-        */
         auto tick = tissue.update(debug);
         //std::cout << i << " " << tissue.GetTime() << std::endl;
         if(tick == SystemEventType::EXT_ACTIVATION)
@@ -58,9 +53,8 @@ int main(int argc, char **argv)
 
             std::cout << "External activation for beat " << beat << " at time " << tissue.GetTime() << std::endl;
             tissue.ExternalActivation({initial_node}, tissue.GetTime(), beat);
-            tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, tissue.GetTime() + 300);
 
-            if(beat == 5)
+            if(beat == 4)
             {
                 // Save the state to a file
                 tissue.SaveState("tissue_state.bin");

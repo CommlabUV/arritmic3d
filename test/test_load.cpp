@@ -25,7 +25,7 @@ int main(int argc, char **argv)
     std::cout << "Tissue live nodes: " << tissue.GetNumLiveNodes() << std::endl;
 
     size_t initial_node = tissue.GetIndex(2,2,1);  // 1*6*6 + 2*6 + 2
-    int beat = 5;   // Start from beat 5, as the first 4 beats are already in the loaded state
+    int beat = 4;   // Start from beat 5, as the first 4 beats are already in the loaded state
     std::cout << "Time: " << tissue.GetTime() << std::endl;
     //tissue.SetSystemEvent(SystemEventType::EXT_ACTIVATION, tissue.GetTime() );
 
@@ -33,7 +33,7 @@ int main(int argc, char **argv)
 
     for(int i = 1; i <= 1200; ++i)
     {
-        auto tick = tissue.update(0);
+        auto tick = tissue.update(1);
         //std::cout << i << " " << tissue.GetTime() << std::endl;
         if(tick == SystemEventType::EXT_ACTIVATION)
         {
@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 
         //std::cout << "State of initial node: " << tissue.GetStates()[initial_node] << std::endl;
         // Write after each event
-        tissue.SaveVTK("output/test"+ std::to_string(i) +".vtk");
+        //tissue.SaveVTK("output/test"+ std::to_string(i) +".vtk");
     }
 
     tissue.ShowSensorData();
