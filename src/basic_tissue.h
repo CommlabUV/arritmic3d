@@ -248,6 +248,7 @@ protected:
 template <typename APM,typename CVM>
 void BasicTissue<APM,CVM>::Init(const vector<CellType> & cell_types_, vector<NodeParameters> & parameters_, const vector<Eigen::Vector3f> & fiber_orientation_)
 {
+    LOG::Info(debug_level > 1, "Begin of Init");
     // First, check if data vectors are consistent
     size_t n_nodes = grid_size;
     LOG::Error(cell_types_.size() != n_nodes, "Number of cell types (", cell_types_.size(), ") does not match number of nodes (", n_nodes, ").");
@@ -344,6 +345,7 @@ void BasicTissue<APM,CVM>::Init(const vector<CellType> & cell_types_, vector<Nod
 template <typename APM,typename CVM>
 void BasicTissue<APM,CVM>::ChangeParameters(vector<NodeParameters> & parameters_)
 {
+    LOG::Info(debug_level > 1, "Begin of ChangeParameters");
     assert(parameters_.size() == this->size() || parameters_.size() == 1);
 
     // Set isotropic diffusion, default is true
@@ -362,14 +364,17 @@ void BasicTissue<APM,CVM>::ChangeParameters(vector<NodeParameters> & parameters_
     for(size_t i = 0; i < this->size(); i++)
     {
         auto index = tissue_geometry.GetMemIndex_from_GridIndex(i);
-        if(parameters_.size() == 1)
-            tissue_nodes.at(index).parameters = parameters_pool.Find(parameters_[0]);
-        else
-            if(index != NO_INDEX)
+        if(index != NO_INDEX)
+        {
+            if(parameters_.size() == 1)
+                tissue_nodes.at(index).parameters = parameters_pool.Find(parameters_[0]);
+            else
                 tissue_nodes.at(index).parameters = parameters_pool.Find(parameters_[i]);
 
-        if(index != NO_INDEX && tissue_nodes.at(index).type != CELL_TYPE_VOID)
-            tissue_nodes.at(index).ReApplyParam(tissue_time);
+            if(tissue_nodes.at(index).type != CELL_TYPE_VOID)
+                tissue_nodes.at(index).ReApplyParam(tissue_time);
+        }
+
     }
 
 
