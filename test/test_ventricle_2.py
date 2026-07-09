@@ -68,6 +68,10 @@ def main():
     tissue.SetSystemEvent(arritmic3d.SystemEventType.EXT_ACTIVATION, 700)  # 700 ms for the second activation
     print(0)
 
+    grid.point_data['State'] = tissue.GetStates()
+    grid.point_data['APD'] = tissue.GetAPD()
+    grid.point_data['CV'] = tissue.GetCV()
+
     i = 1
     while tissue.GetTime() < 1000.0:
         tick = tissue.update(0)
