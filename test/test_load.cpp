@@ -17,6 +17,7 @@ int main(int argc, char **argv)
 {
     // Test of the CardiacTissue class. Units in mm.
     CardiacTissue<ActionPotentialRestSurface,ConductionVelocity> tissue(10, 6, 4, 0.1, 0.1, 0.1);
+    //tissue.SetDebugLevel(2);
 
     tissue.InitModels("restitutionModels/config_TenTuscher_APD.csv","restitutionModels/config_TenTuscher_CV.csv");
     //tissue.Init(v_type, v_np, {fiber_dir});
@@ -33,7 +34,7 @@ int main(int argc, char **argv)
 
     for(int i = 1; i <= 1200; ++i)
     {
-        auto tick = tissue.update(1);
+        auto tick = tissue.update();
         //std::cout << i << " " << tissue.GetTime() << std::endl;
         if(tick == SystemEventType::EXT_ACTIVATION)
         {

@@ -94,6 +94,7 @@ SystemEventType CardiacTissue<APM,CVM>::update(int debug)
         this->event_queue.ExtractFirstCell();
         LOG::Info(debug > 0, "Node Event for node ", ev->cell_node->id, " Type: ", int(ev->event_type));
         LOG::Info(debug > 1, "Before processing event. Node value: ", *(ev->cell_node) );
+        LOG::Warning(ev->cell_node->parameters == nullptr, "Node ", ev->cell_node->id, " has no parameters assigned.");
 
         TriggerEvent(ev);
         //n_cells_updated++;
