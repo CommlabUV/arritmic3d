@@ -101,7 +101,8 @@ PYBIND11_MODULE(MODULE_NAME, m) {
              "Save the current state of the tissue to a binary file")
         .def("LoadState", &CardiacTissue<T_AP, T_CV>::LoadState,
              "Load the state of the tissue from a binary file")
-        .def("SetInitialAPD", &CardiacTissue<T_AP, T_CV>::SetInitialAPD);
+        .def("SetInitialAPD", &CardiacTissue<T_AP, T_CV>::SetInitialAPD)
+        .def("SetDebugLevel", &CardiacTissue<T_AP, T_CV>::SetDebugLevel);
 
 }
 

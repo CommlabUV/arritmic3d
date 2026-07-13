@@ -118,6 +118,14 @@ Set a timer for the simulation
 
 > t : Period (time between events) in milliseconds.
 
+## `SetDebugLevel (int  level)`
+
+Set the debug level for the tissue.
+
+**Parameters:**
+
+> level : Debug level. 0: no debug, 1: basic info, 2: detailed info, 3: very detailed info.
+
 ## `GetTime()`
 
 Get the current time of the tissue
