@@ -159,6 +159,18 @@ public:
         initial_apd = apd;
     }
 
+    /**
+     * @brief Set the debug level for the tissue.
+     * @param level Debug level. 0: no debug, 1: basic info, 2: detailed info, 3: very detailed info.
+     */
+    void SetDebugLevel(int level)
+    {
+        if(level < 0 || level > 3)
+            LOG::Warning(true, "Debug level must be between 0 and 3. Ignoring.");
+        else
+            debug_level = level;
+    }
+
 protected:
 
     // Geometry
@@ -190,7 +202,7 @@ protected:
         assert(mem_index < static_cast<long int>(tissue_nodes.size()));
         if(mem_index == NO_INDEX)
             throw std::out_of_range("GetNodePtr: Node id " + std::to_string(id) + " is VOID.");
-        std::cout << "GetNodePtr: id=" << id << " mem_index=" << mem_index << std::endl;
+        LOG::Info(debug_level > 2, "GetNodePtr: id=" + std::to_string(id) + " mem_index=" + std::to_string(mem_index));
         return &tissue_nodes[mem_index];
     }
 
@@ -230,7 +242,7 @@ protected:
         for(size_t i = 0; i < tissue_nodes.size(); i++)
         {
             size_t ext_grid_pos = tissue_nodes[i].ext_grid_pos;
-            tissue_geometry.index[ext_grid_pos] = i;
+            tissue_geometry.index.at(ext_grid_pos) = i;
         }
     }
 
@@ -931,6 +943,7 @@ void BasicTissue<APM,CVM>::LoadState(const std::string & filename)
     event_queue.LoadState(state_file, tissue_nodes);
 
     // Load each node
+    LOG::Info(debug_level > 0, "Loading " + std::to_string(n_live_nodes) + " nodes.");
     for(auto & node : tissue_nodes)
     {
         node.LoadState(state_file, parameters_pool, event_queue, *this);
