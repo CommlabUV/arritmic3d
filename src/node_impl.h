@@ -358,7 +358,10 @@ void NodeT<APD, CVM>::LoadState(std::ifstream & f, ParametersPool & parameters_p
     if(param_index != std::numeric_limits<size_t>::max())
         parameters = parameters_pool.GetParamPtr(param_index);
     else
+    {
         parameters = nullptr;
+        LOG::Warning(true, "LoadState: Node ", id, " has no parameters assigned.");
+    }
 
     // Load id
     f.read( (char *) &id, sizeof(id) );
@@ -382,10 +385,10 @@ void NodeT<APD, CVM>::LoadState(std::ifstream & f, ParametersPool & parameters_p
     f.read( (char *) &next_deactivation_time, sizeof(next_deactivation_time) );
 
     // Load APD model state
-    apd_model.LoadState(f, type);
+    apd_model.LoadState(f, type, parameters);
 
     // Load CV model state
-    cv_model.LoadState(f, type);
+    cv_model.LoadState(f, type, parameters);
 
     // Load next activation event state
     size_t next_act_index;

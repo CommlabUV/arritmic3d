@@ -131,8 +131,9 @@ public:
      * Load the state of the model from a file.
      * The correct restitution model will be set according to the cell type.
      */
-    void LoadState(std::ifstream & f, CellType type)
+    void LoadState(std::ifstream & f, CellType type, NodeParameters* params)
     {
+        this->parameters = params;
         f.read( (char *) &cv, sizeof(float) );
 
         SetRestitutionModel(type);
