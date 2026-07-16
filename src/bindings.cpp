@@ -73,7 +73,9 @@ PYBIND11_MODULE(MODULE_NAME, m) {
         .def("GetIndex", &CardiacTissue<T_AP, T_CV>::GetIndex)
         .def("ExternalActivation", &CardiacTissue<T_AP, T_CV>::ExternalActivation)
         .def("SaveVTK", &CardiacTissue<T_AP, T_CV>::SaveVTK)
-        .def("SaveVTKPoints", &CardiacTissue<T_AP, T_CV>::SaveVTKPoints)
+        .def("SaveVTKPoints", &CardiacTissue<T_AP, T_CV>::SaveVTKPoints,
+             py::arg("filename"), py::arg("data_id"), py::arg("binary") = false,
+             "Save the state of the tissue in a VTK file for visualization. The data_id parameter is a bitwise OR of NodeDataId values to select which data to save. If binary is true, the data will be saved in binary format.")
         .def("GetTime", &CardiacTissue<T_AP, T_CV>::GetTime)
         .def("update", &CardiacTissue<T_AP, T_CV>::update,
              py::arg("debug") = 0,

@@ -110,7 +110,7 @@ public:
     void SetSystemEvent(SystemEventType type, float t);
 
     void SaveVTK(const std::string & filename) const;
-    void SaveVTKPoints(const std::string & filename, const int data_id) const;
+    void SaveVTKPoints(const std::string & filename, const int data_id, bool binary = false) const;
 
     void SaveState(const std::string & filename) const;
     void LoadState(const std::string & filename);
