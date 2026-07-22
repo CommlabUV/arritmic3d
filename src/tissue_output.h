@@ -115,7 +115,10 @@ template <typename APM,typename CVM>
 void BasicTissue<APM,CVM>::SaveVTKPoints(const std::string & filename, const int data_id, bool binary) const
 {
     std::ofstream vtk_file;
-    vtk_file.open(filename);
+    if(binary)
+        vtk_file.open(filename, std::ios::binary);
+    else
+        vtk_file.open(filename);
     if(!vtk_file)
     {
         LOG::Error(true, "Could not open file " + filename + " for writing.");
@@ -131,18 +134,19 @@ void BasicTissue<APM,CVM>::SaveVTKPoints(const std::string & filename, const int
     vtk_file << "DATASET POLYDATA\n";
 
     // Write the points
-    vtk_file << "POINTS " << this->tissue_nodes.size() << " int\n";
+    vtk_file << "POINTS " << this->tissue_nodes.size() << " float\n";
     for(size_t i = 0; i < this->tissue_nodes.size(); i++)
     {
         auto grid_index = tissue_nodes[i].id;
         auto coords = tissue_geometry.GetCoords_from_GridIndex(grid_index);
+        auto real_coords = tissue_geometry.GetRealCoords_from_Coords(coords);
         if(binary)
         {
-            vtk_file.write(reinterpret_cast<const char*>(coords.data()), sizeof(int) * 3);
+            vtk_file.write(reinterpret_cast<const char*>(real_coords.data()), sizeof(float) * 3);
         }
         else
         {
-            vtk_file << coords[0] << " " << coords[1] << " " << coords[2] << "\n";
+            vtk_file << real_coords[0] << " " << real_coords[1] << " " << real_coords[2] << "\n";
         }
     }
 
