@@ -67,6 +67,17 @@ public:
     }
 
     /**
+     * @brief Set the origin of the tissue
+     * @param x x-coordinate of the origin
+     * @param y y-coordinate of the origin
+     * @param z z-coordinate of the origin
+     */
+    void SetOrigin(float x, float y, float z)
+    {
+        origin = Vector3(x, y, z);
+    }
+
+    /**
      * @brief Calculate the index displacement of the neighbours
      * @param distance Maximum distance to consider a neighbour
     */
@@ -195,7 +206,7 @@ public:
     }
 
     /**
-     * @brief Get the coordinates of a node given its index inside the 3D grid
+     * @brief Get the grid coordinates of a node given its index inside the 3D grid
     */
     Eigen::Vector3i GetCoords_from_GridIndex(size_t index) const
     {
@@ -207,7 +218,17 @@ public:
     }
 
     /**
-     * @brief Get the coordinates of a node given its index inside the extended 3D grid
+     * @brief Get the real coordinates of a node given its grid coordinates
+     */
+    Eigen::Vector3f GetRealCoords_from_Coords(const Eigen::Vector3i & coords) const
+    {
+        return Eigen::Vector3f(coords[0] * dx + origin[0],
+                                coords[1] * dy + origin[1],
+                                coords[2] * dz + origin[2]);
+    }
+
+    /**
+     * @brief Get the extended grid coordinates of a node given its index inside the extended 3D grid
     */
     Eigen::Vector3i GetExtCoords_from_ExtGridIndex(size_t index) const
     {
