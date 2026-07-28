@@ -56,8 +56,9 @@ def main():
         if key != 'Cell_type':
             grid.point_data.remove(key)
 
-    # Set the timer for saving the VTK files
+    # Set the timer and fields for saving the VTK files
     tissue.SetTimer(arritmic3d.SystemEventType.FILE_WRITE, 20)  # 20 ms
+    fields_to_save = int(arritmic3d.NodeDataId.STATE) | int(arritmic3d.NodeDataId.APD) | int(arritmic3d.NodeDataId.CV)
 
     # First activation
     initial_node = 12051 #tissue.GetIndex(2, 2, 1)
@@ -85,7 +86,7 @@ def main():
             # grid.point_data['CV'] = tissue.GetCV()
 
             #grid.save(f"output/vent{int(tissue.GetTime())}.vtk")
-            tissue.SaveVTKPoints(f"output/vent{int(tissue.GetTime())}.vtk", int(arritmic3d.NodeDataId.STATE) | int(arritmic3d.NodeDataId.APD) | int(arritmic3d.NodeDataId.CV))
+            tissue.SaveVTKPoints(f"output/vent{int(tissue.GetTime())}.vtk", fields_to_save)
 
         if i % 1000 == 0:
             print(i, tissue.GetTime())
