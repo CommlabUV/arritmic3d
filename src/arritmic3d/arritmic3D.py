@@ -115,6 +115,7 @@ def run_simulation(case_dir, cfg, debug_level=0):
     # Create the tissue from the grid, passing the loaded configuration dict
     tissue = create_tissue(grid, cfg)
     indexes = tissue.GetNodeIndex()
+    tissue_size = tissue.size()
 
     # Set the timer for saving the VTK files (times in ms)
     tissue.SetTimer(
@@ -140,20 +141,25 @@ def run_simulation(case_dir, cfg, debug_level=0):
 
         elif tick == arritmic3d.SystemEventType.FILE_WRITE:
             fields = cfg['VTK_OUTPUT_FIELDS']
+            for f in fields:
+                if f not in grid.point_data:
+                    grid.point_data[f] = np.zeros(tissue_size)
+
+            # We get the info from the actual tissue nodes and write them in their place
             if 'State' in fields:
                 np.put(grid.point_data['State'], indexes, tissue.GetStatesIndexed())
             if 'APD' in fields:
-                np.put(grid.point_data['APD'], indexes, tissue.GetAPD())
+                np.put(grid.point_data['APD'], indexes, tissue.GetAPDIndexed())
             if 'DI' in fields:
-                np.put(grid.point_data['DI'], indexes, tissue.GetLastDI())
+                np.put(grid.point_data['DI'], indexes, tissue.GetLastDIIndexed())
             if 'CV' in fields:
-                np.put(grid.point_data['CV'], indexes, tissue.GetCV())
+                np.put(grid.point_data['CV'], indexes, tissue.GetCVIndexed())
             if 'AP' in fields:
-                np.put(grid.point_data['AP'], indexes, tissue.GetAP())
+                np.put(grid.point_data['AP'], indexes, tissue.GetAPIndexed())
             if 'LAT' in fields:
-                np.put(grid.point_data['LAT'], indexes, tissue.GetLAT())
+                np.put(grid.point_data['LAT'], indexes, tissue.GetLATIndexed())
             if 'Beat' in fields:
-                np.put(grid.point_data['Beat'], indexes, tissue.GetBeat())
+                np.put(grid.point_data['Beat'], indexes, tissue.GetBeatIndexed())
             grid.field_data['Time'] = time
 
             clean_grid = grid.threshold(0.5, scalars="restitution_model", all_scalars=True)
