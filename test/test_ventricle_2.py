@@ -28,7 +28,7 @@ def main():
     print("Dimensions:", dims)
     print("Spacing:", x_spacing, y_spacing, z_spacing)
 
-    print("Campos disponibles en point_data:", grid.point_data.keys())
+    print("Available fields in point_data:", grid.point_data.keys())
     v_type = list(map(convert_to_cell_type, np.array(grid.point_data['Cell_type']), np.array(grid.point_data['EndoToEpi'])))
 
     # Number of cells in each dimension

@@ -18,7 +18,7 @@ def main():
     print("Dimensions:", dims)
     print("Spacing:", x_spacing, y_spacing, z_spacing)
 
-    print("Campos disponibles en point_data:", grid.point_data.keys())
+    print("Available fields in point_data:", grid.point_data.keys())
     v_type = list(map(arritmic3d.CellType, np.array(grid.point_data['Type'])))
 
     # Number of cells in each dimension
