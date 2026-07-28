@@ -1,5 +1,31 @@
 # Changelog
 
+## [3.0b8] - 2026-07-28
+
+### Added
+- **Node indexing support**: Introduced node index structures and indexed getters for live-node access.
+- **VTK point export tools**: Added `SaveVTKPoints` with selectable output arrays for alive points.
+- **Debug and bindings updates**: Added `SetDebugLevel` in core tissue logic and exposed related functionality to Python.
+- **Input tooling**: Added support for reading activation regions from VTK sites and converting legacy v2 cell types.
+
+### Changed
+- **Indexing refactor**: Unified index naming/conversions across GridIndex, MemIndex, NodeId, and extended-grid coordinates.
+- **Core API adaptation**: Updated init/activation/parameter-update paths to the new indexation model.
+- **VTK output organization**: Moved output helpers into dedicated utilities and aligned save routines with indexed storage.
+- **Documentation and tests**: Updated API docs and test cases to reflect the new indexing/output workflows.
+
+### Fixed
+- **Load/restore consistency**: Fixed `LoadState` initialization for `ActionPotential` and `ConductionVelocity`.
+- **Post-load index integrity**: Fixed index reconstruction and node container sizing after loading.
+- **Parameter safety checks**: Fixed invalid-index (`NO_INDEX`) handling in parameter updates.
+- **Binary VTK export reliability**: Fixed binary file opening and point coordinate export in `SaveVTKPoints`.
+- **PyVista/data compatibility**: Fixed point-data assignment order and improved dtype/type preservation in input/output fields.
+- **Plot/config robustness**: Fixed visualization time handling, local paths, and incomplete config-dictionary scenarios.
+
+### Contributors
+- Fernando Barber
+- Ignacio García-Fernández
+
 ## [3.0b7] - 2026-04-22
 
 ### Added
